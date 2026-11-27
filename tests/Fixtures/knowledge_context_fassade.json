@@ -1,0 +1,75 @@
+{
+    "methoden": {
+        "budgetFuer": "(string $feature): int",
+        "contextFor": "(?Platform\\Core\\Models\\Team $team, string $feature, string $description, ?string $stil = NULL, array $hauptzutatSlugs = array (\n), array $params = array (\n)): array",
+        "crossCuttingSlugs": "(string $feature): array",
+        "extractPairingNames": "(string $content, ?array $sections = NULL): array",
+        "frontmatterOf": "(string $md): array",
+        "getDocument": "(?Platform\\Core\\Models\\Team $team, string $slug): ?object",
+        "jaccard": "(array $a, array $b): float",
+        "kanonTextFuer": "(?Platform\\Core\\Models\\Team $team, string $promptKey): array",
+        "listDocuments": "(?Platform\\Core\\Models\\Team $team, ?string $kategorie, int $offset, int $limit, bool $mitFrontmatter = true, bool $includeInactive = false): array",
+        "mcpLesbareDokumente": "(?Platform\\Core\\Models\\Team $team): Illuminate\\Database\\Query\\Builder",
+        "pflichtBudgetFuer": "(?Platform\\Core\\Models\\Team $team, string $feature): array",
+        "pflichtZeichen": "(string $feature): int",
+        "proposeOptionen": "static (array $wissen): array",
+        "regelwerkDossiersFuer": "(?Platform\\Core\\Models\\Team $team, string $feature, array $spalten = array (\n  0 => 'slug',\n  1 => 'title',\n  2 => 'char_count',\n  3 => 'version',\n)): Illuminate\\Support\\Collection",
+        "routingFeatureFuer": "static (string $promptKey): string",
+        "searchDocuments": "(?Platform\\Core\\Models\\Team $team, string $q, ?string $kategorie = NULL, int $limit = 10, bool $includeInactive = false): array",
+        "sichtbareDokumente": "(?Platform\\Core\\Models\\Team $team): Illuminate\\Database\\Query\\Builder",
+        "tokenize": "(string $s): array",
+        "truncate": "(string $text, int $maxChars): string",
+        "wirksameRoutings": "(string $feature): Illuminate\\Support\\Collection"
+    },
+    "konstanten": {
+        "ALWAYS_LOAD_CROSS_CUTTING": [
+            "substitutionen",
+            "saisonkalender",
+            "synonyme",
+            "sauce_mutterstrukturen",
+            "mengen_defaults",
+            "techniken",
+            "bruehen_fonds"
+        ],
+        "CONCEPT_MAX_DOCS": 4,
+        "CONTEXT_ONLY_FEATURES": {
+            "foodbook.plan": "IdeenService — contextFor(…, 'foodbook.plan'), kein Registry-Key"
+        },
+        "DOMAIN_TOP_K": 4,
+        "MAX_KNOWLEDGE_CHARS_DEFAULT": 16200,
+        "MAX_PARTNERS": 28,
+        "OHNE_AUFRUFER_GEMESSEN": [
+            "ai_extract_recipe",
+            "ai_infer_ankers",
+            "ai_plan_dishes",
+            "ai_suggest_pairings"
+        ],
+        "PAIRING_TOP_K": 3,
+        "RECIPE_MAX_KNOWLEDGE_CHARS": 48000,
+        "REGELWERK_SLUG_LIKE": {
+            "concept.brief_geruest": "%concept%",
+            "foodbook.grundgeruest": "%foodbook%",
+            "format.grundgeruest": "%format%",
+            "ai_generate_recipe": "%basisrezept%",
+            "recipe.generator": "%basisrezept%",
+            "recipe.ueberarbeiten": "%basisrezept%",
+            "recipe.review": "%basisrezept%",
+            "recipe.eigenschaften": "%basisrezept%",
+            "vk.generator": "%verkaufsgerichte%",
+            "vk.ueberarbeiten": "%verkaufsgerichte%",
+            "vk.review": "%verkaufsgerichte%",
+            "gp.suggest": "%regelwerk-gp%",
+            "gp.conformance_revise": "%regelwerk-gp%"
+        },
+        "REZEPT_BUDGET_KEYS": [
+            "ai_generate_recipe",
+            "recipe.generator",
+            "vk.generator"
+        ],
+        "ROUTING_ALIAS": {
+            "recipe.generator": "ai_generate_recipe",
+            "vk.generator": "ai_generate_recipe",
+            "recipe.dichteklasse": "recipe.eigenschaften"
+        }
+    }
+}

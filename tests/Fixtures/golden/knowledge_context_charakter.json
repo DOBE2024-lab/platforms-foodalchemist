@@ -1,0 +1,1026 @@
+{
+    "contextFor.alias_vk": {
+        "wirksame_routings": [
+            [
+                "ai_generate_recipe",
+                "kueche",
+                "discovery",
+                2
+            ],
+            [
+                "ai_generate_recipe",
+                "regelwerk",
+                "discovery",
+                2
+            ],
+            [
+                "vk.generator",
+                "domain",
+                "discovery",
+                1
+            ]
+        ],
+        "ohne_ausschluss": {
+            "block": "# VAULT-WISSEN (Catering-Wissensbasis)\n\nFolgende Domain- und Cross-Cutting-Files aus der Wissensbasis sind für diesen Generator-Call relevant.\nNutze sie als Souschef-Wissen: klassische Verhältnisse, Substitutionen, Synonyme, Sub-Rezept-Patterns.\n\n## DOMAIN: fruchtgemuese-tomate-verwendung\n\nTomate: Säure, Süße, Garzeiten.\n\n# KUECHE-WISSEN\n\n## KUECHE: kueche-suppen-tomate\n\nSuppen-Küche: Tomatensuppe, Ansatz, Mixen.",
+            "built_chars": 416,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [
+                "fruchtgemuese-tomate-verwendung@v1",
+                "kueche-suppen-tomate@v1"
+            ],
+            "herkunft": {
+                "fruchtgemuese-tomate-verwendung": {
+                    "score": 0.01639344262295082,
+                    "via": "lexical",
+                    "lexical_rank": 1,
+                    "semantic_rank": null,
+                    "lexical_score": 0.5,
+                    "candidate_limit": 100,
+                    "chars": 31,
+                    "sent": 31
+                },
+                "kueche-suppen-tomate": {
+                    "score": 0.01639344262295082,
+                    "via": "lexical",
+                    "lexical_rank": 1,
+                    "semantic_rank": null,
+                    "lexical_score": 0.6,
+                    "candidate_limit": 100,
+                    "chars": 42,
+                    "sent": 42
+                }
+            },
+            "kanon_required_chars": 0,
+            "knowledge_budget": 49000,
+            "required_chars": 0,
+            "total_chars": 416,
+            "used_by_category": {
+                "domain": [
+                    "fruchtgemuese-tomate-verwendung@v1"
+                ],
+                "kueche": [
+                    "kueche-suppen-tomate@v1"
+                ]
+            }
+        },
+        "mit_ausschluss": {
+            "block": "# VAULT-WISSEN (Catering-Wissensbasis)\n\nFolgende Domain- und Cross-Cutting-Files aus der Wissensbasis sind für diesen Generator-Call relevant.\nNutze sie als Souschef-Wissen: klassische Verhältnisse, Substitutionen, Synonyme, Sub-Rezept-Patterns.\n\n## DOMAIN: fruchtgemuese-tomate-verwendung\n\nTomate: Säure, Süße, Garzeiten.",
+            "built_chars": 322,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [
+                "fruchtgemuese-tomate-verwendung@v1"
+            ],
+            "herkunft": {
+                "fruchtgemuese-tomate-verwendung": {
+                    "score": 0.01639344262295082,
+                    "via": "lexical",
+                    "lexical_rank": 1,
+                    "semantic_rank": null,
+                    "lexical_score": 0.5,
+                    "candidate_limit": 100,
+                    "chars": 31,
+                    "sent": 31
+                }
+            },
+            "kanon_required_chars": 0,
+            "knowledge_budget": 49000,
+            "required_chars": 0,
+            "total_chars": 322,
+            "used_by_category": {
+                "domain": [
+                    "fruchtgemuese-tomate-verwendung@v1"
+                ]
+            }
+        },
+        "max_chars": {
+            "block": "",
+            "built_chars": 416,
+            "datenwerk": null,
+            "dropped_chars": 416,
+            "files_dropped": [
+                "fruchtgemuese-tomate-verwendung@v1",
+                "kueche-suppen-tomate@v1"
+            ],
+            "files_used": [],
+            "herkunft": {
+                "fruchtgemuese-tomate-verwendung": {
+                    "score": 0.01639344262295082,
+                    "via": "lexical",
+                    "lexical_rank": 1,
+                    "semantic_rank": null,
+                    "lexical_score": 0.5,
+                    "candidate_limit": 100,
+                    "chars": 31,
+                    "sent": 0
+                },
+                "kueche-suppen-tomate": {
+                    "score": 0.01639344262295082,
+                    "via": "lexical",
+                    "lexical_rank": 1,
+                    "semantic_rank": null,
+                    "lexical_score": 0.6,
+                    "candidate_limit": 100,
+                    "chars": 42,
+                    "sent": 0
+                }
+            },
+            "kanon_required_chars": 0,
+            "knowledge_budget": 49000,
+            "required_chars": 0,
+            "total_chars": 0,
+            "used_by_category": []
+        },
+        "scope": {
+            "block": "# VAULT-WISSEN (Catering-Wissensbasis)\n\nFolgende Domain- und Cross-Cutting-Files aus der Wissensbasis sind für diesen Generator-Call relevant.\nNutze sie als Souschef-Wissen: klassische Verhältnisse, Substitutionen, Synonyme, Sub-Rezept-Patterns.\n\n## DOMAIN: fonds-bruehen-ansatz\n\nFonds: Ansatz, Auszug, Klärung.",
+            "built_chars": 311,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [
+                "fonds-bruehen-ansatz@v1"
+            ],
+            "herkunft": {
+                "fonds-bruehen-ansatz": {
+                    "score": 0.01639344262295082,
+                    "via": "lexical",
+                    "lexical_rank": 1,
+                    "semantic_rank": null,
+                    "lexical_score": 0.4222222222222222,
+                    "candidate_limit": 100,
+                    "chars": 31,
+                    "sent": 31
+                }
+            },
+            "kanon_required_chars": 0,
+            "knowledge_budget": 49000,
+            "required_chars": 0,
+            "total_chars": 311,
+            "used_by_category": {
+                "domain": [
+                    "fonds-bruehen-ansatz@v1"
+                ]
+            }
+        }
+    },
+    "contextFor.arten": {
+        "voll": {
+            "block": "# VAULT-WISSEN (Catering-Wissensbasis)\n\nFolgende Domain- und Cross-Cutting-Files aus der Wissensbasis sind für diesen Generator-Call relevant.\nNutze sie als Souschef-Wissen: klassische Verhältnisse, Substitutionen, Synonyme, Sub-Rezept-Patterns.\n\n## CROSS_CUTTING: synonyme\n\nSynonyme: Paradeiser = Tomate, Schlagobers = Sahne.\n\n---\n\n## CROSS_CUTTING: mengen_defaults\n\nMengen: Suppe 250 ml je Portion.\n\n---\n\n## CROSS_CUTTING: techniken\n\nTechniken: Confieren, Sous-vide, Glasieren.\n\n# FACHWISSEN-WISSEN\n\n## FACHWISSEN: fachwissen-basilikum-tomate\n\nFachwissen Basilikum zu Tomate, spät zugeben.\n\n# REFERENZEN (optionale Inspiration; keine verbindlichen Regeln)\n\n## REFERENZ: referenz-tomatensuppe-klassiker\n\nReferenz: klassische Tomatensuppe.",
+            "built_chars": 739,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [
+                "synonyme@v1",
+                "mengen_defaults@v1",
+                "techniken@v1",
+                "fachwissen-basilikum-tomate@v1",
+                "referenz-tomatensuppe-klassiker@v1"
+            ],
+            "herkunft": {
+                "fachwissen-basilikum-tomate": {
+                    "score": 0.01639344262295082,
+                    "via": "lexical",
+                    "lexical_rank": 1,
+                    "semantic_rank": null,
+                    "lexical_score": 0.75,
+                    "candidate_limit": 100,
+                    "chars": 45,
+                    "sent": 45
+                },
+                "referenz-tomatensuppe-klassiker": {
+                    "score": 0.01639344262295082,
+                    "via": "lexical",
+                    "lexical_rank": 1,
+                    "semantic_rank": null,
+                    "lexical_score": 0.6111111111111112,
+                    "candidate_limit": 100,
+                    "chars": 34,
+                    "sent": 34
+                }
+            },
+            "kanon_required_chars": 0,
+            "knowledge_budget": 16200,
+            "required_chars": 479,
+            "total_chars": 739,
+            "used_by_category": {
+                "cross_cutting": [
+                    "synonyme@v1",
+                    "mengen_defaults@v1",
+                    "techniken@v1"
+                ],
+                "art:fachwissen": [
+                    "fachwissen-basilikum-tomate@v1"
+                ],
+                "art:referenz": [
+                    "referenz-tomatensuppe-klassiker@v1"
+                ]
+            }
+        },
+        "nur_pflicht": {
+            "block": "# VAULT-WISSEN (Catering-Wissensbasis)\n\nFolgende Domain- und Cross-Cutting-Files aus der Wissensbasis sind für diesen Generator-Call relevant.\nNutze sie als Souschef-Wissen: klassische Verhältnisse, Substitutionen, Synonyme, Sub-Rezept-Patterns.\n\n## CROSS_CUTTING: synonyme\n\nSynonyme: Paradeiser = Tomate, Schlagobers = Sahne.\n\n---\n\n## CROSS_CUTTING: mengen_defaults\n\nMengen: Suppe 250 ml je Portion.\n\n---\n\n## CROSS_CUTTING: techniken\n\nTechniken: Confieren, Sous-vide, Glasieren.",
+            "built_chars": 479,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [
+                "synonyme@v1",
+                "mengen_defaults@v1",
+                "techniken@v1"
+            ],
+            "herkunft": [],
+            "kanon_required_chars": 0,
+            "knowledge_budget": 16200,
+            "required_chars": 479,
+            "total_chars": 479,
+            "used_by_category": {
+                "cross_cutting": [
+                    "synonyme@v1",
+                    "mengen_defaults@v1",
+                    "techniken@v1"
+                ]
+            }
+        },
+        "schmal_cross_cutting": {
+            "block": "",
+            "built_chars": 0,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [],
+            "herkunft": [],
+            "kanon_required_chars": 0,
+            "knowledge_budget": 16200,
+            "required_chars": 0,
+            "total_chars": 0,
+            "used_by_category": []
+        }
+    },
+    "contextFor.pairing_grounding": {
+        "treffer": {
+            "block": "### Pairing-Doku: basilikum\n# Basilikum\n## Pairings\n- [[tomate|Tomate]]\n- **Erdbeere**\n## Notizen\n- [[nicht|Nicht]]",
+            "built_chars": 115,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [
+                "pairing.basilikum@v1"
+            ],
+            "herkunft": [],
+            "kanon_required_chars": 0,
+            "knowledge_budget": 16200,
+            "required_chars": 0,
+            "total_chars": 115,
+            "used_by_category": {
+                "pairing_grounding": [
+                    "pairing.basilikum@v1"
+                ]
+            }
+        },
+        "leer": {
+            "block": "(keine spezifische Doku gefunden — nutze allgemeines Wissen)",
+            "built_chars": 60,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [],
+            "herkunft": [],
+            "kanon_required_chars": 0,
+            "knowledge_budget": 16200,
+            "required_chars": 0,
+            "total_chars": 60,
+            "used_by_category": []
+        }
+    },
+    "contextFor.voll": {
+        "block": "# CONCEPTING-WISSEN (Konzept-/Menü-Handwerk: Dramaturgie, Gang-Aufbau, Anlass- und Gäste-Fit, Balance)\n\nMaßstab für den PLAN: es sagt, WIE ein gutes Konzept gebaut ist — nicht, welches Gericht darin steht.\n\n## CONCEPT: concept-dramaturgie\n\n# Dramaturgie\nSpannungsbogen über die Gänge.\n\n---\n\n## CONCEPT: concept-gangaufbau\n\n# Gangaufbau\nLeicht → schwer → leicht.\n\n# ANLASS- & SEGMENT-WISSEN (aus den Leitplanken aufgelöst — verbindlicher Rahmen)\n\nDiese Dossiers gehören zum gewählten Anlass bzw. Verpflegungskontext. Sie setzen den\nRahmen für Portionierung, Service-Logik und Erwartungshaltung — nicht die Zutatenwahl.\n\n## OCCASION: Titel event_playbook_gala\n\nGala-Dinner: Portionierung, Service-Takt, Erwartung.\n\n# VAULT-WISSEN (Catering-Wissensbasis)\n\nFolgende Domain- und Cross-Cutting-Files aus der Wissensbasis sind für diesen Generator-Call relevant.\nNutze sie als Souschef-Wissen: klassische Verhältnisse, Substitutionen, Synonyme, Sub-Rezept-Patterns.\n\n## CROSS_CUTTING: synonyme\n\nSynonyme: Paradeiser = Tomate, Schlagobers = Sahne.\n\n---\n\n## CROSS_CUTTING: mengen_defaults\n\nMengen: Suppe 250 ml je Portion.\n\n---\n\n## CROSS_CUTTING: techniken\n\nTechniken: Confieren, Sous-vide, Glasieren.\n\n---\n\n## DOMAIN: fruchtgemuese-tomate-verwendung\n\nTomate: Säure, Süße, Garzeiten.\n\n---\n\n## DOMAIN: fonds-bruehen-ansatz\n\nFonds: Ansatz, Auszug, Klärung.\n\n# FLAVOR-PAIRING (gemessene Harmonie aus dem Anker-Graphen (Stil KREATIV — belegte Basis, Twists nur mit Partnern aus dieser Liste) — ●●● = echtes Food Pairing (Foodpairing best match, geteilte Aromastoffe); bevorzuge diese fuer Komponenten + Garnitur, erfinde KEINE unbelegten Paarungen. Kontrast (bewusstes Gegeneinander von Saeure/Fett/Textur) leite aus dem Pairing-Prinzip + Kochwissen ab, NICHT aus dieser Harmonie-Liste):\n- basilikum: Tomate ●●●\n- tomate: Basilikum ●●●\n\n### Zutat: tomate (verwendung)\nTomate Verwendung: roh, geschmort, als Fond-Basis.\n\n# NIVEAU-WISSEN\n\n## NIVEAU: niveau-gehoben-teller\n\nGehoben am Teller: drei Texturen.\n\n# KUECHE-WISSEN\n\n## KUECHE: kueche-suppen-tomate\n\nSuppen-Küche: Tomatensuppe, Ansatz, Mixen.\n\n# REFERENZ-WISSEN (produktion)\n\n## PRODUKTION: produktion-kapazitat-a\n\nProduktion A: 40 Portionen je Stunde.",
+        "built_chars": 2195,
+        "datenwerk": null,
+        "dropped_chars": 0,
+        "files_dropped": [],
+        "files_used": [
+            "concept-dramaturgie@v1",
+            "concept-gangaufbau@v2",
+            "event_playbook_gala@v1",
+            "synonyme@v1",
+            "mengen_defaults@v1",
+            "techniken@v1",
+            "fruchtgemuese-tomate-verwendung@v1",
+            "fonds-bruehen-ansatz@v1",
+            "graph:basilikum",
+            "graph:tomate",
+            "zutat.tomate--verwendung@v1",
+            "niveau-gehoben-teller@v1",
+            "kueche-suppen-tomate@v1",
+            "produktion-kapazitat-a@v1"
+        ],
+        "herkunft": {
+            "event_playbook_gala": {
+                "score": null,
+                "via": "achse:occasion",
+                "chars": 52,
+                "sent": 52
+            },
+            "fruchtgemuese-tomate-verwendung": {
+                "score": 0.01639344262295082,
+                "via": "lexical",
+                "lexical_rank": 1,
+                "semantic_rank": null,
+                "lexical_score": 0.4714285714285714,
+                "candidate_limit": 100,
+                "chars": 31,
+                "sent": 31
+            },
+            "fonds-bruehen-ansatz": {
+                "score": 0.016129032258064516,
+                "via": "lexical",
+                "lexical_rank": 2,
+                "semantic_rank": null,
+                "lexical_score": 0.35384615384615387,
+                "candidate_limit": 100,
+                "chars": 31,
+                "sent": 31
+            },
+            "zutat.tomate--verwendung": {
+                "via": "zutat_grounding",
+                "score": 1.0,
+                "chars": 50,
+                "sent": 50,
+                "aspekt": "verwendung",
+                "hauptzutat": "tomate",
+                "hauptzutaten_quelle": "caller",
+                "anker_match": "exakt"
+            },
+            "zutat.basilikum": {
+                "via": "zutat_grounding",
+                "score": null,
+                "status": "ohne_dossier",
+                "aspekt": "verwendung",
+                "hauptzutaten_quelle": "caller",
+                "anker_match": "exakt",
+                "sent": 0
+            },
+            "zutat:gibtsnicht": {
+                "via": "zutat_grounding",
+                "score": null,
+                "status": "ohne_anker",
+                "hauptzutaten_quelle": "caller",
+                "sent": 0
+            },
+            "kueche-suppen-tomate": {
+                "score": 0.01639344262295082,
+                "via": "lexical",
+                "lexical_rank": 1,
+                "semantic_rank": null,
+                "lexical_score": 0.5714285714285714,
+                "candidate_limit": 100,
+                "chars": 42,
+                "sent": 42
+            }
+        },
+        "kanon_required_chars": 0,
+        "knowledge_budget": 16200,
+        "required_chars": 1302,
+        "total_chars": 2195,
+        "used_by_category": {
+            "concept": [
+                "concept-dramaturgie@v1",
+                "concept-gangaufbau@v2"
+            ],
+            "achse": [
+                "event_playbook_gala@v1"
+            ],
+            "cross_cutting": [
+                "synonyme@v1",
+                "mengen_defaults@v1",
+                "techniken@v1"
+            ],
+            "domain": [
+                "fruchtgemuese-tomate-verwendung@v1",
+                "fonds-bruehen-ansatz@v1"
+            ],
+            "pairing": [
+                "graph:basilikum",
+                "graph:tomate"
+            ],
+            "zutat": [
+                "zutat.tomate--verwendung@v1"
+            ],
+            "niveau": [
+                "niveau-gehoben-teller@v1"
+            ],
+            "kueche": [
+                "kueche-suppen-tomate@v1"
+            ],
+            "produktion": [
+                "produktion-kapazitat-a@v1"
+            ]
+        }
+    },
+    "contextFor.zutat_abgeleitet": {
+        "recipe.steps": {
+            "block": "### Zutat: tomate (verhalten)\nTomate Hitze: zerfällt, konzentriert.\n\n### Zutat: tomate (verhalten)\nTomate Säure: bremst Garung von Hülsenfrüchten.",
+            "built_chars": 146,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [
+                "zutat.tomate--verhalten-hitze@v1",
+                "zutat.tomate--verhalten-saeure@v1"
+            ],
+            "herkunft": {
+                "zutat.tomate--verhalten-hitze": {
+                    "via": "zutat_grounding",
+                    "score": 1.0,
+                    "chars": 37,
+                    "sent": 37,
+                    "aspekt": "verhalten",
+                    "hauptzutat": "tomate",
+                    "hauptzutaten_quelle": "abgeleitet",
+                    "anker_match": "exakt"
+                },
+                "zutat.tomate--verhalten-saeure": {
+                    "via": "zutat_grounding",
+                    "score": 1.0,
+                    "chars": 47,
+                    "sent": 47,
+                    "aspekt": "verhalten",
+                    "hauptzutat": "tomate",
+                    "hauptzutaten_quelle": "abgeleitet",
+                    "anker_match": "exakt"
+                },
+                "zutat:geschmort": {
+                    "via": "zutat_grounding",
+                    "score": null,
+                    "status": "ohne_anker",
+                    "hauptzutaten_quelle": "abgeleitet",
+                    "sent": 0
+                }
+            },
+            "kanon_required_chars": 0,
+            "knowledge_budget": 17200,
+            "required_chars": 0,
+            "total_chars": 146,
+            "used_by_category": {
+                "zutat": [
+                    "zutat.tomate--verhalten-hitze@v1",
+                    "zutat.tomate--verhalten-saeure@v1"
+                ]
+            }
+        },
+        "gp.suggest": {
+            "block": "### Zutat: tomate (steckbrief)\nTomate Steckbrief: Nachtschattengewächs.",
+            "built_chars": 71,
+            "datenwerk": null,
+            "dropped_chars": 0,
+            "files_dropped": [],
+            "files_used": [
+                "zutat.tomate--steckbrief@v1"
+            ],
+            "herkunft": {
+                "zutat.tomate--steckbrief": {
+                    "via": "zutat_grounding",
+                    "score": 1.0,
+                    "chars": 40,
+                    "sent": 40,
+                    "aspekt": "steckbrief",
+                    "hauptzutat": "tomate",
+                    "hauptzutaten_quelle": "caller",
+                    "anker_match": "exakt"
+                }
+            },
+            "kanon_required_chars": 0,
+            "knowledge_budget": 16200,
+            "required_chars": 0,
+            "total_chars": 71,
+            "used_by_category": {
+                "zutat": [
+                    "zutat.tomate--steckbrief@v1"
+                ]
+            }
+        }
+    },
+    "mcp": {
+        "searchDocuments": [
+            {
+                "slug": "kueche-suppen-tomate",
+                "title": "Titel kueche-suppen-tomate",
+                "category": "kueche",
+                "active": true,
+                "version": 1,
+                "char_count": 42,
+                "art": null,
+                "score": 0.01639344262295082,
+                "lexical_score": 0.4,
+                "lexical_rank": 1,
+                "semantic_rank": null,
+                "via": "lexical",
+                "candidate_limit": 100
+            },
+            {
+                "slug": "fachwissen-basilikum-tomate",
+                "title": "Titel fachwissen-basilikum-tomate",
+                "category": "technik",
+                "active": true,
+                "version": 1,
+                "char_count": 45,
+                "art": "fachwissen",
+                "score": 0.016129032258064516,
+                "lexical_score": 0.30000000000000004,
+                "lexical_rank": 2,
+                "semantic_rank": null,
+                "via": "lexical",
+                "candidate_limit": 100
+            },
+            {
+                "slug": "fruchtgemuese-tomate-verwendung",
+                "title": "Titel fruchtgemuese-tomate-verwendung",
+                "category": "domain",
+                "active": true,
+                "version": 1,
+                "char_count": 31,
+                "art": null,
+                "score": 0.015873015873015872,
+                "lexical_score": 0.30000000000000004,
+                "lexical_rank": 3,
+                "semantic_rank": null,
+                "via": "lexical",
+                "candidate_limit": 100
+            },
+            {
+                "slug": "zutat.tomate--steckbrief",
+                "title": "Titel zutat.tomate--steckbrief",
+                "category": "zutat",
+                "active": true,
+                "version": 1,
+                "char_count": 40,
+                "art": "fachwissen",
+                "score": 0.015625,
+                "lexical_score": 0.30000000000000004,
+                "lexical_rank": 4,
+                "semantic_rank": null,
+                "via": "lexical",
+                "candidate_limit": 100
+            },
+            {
+                "slug": "referenz-tomatensuppe-klassiker",
+                "title": "Titel referenz-tomatensuppe-klassiker",
+                "category": "referenzgericht",
+                "active": true,
+                "version": 1,
+                "char_count": 34,
+                "art": "referenz",
+                "score": 0.014705882352941176,
+                "lexical_score": 0.2,
+                "lexical_rank": 8,
+                "semantic_rank": null,
+                "via": "lexical",
+                "candidate_limit": 100
+            }
+        ],
+        "searchDocuments_kategorie_inaktiv": [
+            {
+                "slug": "concept-dramaturgie",
+                "title": "Titel concept-dramaturgie",
+                "category": "concept",
+                "active": true,
+                "version": 1,
+                "char_count": 44,
+                "art": null,
+                "score": 0.01639344262295082,
+                "lexical_score": 0.43333333333333335,
+                "lexical_rank": 1,
+                "semantic_rank": null,
+                "via": "lexical",
+                "candidate_limit": 100
+            },
+            {
+                "slug": "concept-gangaufbau",
+                "title": "Titel concept-gangaufbau",
+                "category": "concept",
+                "active": true,
+                "version": 2,
+                "char_count": 38,
+                "art": null,
+                "score": 0.016129032258064516,
+                "lexical_score": 0.43333333333333335,
+                "lexical_rank": 2,
+                "semantic_rank": null,
+                "via": "lexical",
+                "candidate_limit": 100
+            },
+            {
+                "slug": "concept-zzz-inaktiv",
+                "title": "Titel concept-zzz-inaktiv",
+                "category": "concept",
+                "active": false,
+                "version": 1,
+                "char_count": 7,
+                "art": null,
+                "score": 0.015873015873015872,
+                "lexical_score": 0.35,
+                "lexical_rank": 3,
+                "semantic_rank": null,
+                "via": "lexical",
+                "candidate_limit": 100
+            }
+        ],
+        "listDocuments": {
+            "total": 33,
+            "offset": 2,
+            "limit": 5,
+            "next_offset": 7,
+            "categories": {
+                "ablauf": 1,
+                "concept": 2,
+                "cross_cutting": 3,
+                "domain": 3,
+                "event_playbook": 1,
+                "kueche": 2,
+                "niveau": 3,
+                "pairing": 1,
+                "produktion": 2,
+                "referenzgericht": 1,
+                "regelwerk": 3,
+                "technik": 1,
+                "trend": 1,
+                "workflow": 4,
+                "zutat": 5
+            },
+            "documents": [
+                {
+                    "slug": "concept-gangaufbau",
+                    "title": "Titel concept-gangaufbau",
+                    "category": "concept",
+                    "art": null,
+                    "geltung": [],
+                    "active": true,
+                    "version": 2,
+                    "char_count": 38,
+                    "updated_at": "2026-11-01 10:00:00",
+                    "frontmatter": {
+                        "thema": null,
+                        "sub_thema": null,
+                        "relevanz": null,
+                        "recherche_datum": null,
+                        "tags": []
+                    }
+                },
+                {
+                    "slug": "mengen_defaults",
+                    "title": "Titel mengen_defaults",
+                    "category": "cross_cutting",
+                    "art": null,
+                    "geltung": [],
+                    "active": true,
+                    "version": 1,
+                    "char_count": 32,
+                    "updated_at": "2026-11-01 10:00:00",
+                    "frontmatter": {
+                        "thema": null,
+                        "sub_thema": null,
+                        "relevanz": null,
+                        "recherche_datum": null,
+                        "tags": []
+                    }
+                },
+                {
+                    "slug": "synonyme",
+                    "title": "Titel synonyme",
+                    "category": "cross_cutting",
+                    "art": null,
+                    "geltung": [],
+                    "active": true,
+                    "version": 1,
+                    "char_count": 51,
+                    "updated_at": "2026-11-01 10:00:00",
+                    "frontmatter": {
+                        "thema": null,
+                        "sub_thema": null,
+                        "relevanz": null,
+                        "recherche_datum": null,
+                        "tags": []
+                    }
+                },
+                {
+                    "slug": "techniken",
+                    "title": "Titel techniken",
+                    "category": "cross_cutting",
+                    "art": null,
+                    "geltung": [],
+                    "active": true,
+                    "version": 1,
+                    "char_count": 43,
+                    "updated_at": "2026-11-01 10:00:00",
+                    "frontmatter": {
+                        "thema": null,
+                        "sub_thema": null,
+                        "relevanz": null,
+                        "recherche_datum": null,
+                        "tags": []
+                    }
+                },
+                {
+                    "slug": "fonds-bruehen-ansatz",
+                    "title": "Titel fonds-bruehen-ansatz",
+                    "category": "domain",
+                    "art": null,
+                    "geltung": [],
+                    "active": true,
+                    "version": 1,
+                    "char_count": 31,
+                    "updated_at": "2026-11-01 10:00:00",
+                    "frontmatter": {
+                        "thema": null,
+                        "sub_thema": null,
+                        "relevanz": null,
+                        "recherche_datum": null,
+                        "tags": []
+                    }
+                }
+            ]
+        },
+        "listDocuments_kategorie_ohne_fm": {
+            "total": 3,
+            "offset": 0,
+            "limit": 200,
+            "next_offset": null,
+            "categories": {
+                "ablauf": 1,
+                "concept": 2,
+                "cross_cutting": 3,
+                "domain": 3,
+                "event_playbook": 1,
+                "kueche": 2,
+                "niveau": 3,
+                "pairing": 1,
+                "produktion": 2,
+                "referenzgericht": 1,
+                "regelwerk": 3,
+                "technik": 1,
+                "trend": 1,
+                "workflow": 4,
+                "zutat": 5
+            },
+            "documents": [
+                {
+                    "slug": "mengen_defaults",
+                    "title": "Titel mengen_defaults",
+                    "category": "cross_cutting",
+                    "art": null,
+                    "geltung": [],
+                    "active": true,
+                    "version": 1,
+                    "char_count": 32,
+                    "updated_at": "2026-11-01 10:00:00"
+                },
+                {
+                    "slug": "synonyme",
+                    "title": "Titel synonyme",
+                    "category": "cross_cutting",
+                    "art": null,
+                    "geltung": [],
+                    "active": true,
+                    "version": 1,
+                    "char_count": 51,
+                    "updated_at": "2026-11-01 10:00:00"
+                },
+                {
+                    "slug": "techniken",
+                    "title": "Titel techniken",
+                    "category": "cross_cutting",
+                    "art": null,
+                    "geltung": [],
+                    "active": true,
+                    "version": 1,
+                    "char_count": 43,
+                    "updated_at": "2026-11-01 10:00:00"
+                }
+            ]
+        },
+        "getDocument": {
+            "slug": "trend-mit-frontmatter",
+            "title": "Titel trend-mit-frontmatter",
+            "category": "trend",
+            "anchor_id": null,
+            "art": null,
+            "geltung": null,
+            "datenwerte": null,
+            "version": 1,
+            "char_count": 136,
+            "content_md": "---\nthema: Fermentation\nsub_thema: \"Koji\"\nrelevanz: hoch\ntags: [koji, 'miso', umami]\nquellen:\n  - Buch A\n  - \"Studie B\"\n---\n# Koji\nText."
+        },
+        "getDocument_inaktiv": null,
+        "sichtbareDokumente": [
+            "ablauf-anleitung",
+            "concept-dramaturgie",
+            "concept-gangaufbau",
+            "concept-zzz-inaktiv",
+            "event_playbook_gala",
+            "fachwissen-basilikum-tomate",
+            "fonds-bruehen-ansatz",
+            "fruchtgemuese-tomate-verwendung",
+            "gewuerze-thai-curry",
+            "kueche-dessert-schoko",
+            "kueche-suppen-tomate",
+            "mengen_defaults",
+            "niveau-gehoben-basis",
+            "niveau-gehoben-teller",
+            "niveau-klassisch-teller",
+            "pairing.basilikum",
+            "produktion-kapazitat-a",
+            "produktion-kapazitat-b",
+            "referenz-tomatensuppe-klassiker",
+            "regelwerk-basisrezepte-2",
+            "regelwerk-basisrezepte-6",
+            "regelwerk-verkaufsgerichte-1",
+            "synonyme",
+            "techniken",
+            "trend-mit-frontmatter",
+            "workflow.basisrezept_abschluss",
+            "workflow.basisrezept_erzeugen",
+            "workflow.basisrezept_komponenten",
+            "workflow.basisrezept_regeln",
+            "workflow.gericht_anlegen_mcp",
+            "workflow.rezept_anlegen_mcp",
+            "zutat.tomate--steckbrief",
+            "zutat.tomate--verhalten-hitze",
+            "zutat.tomate--verhalten-saeure",
+            "zutat.tomate--verwendung",
+            "zutat.tomatillo--verwendung"
+        ],
+        "mcpLesbareDokumente": [
+            "ablauf-anleitung",
+            "concept-dramaturgie",
+            "concept-gangaufbau",
+            "concept-zzz-inaktiv",
+            "event_playbook_gala",
+            "fachwissen-basilikum-tomate",
+            "fonds-bruehen-ansatz",
+            "fruchtgemuese-tomate-verwendung",
+            "gewuerze-thai-curry",
+            "kueche-dessert-schoko",
+            "kueche-suppen-tomate",
+            "mengen_defaults",
+            "niveau-gehoben-basis",
+            "niveau-gehoben-teller",
+            "niveau-klassisch-teller",
+            "pairing.basilikum",
+            "produktion-kapazitat-a",
+            "produktion-kapazitat-b",
+            "referenz-tomatensuppe-klassiker",
+            "regelwerk-basisrezepte-2",
+            "regelwerk-basisrezepte-6",
+            "regelwerk-verkaufsgerichte-1",
+            "synonyme",
+            "techniken",
+            "trend-mit-frontmatter",
+            "workflow.basisrezept_abschluss",
+            "workflow.basisrezept_erzeugen",
+            "workflow.basisrezept_komponenten",
+            "workflow.basisrezept_regeln",
+            "workflow.gericht_anlegen_mcp",
+            "workflow.rezept_anlegen_mcp",
+            "zutat.tomate--steckbrief",
+            "zutat.tomate--verhalten-hitze",
+            "zutat.tomate--verhalten-saeure",
+            "zutat.tomate--verwendung",
+            "zutat.tomatillo--verwendung"
+        ],
+        "sichtbareDokumente_ohne_team": 0
+    },
+    "routing_budget": {
+        "routingFeatureFuer": [
+            "ai_generate_recipe",
+            "ai_generate_recipe",
+            "recipe.eigenschaften",
+            "concept.plan"
+        ],
+        "crossCuttingSlugs": {
+            "standard": [
+                "substitutionen",
+                "saisonkalender",
+                "synonyme",
+                "sauce_mutterstrukturen",
+                "mengen_defaults",
+                "techniken",
+                "bruehen_fonds"
+            ],
+            "schmal": [
+                "synonyme"
+            ]
+        },
+        "budgetFuer": [
+            48000,
+            48000,
+            49000,
+            16200,
+            33200
+        ],
+        "pflichtZeichen": 588,
+        "pflichtBudgetFuer": {
+            "required_chars": 945,
+            "budget": 16200,
+            "ok": true
+        },
+        "proposeOptionen": [
+            {
+                "knowledge": "X",
+                "knowledge_used": [
+                    "a@v1"
+                ],
+                "knowledge_dropped_chars": 7
+            },
+            {
+                "knowledge": null,
+                "knowledge_used": [],
+                "knowledge_dropped_chars": 0
+            }
+        ],
+        "regelwerkDossiersFuer": {
+            "recipe.generator": [
+                {
+                    "slug": "regelwerk-basisrezepte-2",
+                    "title": "Titel regelwerk-basisrezepte-2",
+                    "char_count": 41,
+                    "version": 1
+                },
+                {
+                    "slug": "regelwerk-basisrezepte-6",
+                    "title": "Titel regelwerk-basisrezepte-6",
+                    "char_count": 30,
+                    "version": 1
+                }
+            ],
+            "vk.review": [
+                "regelwerk-verkaufsgerichte-1"
+            ],
+            "unbekannt": []
+        },
+        "kanonTextFuer": {
+            "text": null,
+            "files_used": []
+        }
+    },
+    "text": {
+        "tokenize": [
+            "aepfel",
+            "schmorgurke",
+            "weisskraut",
+            "oel",
+            "groesse"
+        ],
+        "jaccard": [
+            0.5,
+            0.0,
+            1.0
+        ],
+        "truncate": [
+            "kurz",
+            "ein lang\n\n[…gekürzt für KI-Kontext…]"
+        ],
+        "extractPairingNames": {
+            "alle": [
+                "Basilikum",
+                "erdbeere",
+                "Oliven",
+                "Mozzarella",
+                "Rhabarber"
+            ],
+            "klassisch": [
+                "Basilikum",
+                "Mozzarella"
+            ],
+            "modern_verbund": [
+                "erdbeere",
+                "Rhabarber"
+            ],
+            "ohne_region": []
+        },
+        "frontmatterOf": {
+            "mit": {
+                "thema": "Fermentation",
+                "sub_thema": "Koji",
+                "relevanz": "hoch",
+                "tags": [
+                    "koji",
+                    "miso",
+                    "umami"
+                ],
+                "quellen": [
+                    "Buch A",
+                    "Studie B"
+                ]
+            },
+            "ohne": [],
+            "bom": {
+                "tags": [
+                    "einzeln"
+                ]
+            }
+        }
+    }
+}

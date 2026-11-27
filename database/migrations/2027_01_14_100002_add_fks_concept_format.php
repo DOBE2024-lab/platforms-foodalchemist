@@ -28,6 +28,9 @@ return new class extends Migration
         ['foodalchemist_offer_concept', 'concept_id', 'foodalchemist_concepts', Fremdschluessel::RESTRICT],
         ['foodalchemist_offer_concept', 'offer_id', 'foodalchemist_offers', Fremdschluessel::RESTRICT],
         ['foodalchemist_dish_ideas', 'sales_recipe_id', 'foodalchemist_recipes', Fremdschluessel::RESTRICT],
+        // 3.5 Schritt 4 (Paul) benennt sales_recipe_id → recipe_id um. Läuft das Rename vor dieser Migration, greift diese Zeile
+        // (die obere wird übersprungen); danach findet besteht() den FK über die Spalte — der FK-Name bleibt *_sales_recipe_id_foreign.
+        ['foodalchemist_dish_ideas', 'recipe_id', 'foodalchemist_recipes', Fremdschluessel::RESTRICT],
     ];
 
     public function up(): void

@@ -28,9 +28,11 @@ function fkMigrationsListe(): array
 it('legt die 49 Fremdschlüssel der Kernkette an (Test-Schema = io nach der Migration)', function () {
     $liste = fkMigrationsListe();
 
-    expect($liste)->toHaveCount(49);
-    $fehlt = array_values(array_filter($liste, fn ($fk) => ! Fremdschluessel::besteht($fk[0], $fk[1], $fk[2])));
-    expect($fehlt)->toBe([]);
+    // 50 Einträge: dish_ideas steht mit sales_recipe_id UND recipe_id drin (Rename 3.5 Schritt 4) — es gibt immer nur eine der Spalten
+    expect($liste)->toHaveCount(50);
+    $vorhanden = array_values(array_filter($liste, fn ($fk) => Schema::hasColumn($fk[0], $fk[1])));
+    $fehlt = array_values(array_filter($vorhanden, fn ($fk) => ! Fremdschluessel::besteht($fk[0], $fk[1], $fk[2])));
+    expect($vorhanden)->toHaveCount(49)->and($fehlt)->toBe([]);
 });
 
 it('nie cascade: nur restrict oder set null, set null nur auf nullbaren Selbstbezügen und Varianten-Quellen', function () {

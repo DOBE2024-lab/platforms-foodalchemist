@@ -63,7 +63,9 @@ final class Fremdschluessel
 
             return;
         }
-        Schema::table($tabelle, fn (Blueprint $t) => $t->dropForeign([$spalte]));
+        // Namen aus dem Schema: nach einem Spalten-Rename trägt der FK noch den alten Namen (z. B. dish_ideas …_sales_recipe_id_foreign)
+        $name = self::name($tabelle, $spalte, $ziel);
+        Schema::table($tabelle, fn (Blueprint $t) => $name !== null ? $t->dropForeign($name) : $t->dropForeign([$spalte]));
     }
 
     public static function besteht(string $tabelle, string $spalte, string $ziel): bool
@@ -75,6 +77,17 @@ final class Fremdschluessel
         }
 
         return false;
+    }
+
+    private static function name(string $tabelle, string $spalte, string $ziel): ?string
+    {
+        foreach (Schema::getForeignKeys($tabelle) as $fk) {
+            if ($fk['columns'] === [$spalte] && self::ohneSchema($fk['foreign_table']) === $ziel) {
+                return $fk['name'];
+            }
+        }
+
+        return null;
     }
 
     /**

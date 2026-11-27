@@ -71,7 +71,7 @@ it('SpeiseplanService::dupliziere kopiert Kopf + Linien + Zellen (line_id remapp
     $linie = $plan->lines()->orderBy('sort_order')->first();
     $gericht = $this->makeRecipe($this->team, 'Suppe', ['is_sales_recipe' => true]);
     $svc->addEintrag($this->team, $plan->id, [
-        'entry_date' => '2027-06-07', 'mahlzeit' => 'mittag', 'line_id' => $linie->id, 'sales_recipe_id' => $gericht->id,
+        'entry_date' => '2027-06-07', 'mahlzeit' => 'mittag', 'line_id' => $linie->id, 'recipe_id' => $gericht->id,
     ]);
 
     $neu = $svc->dupliziere($this->team, $plan->id);
@@ -87,5 +87,5 @@ it('SpeiseplanService::dupliziere kopiert Kopf + Linien + Zellen (line_id remapp
     $neuEintrag = $neu->entries()->first();
     expect($neu->lines()->pluck('id')->contains($neuEintrag->line_id))->toBeTrue()
         ->and($neuEintrag->line_id)->not->toBe($linie->id)
-        ->and($neuEintrag->sales_recipe_id)->toBe($gericht->id);
+        ->and($neuEintrag->recipe_id)->toBe($gericht->id);
 });

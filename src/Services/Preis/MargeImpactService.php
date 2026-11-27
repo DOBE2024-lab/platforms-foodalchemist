@@ -210,7 +210,7 @@ class MargeImpactService
         usort($rows, fn ($a, $b) => abs($b['marge_delta_eur']) <=> abs($a['marge_delta_eur']));
         $gerichtIds = array_column($rows, 'recipe_id');
         $nConcepts = $gerichtIds === [] ? 0 : DB::table('foodalchemist_concept_slots')
-            ->whereIn('sales_recipe_id', $gerichtIds)->whereNull('deleted_at')
+            ->whereIn('recipe_id', $gerichtIds)->whereNull('deleted_at')
             ->whereNotNull('concept_id')->distinct()->count('concept_id');
 
         return [

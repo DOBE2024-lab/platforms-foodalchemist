@@ -37,7 +37,7 @@ beforeEach(function () {
     $mkSlot = function () {
         $s = $this->svc->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Gang']);
 
-        return $this->svc->fillSlot($this->rootTeam, $s->id, ['sales_recipe_id' => $this->dish->id]);
+        return $this->svc->fillSlot($this->rootTeam, $s->id, ['recipe_id' => $this->dish->id]);
     };
     $this->slotA = $mkSlot();
     $this->slotB = $mkSlot();
@@ -162,17 +162,17 @@ it('concept_slot_variante.SWAP + RESET: konzept-lokaler Zutat-Tausch', function 
     app(RecipeRecomputeService::class)->recomputePipeline($gericht->id);
 
     $slot = $this->svc->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Dessert']);
-    $slot = $this->svc->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $gericht->id]);
+    $slot = $this->svc->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $gericht->id]);
 
     $swap = ($this->run)('foodalchemist.concept_slot_variante.SWAP', ['slot_id' => $slot->id, 'ingredient_id' => $zutat->id]);
     expect($swap->success)->toBeTrue('swap: ' . ($swap->error ?? ''));
-    $variante = FoodAlchemistRecipe::find(FoodAlchemistConceptSlot::find($slot->id)->sales_recipe_id);
+    $variante = FoodAlchemistRecipe::find(FoodAlchemistConceptSlot::find($slot->id)->recipe_id);
     expect((int) $variante->variant_source_recipe_id)->toBe($gericht->id)
         ->and((int) $variante->ingredients()->first()->gp_id)->toBe($margarine->id);
 
     $reset = ($this->run)('foodalchemist.concept_slot_variante.RESET', ['slot_id' => $slot->id]);
     expect($reset->success)->toBeTrue('reset: ' . ($reset->error ?? ''));
-    expect((int) FoodAlchemistConceptSlot::find($slot->id)->sales_recipe_id)->toBe($gericht->id);
+    expect((int) FoodAlchemistConceptSlot::find($slot->id)->recipe_id)->toBe($gericht->id);
 });
 
 it('Guards: unbekannt → NOT_FOUND; fremd → ACCESS_DENIED; leere felder → VALIDATION_ERROR', function () {

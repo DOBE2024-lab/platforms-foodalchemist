@@ -26,7 +26,7 @@ class DarreichungResolver
     public function fuerSlot(FoodAlchemistConceptSlot $slot): ?FoodAlchemistRecipeDarreichung
     {
         // B7 (98 · 3.6 PR6): nur eine Darreichung DIESES Gerichts — eine fremde (Altbestand nach Gerichtswechsel) zählt nicht
-        if ($slot->presentation_id !== null && $slot->presentation !== null && (int) $slot->presentation->recipe_id === (int) $slot->sales_recipe_id) {
+        if ($slot->presentation_id !== null && $slot->presentation !== null && (int) $slot->presentation->recipe_id === (int) $slot->recipe_id) {
             return $slot->presentation;
         }
 
@@ -88,11 +88,11 @@ class DarreichungResolver
      */
     public function fuerSpeiseplanEintrag(FoodAlchemistSpeiseplanEintrag $e): ?FoodAlchemistRecipeDarreichung
     {
-        if ($e->sales_recipe_id === null || $e->dish === null) {
+        if ($e->recipe_id === null || $e->dish === null) {
             return null;
         }
         if ($e->presentation_id !== null && $e->presentation !== null
-            && (int) $e->presentation->recipe_id === (int) $e->sales_recipe_id) {
+            && (int) $e->presentation->recipe_id === (int) $e->recipe_id) {
             return $e->presentation;
         }
 

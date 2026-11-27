@@ -56,7 +56,7 @@ it('Editor: Zelle (Datum × Mittag) mit Gericht belegen — Eintrag erscheint', 
     expect($e)->not->toBeNull()
         ->and($e->entry_date->format('Y-m-d'))->toBe($montag)
         ->and($e->meal)->toBe('mittag')
-        ->and($e->sales_recipe_id)->toBe($this->gericht->id);
+        ->and($e->recipe_id)->toBe($this->gericht->id);
 });
 
 it('gerichtKandidaten (Spec 42): browst ohne Suche, filtert Hauptgruppe, schließt Varianten aus', function () {

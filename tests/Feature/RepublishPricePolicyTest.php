@@ -43,7 +43,7 @@ beforeEach(function () {
         'speisekarte_id' => $this->karteId, 'title' => 'Fisch', 'art' => 'speisen',
     ], $this->kontext)->data['rubrik']['id'];
     $this->registry->get('foodalchemist.speisekarte_positionen.POST')->execute([
-        'rubrik_id' => $this->rubrikId, 'type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id,
+        'rubrik_id' => $this->rubrikId, 'type' => 'gericht_ref', 'recipe_id' => $this->gericht->id,
     ], $this->kontext);
 
     // Preise des aktuell gespeicherten (Standard-Link-)Snapshots als Liste der Netto-Werte.
@@ -83,7 +83,7 @@ it('neue Speise kommt beim preserve-Republish LIVE rein, bestehende bleibt einge
         'is_standard' => true, 'ek_portion' => 5, 'sales_net' => 50.0,
     ]);
     $this->registry->get('foodalchemist.speisekarte_positionen.POST')->execute([
-        'rubrik_id' => $this->rubrikId, 'type' => 'gericht_ref', 'sales_recipe_id' => $g2->id,
+        'rubrik_id' => $this->rubrikId, 'type' => 'gericht_ref', 'recipe_id' => $g2->id,
     ], $this->kontext);
 
     ($this->publishStd)();                                    // preserve

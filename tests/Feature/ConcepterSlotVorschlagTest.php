@@ -150,7 +150,7 @@ it('Concepter-Editor: ✨ Vorschlag füllt die Position — und legt dabei KEIN 
     $haupt = ($this->gericht)('Rinderbraten', $this->hgHaupt, 22.00);
     // Konzept OHNE Gerüst: der Vorschlag muss trotzdem tragen (Rolle + Anker ranken auch ohne Vorgaben).
     $ohneFrame = $this->makeConcept($this->rootTeam, 'Freies Menü');
-    $slot = $this->makeConceptSlot($ohneFrame, ['role' => 'Hauptgang', 'sales_recipe_id' => null]);
+    $slot = $this->makeConceptSlot($ohneFrame, ['role' => 'Hauptgang', 'recipe_id' => null]);
 
     $c = Livewire::test(Editor::class)
         ->call('oeffnen', 'concepts', $ohneFrame->id)
@@ -162,13 +162,13 @@ it('Concepter-Editor: ✨ Vorschlag füllt die Position — und legt dabei KEIN 
 
     $c->call('vorschlagUebernehmen', $slot->id, $haupt->id);
 
-    expect((int) $slot->refresh()->sales_recipe_id)->toBe($haupt->id)
+    expect((int) $slot->refresh()->recipe_id)->toBe($haupt->id)
         ->and($c->get('slotVorschlaege'))->not->toHaveKey($slot->id);
 });
 
 it('Concepter-Editor: zweiter Klick klappt die Rangliste wieder zu, Verwerfen nimmt eine Zeile', function () {
     $haupt = ($this->gericht)('Rinderbraten', $this->hgHaupt, 22.00);
-    $slot = $this->makeConceptSlot($this->konzept, ['role' => 'Hauptgang', 'sales_recipe_id' => null]);
+    $slot = $this->makeConceptSlot($this->konzept, ['role' => 'Hauptgang', 'recipe_id' => null]);
 
     $c = Livewire::test(Editor::class)
         ->call('oeffnen', 'concepts', $this->konzept->id)
@@ -192,7 +192,7 @@ it('Gerichte gebuchter Pakete zählen zur Kohäsions-Basis', function () {
     // 98 · 2.6c: Paket = kind=paket-Concept, eingebettet über embedded_concept_id
     $cs = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $paket = $cs->createPaket($this->rootTeam, ['name' => 'Fisch-Station']);
-    $cs->fillSlot($this->rootTeam, $cs->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeisen'])->id, ['sales_recipe_id' => $imPaket->id]);
+    $cs->fillSlot($this->rootTeam, $cs->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeisen'])->id, ['recipe_id' => $imPaket->id]);
     $this->makeConceptSlot($this->konzept, ['role' => 'Vorspeisen', 'type' => 'paket', 'embedded_concept_id' => $paket->id, 'position' => 1]);
 
     $angus = ($this->gericht)('Angus-Braten', $this->hgHaupt, 24.00);
@@ -200,7 +200,7 @@ it('Gerichte gebuchter Pakete zählen zur Kohäsions-Basis', function () {
     $wild = ($this->gericht)('Wildlachs-Filet', $this->hgHaupt, 26.00);
     $this->makeIngredient($wild, 'Lachs', $lachs);
 
-    $offen = $this->makeConceptSlot($this->konzept, ['role' => 'Hauptgang', 'sales_recipe_id' => null, 'position' => 2]);
+    $offen = $this->makeConceptSlot($this->konzept, ['role' => 'Hauptgang', 'recipe_id' => null, 'position' => 2]);
 
     $c = Livewire::test(Editor::class)
         ->call('oeffnen', 'concepts', $this->konzept->id)
@@ -215,7 +215,7 @@ it('Gerichte gebuchter Pakete zählen zur Kohäsions-Basis', function () {
 
 it('Struktur-Blöcke bekommen keinen Vorschlag (sie tragen kein Gericht)', function () {
     ($this->gericht)('Rinderbraten', $this->hgHaupt, 22.00);
-    $header = $this->makeConceptSlot($this->konzept, ['role' => 'Hauptgang', 'type' => 'header', 'sales_recipe_id' => null]);
+    $header = $this->makeConceptSlot($this->konzept, ['role' => 'Hauptgang', 'type' => 'header', 'recipe_id' => null]);
 
     $c = Livewire::test(Editor::class)
         ->call('oeffnen', 'concepts', $this->konzept->id)

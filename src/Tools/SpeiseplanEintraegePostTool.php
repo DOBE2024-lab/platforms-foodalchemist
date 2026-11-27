@@ -24,7 +24,7 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
     {
         return 'Hängt einen Eintrag an einen draft-Speiseplan: datum (YYYY-MM-DD) + mahlzeit '
             . '(fruehstueck|mittag|abend|snack) + line_id (aus speiseplaene.POST) + GENAU EINES von '
-            . 'concept_id | sales_recipe_id (nur Gerichte, keine Basisrezepte; ein Paket = Concept mit kind=paket über concept_id). Optional presentation_id = '
+            . 'concept_id | recipe_id (nur Gerichte, keine Basisrezepte; ein Paket = Concept mit kind=paket über concept_id). Optional presentation_id = '
             . 'Darreichung des Gerichts (ohne Angabe gilt die Standard-Darreichung).';
     }
 
@@ -38,8 +38,9 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
                 'mahlzeit' => ['type' => 'string', 'enum' => ['fruehstueck', 'mittag', 'abend', 'snack'], 'default' => 'mittag'],
                 'line_id' => ['type' => 'integer'],
                 'concept_id' => ['type' => 'integer'],
-                'sales_recipe_id' => ['type' => 'integer'],
-                'presentation_id' => ['type' => 'integer', 'description' => 'Optional: Darreichung des Gerichts (nur mit sales_recipe_id).'],
+                'recipe_id' => ['type' => 'integer'],
+                'sales_recipe_id' => \Platform\FoodAlchemist\Support\RezeptIdAlias::schema(),
+                'presentation_id' => ['type' => 'integer', 'description' => 'Optional: Darreichung des Gerichts (nur mit recipe_id).'],
             ],
             'required' => ['menu_plan_id', 'entry_date'],
         ];
@@ -47,6 +48,7 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
@@ -60,11 +62,11 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
         if ($plan->statusWert() !== AusgabeStatus::Entwurf) {
             return ToolResult::error("Speiseplan hat Status \"{$plan->statusWert()->label()}\" — via MCP ist nur ein Entwurf editierbar.", 'ACCESS_DENIED');
         }
-        $ziele = array_values(array_intersect(['concept_id', 'sales_recipe_id'], array_keys(array_filter($arguments))));
+        $ziele = array_values(array_intersect(['concept_id', 'recipe_id'], array_keys(array_filter($arguments))));
         if (count($ziele) !== 1) {
-            return ToolResult::error('Genau EINES von concept_id, sales_recipe_id angeben.', 'VALIDATION_ERROR');
+            return ToolResult::error('Genau EINES von concept_id, recipe_id angeben.', 'VALIDATION_ERROR');
         }
-        $refModelle = ['concept_id' => FoodAlchemistConcept::class, 'sales_recipe_id' => FoodAlchemistRecipe::class];
+        $refModelle = ['concept_id' => FoodAlchemistConcept::class, 'recipe_id' => FoodAlchemistRecipe::class];
         foreach ($refModelle as $key => $model) {
             if (! empty($arguments[$key]) && ! $model::visibleToTeam($team)->whereKey((int) $arguments[$key])->exists()) {
                 return ToolResult::error("{$key} nicht sichtbar/vorhanden.", 'NOT_FOUND');
@@ -77,7 +79,7 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
                 'mahlzeit' => $arguments['mahlzeit'] ?? 'mittag',
                 'line_id' => $arguments['line_id'] ?? null,
                 'concept_id' => $arguments['concept_id'] ?? null,
-                'sales_recipe_id' => $arguments['sales_recipe_id'] ?? null,
+                'recipe_id' => $arguments['recipe_id'] ?? null,
                 'presentation_id' => $arguments['presentation_id'] ?? null,
             ]);
         } catch (\Throwable $ex) {
@@ -87,7 +89,7 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
         return ToolResult::success(['eintrag' => [
             'id' => $e->id, 'entry_date' => (string) $e->entry_date, 'mahlzeit' => $e->meal,
             'line_id' => $e->line_id, 'concept_id' => $e->concept_id,
-            'sales_recipe_id' => $e->sales_recipe_id,
+            ...\Platform\FoodAlchemist\Support\RezeptIdAlias::beide($e->recipe_id),
             'presentation_id' => $e->presentation_id,
         ]]);
     }

@@ -37,10 +37,10 @@ it('0.1: addEintrag nimmt nur sichtbare Inhalte an — eigenes und geerbtes ja, 
     $geerbt = ($this->gericht)($this->rootTeam, 'Master-Gericht');
     $fremd = ($this->gericht)($this->childB, 'Fremdes Gericht');
 
-    expect($this->svc->addEintrag($this->childA, $plan->id, ['entry_date' => $this->mo, 'sales_recipe_id' => $eigen->id])->sales_recipe_id)->toBe($eigen->id)
-        ->and($this->svc->addEintrag($this->childA, $plan->id, ['entry_date' => $this->mo, 'sales_recipe_id' => $geerbt->id])->sales_recipe_id)->toBe($geerbt->id);
+    expect($this->svc->addEintrag($this->childA, $plan->id, ['entry_date' => $this->mo, 'recipe_id' => $eigen->id])->recipe_id)->toBe($eigen->id)
+        ->and($this->svc->addEintrag($this->childA, $plan->id, ['entry_date' => $this->mo, 'recipe_id' => $geerbt->id])->recipe_id)->toBe($geerbt->id);
 
-    expect(fn () => $this->svc->addEintrag($this->childA, $plan->id, ['entry_date' => $this->mo, 'sales_recipe_id' => $fremd->id]))
+    expect(fn () => $this->svc->addEintrag($this->childA, $plan->id, ['entry_date' => $this->mo, 'recipe_id' => $fremd->id]))
         ->toThrow(RuntimeException::class, 'nicht sichtbar');
     expect(fn () => $this->svc->addEintrag($this->childA, $plan->id, ['entry_date' => $this->mo]))
         ->toThrow(RuntimeException::class, 'Genau einen Inhalt');
@@ -64,7 +64,7 @@ it('0.1: auch der Editor kann kein Gericht eines fremden Teams einhängen', func
 it('0.2: → Produktion ist wiederholbar — zweiter Aufruf aktualisiert, ein laufender Auftrag bleibt unberührt', function () {
     $g = ($this->gericht)($this->rootTeam, 'Tagessuppe');
     $sp = $this->svc->create($this->rootTeam, ['name' => 'Prod', 'start_date' => $this->mo]);
-    $e = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $g->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $g->id]);
     $mo = Carbon::parse($this->mo);
 
     $r1 = $this->svc->wocheAnProduktion($this->rootTeam, $sp->refresh(), 'mittag', $mo);
@@ -89,18 +89,18 @@ it('0.3: Ausrollen nimmt Pax mit und lässt belegte Zellen stehen — außer mit
     $hand = ($this->gericht)($this->rootTeam, 'Handgesetzt');
     $sp = $this->svc->create($this->rootTeam, ['name' => 'Zyklus', 'start_date' => $this->mo, 'cycle_weeks' => 1]);
     $linie = $sp->lines()->first();
-    $e = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $linie->id, 'sales_recipe_id' => $vorlage->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $linie->id, 'recipe_id' => $vorlage->id]);
     $this->svc->setEintragPax($this->rootTeam, $e->id, 70);
-    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-12', 'line_id' => $linie->id, 'sales_recipe_id' => $hand->id]);
+    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-12', 'line_id' => $linie->id, 'recipe_id' => $hand->id]);
 
     expect($this->svc->vorlageAusrollen($this->rootTeam, $sp->id, '2026-10-19'))->toBe(1);   // nur der 19.10.
     $am12 = $sp->entries()->whereDate('entry_date', '2026-10-12')->get();
-    expect($am12)->toHaveCount(1)->and($am12->first()->sales_recipe_id)->toBe($hand->id)
+    expect($am12)->toHaveCount(1)->and($am12->first()->recipe_id)->toBe($hand->id)
         ->and($sp->entries()->whereDate('entry_date', '2026-10-19')->first()->pax)->toBe(70);
 
     $this->svc->vorlageAusrollen($this->rootTeam, $sp->id, '2026-10-19', true);
     $am12 = $sp->entries()->whereDate('entry_date', '2026-10-12')->get();
-    expect($am12)->toHaveCount(1)->and($am12->first()->sales_recipe_id)->toBe($vorlage->id)
+    expect($am12)->toHaveCount(1)->and($am12->first()->recipe_id)->toBe($vorlage->id)
         ->and($sp->entries()->whereDate('entry_date', '2026-10-19')->count())->toBe(1);
 });
 
@@ -108,7 +108,7 @@ it('0.4: Veröffentlichen aus dem Editor friert die sichtbare Woche ein, nicht d
     $this->actingAs($this->makeUser($this->rootTeam));
     $g = ($this->gericht)($this->rootTeam, 'Gulasch');
     $sp = $this->svc->create($this->rootTeam, ['name' => 'Aushang', 'start_date' => $this->mo]);
-    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-12', 'line_id' => $sp->lines()->first()->id, 'sales_recipe_id' => $g->id]);
+    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-12', 'line_id' => $sp->lines()->first()->id, 'recipe_id' => $g->id]);
 
     Livewire::test(SpeiseplanEditor::class)
         ->call('oeffnenBearbeiten', $sp->id)
@@ -125,7 +125,7 @@ it('0.4: Veröffentlichen aus dem Editor friert die sichtbare Woche ein, nicht d
 it('0.5: der Aushang zeigt das Wording, nicht den internen Namen', function () {
     $g = ($this->gericht)($this->rootTeam, '[HG] Rinderroulade intern', ['sales_wording_standard' => 'Rinderroulade | Rotkohl']);
     $sp = $this->svc->create($this->rootTeam, ['name' => 'Wording', 'start_date' => $this->mo]);
-    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $sp->lines()->first()->id, 'sales_recipe_id' => $g->id]);
+    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $sp->lines()->first()->id, 'recipe_id' => $g->id]);
 
     $dok = $this->svc->dokumentDaten($this->rootTeam, $this->svc->detail($this->rootTeam, $sp->id), 'mittag', $this->mo);
     $namen = collect($dok['zeilen'])->flatMap(fn ($z) => collect($z['zellen'])->flatten(1))->pluck('name')->all();
@@ -143,9 +143,9 @@ it('Paket 1+2: Wareneinsatz gegen das Zielband der Linie, Linienpreis, Gäste nu
     $lachs = ($this->gericht)($this->rootTeam, 'Lachs', ['sales_net' => 10, 'ek_total_eur' => 6]);
     $creme = ($this->gericht)($this->rootTeam, 'Vanillecreme', ['sales_net' => 5, 'ek_total_eur' => 0.8, 'spec_is_vegetarian' => true]);
 
-    $e1 = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $menue->id, 'sales_recipe_id' => $roulade->id]);
-    $e2 = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-06', 'line_id' => $menue->id, 'sales_recipe_id' => $lachs->id]);
-    $e3 = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $dessert->id, 'sales_recipe_id' => $creme->id]);
+    $e1 = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $menue->id, 'recipe_id' => $roulade->id]);
+    $e2 = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-06', 'line_id' => $menue->id, 'recipe_id' => $lachs->id]);
+    $e3 = $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $dessert->id, 'recipe_id' => $creme->id]);
 
     $plan = $this->svc->detail($this->rootTeam, $sp->id);
     $zk = $this->svc->zellenKennzahlen($this->rootTeam, $plan, 'mittag', Carbon::parse($this->mo));
@@ -186,8 +186,8 @@ it('Paket 2: Linien-Felder werden gesäubert, Dauerangebote zählen nicht als Wi
 
     $salat = $this->svc->addLinie($this->rootTeam, $sp->id, ['name' => 'Salatbar', 'role' => 'salat', 'is_standing' => true, 'plu' => '2105', 'target_wes_max_pct' => 40]);
     $g = ($this->gericht)($this->rootTeam, 'Salatbar klein');
-    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $salat->id, 'sales_recipe_id' => $g->id]);
-    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-06', 'line_id' => $salat->id, 'sales_recipe_id' => $g->id]);
+    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => $this->mo, 'line_id' => $salat->id, 'recipe_id' => $g->id]);
+    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-06', 'line_id' => $salat->id, 'recipe_id' => $g->id]);
     expect(collect($this->svc->wiederholungen($sp->fresh()))->where('konflikt', true))->toBeEmpty();
 
     $kopie = $this->svc->dupliziere($this->rootTeam, $sp->id);
@@ -199,7 +199,7 @@ it('Paket 2: Linien-Felder werden gesäubert, Dauerangebote zählen nicht als Wi
 it('Paket 9: Öffnungstage steuern Wochentage, Aushang und Kostformen; leer fällt auf Mo–Fr zurück', function () {
     $sp = $this->svc->create($this->rootTeam, ['name' => 'Sechs Tage', 'start_date' => $this->mo, 'opening_days' => [6, 1, 2, 3, 4, 5, 9]]);
     $g = ($this->gericht)($this->rootTeam, 'Samstagsgericht');
-    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-10', 'line_id' => $sp->lines()->first()->id, 'sales_recipe_id' => $g->id]);
+    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-10-10', 'line_id' => $sp->lines()->first()->id, 'recipe_id' => $g->id]);
 
     $plan = $this->svc->detail($this->rootTeam, $sp->id);
     expect($plan->oeffnungstage())->toBe([1, 2, 3, 4, 5, 6]);
@@ -263,7 +263,7 @@ it('Editor: Matrix zeigt Zell-Kennzahlen, Tagesfuß und Linien-Ampel; Öffnungst
     $this->actingAs($this->makeUser($this->rootTeam));
     $sp = $this->svc->create($this->rootTeam, ['name' => 'UI', 'start_date' => now()->startOfWeek()->format('Y-m-d')]);
     $g = ($this->gericht)($this->rootTeam, 'Kürbissuppe | Ingwer', ['sales_net' => 4, 'ek_total_eur' => 1, 'spec_is_vegan' => true, 'spec_is_vegetarian' => true]);
-    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => now()->startOfWeek()->format('Y-m-d'), 'line_id' => $sp->lines()->first()->id, 'sales_recipe_id' => $g->id]);
+    $this->svc->addEintrag($this->rootTeam, $sp->id, ['entry_date' => now()->startOfWeek()->format('Y-m-d'), 'line_id' => $sp->lines()->first()->id, 'recipe_id' => $g->id]);
 
     Livewire::test(SpeiseplanEditor::class)
         ->call('oeffnenBearbeiten', $sp->id)

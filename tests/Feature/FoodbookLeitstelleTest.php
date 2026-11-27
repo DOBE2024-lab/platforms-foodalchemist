@@ -66,13 +66,13 @@ it('zweimaliges Übernehmen desselben Gerichts meldet schon_drin + legt nur eine
     expect($a['schon_drin'])->toBeFalse()
         ->and($b['schon_drin'])->toBeTrue()
         ->and($b['concept_id'])->toBe($a['concept_id']);   // führendes Kapitel-Konzept zurückgegeben
-    expect(FoodAlchemistConceptSlot::where('concept_id', $a['concept_id'])->where('sales_recipe_id', $this->dish->id)->count())->toBe(1);
+    expect(FoodAlchemistConceptSlot::where('concept_id', $a['concept_id'])->where('recipe_id', $this->dish->id)->count())->toBe(1);
 });
 
 it('Gericht bereits als recipe_ref-Block im Kapitel → Übernehmen dedupt kapitelweit (kein Konzept, kein Slot)', function () {
     // Einzel-Weg: Gericht liegt schon als recipe_ref direkt am Kapitel.
     $chapterId = (int) $this->slot->refresh()->chapter_id;
-    $this->fbSvc->addBlock($this->rootTeam, $chapterId, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->dish->id]);
+    $this->fbSvc->addBlock($this->rootTeam, $chapterId, ['type' => 'recipe_ref', 'recipe_id' => $this->dish->id]);
 
     $res = $this->fbSvc->uebernehmeVorschlag($this->rootTeam, $this->fb->id, $this->slot->id, $this->dish->id);
 
@@ -80,7 +80,7 @@ it('Gericht bereits als recipe_ref-Block im Kapitel → Übernehmen dedupt kapit
     // Union-Dedup greift VOR jeder Anlage: weder Konzept-Block noch Konzept-Slot entstehen.
     $kapitel = $this->fb->refresh()->chapters->firstWhere('id', $chapterId);
     expect($kapitel->blocks->where('type', 'concept_ref')->count())->toBe(0);
-    expect(FoodAlchemistConceptSlot::where('sales_recipe_id', $this->dish->id)->count())->toBe(0);
+    expect(FoodAlchemistConceptSlot::where('recipe_id', $this->dish->id)->count())->toBe(0);
 });
 
 // ── E7.2 uebernehmeGericht-Kern: gezieltes Ziel-Konzept via $conceptId ──────
@@ -100,7 +100,7 @@ it('uebernehmeGericht mit $conceptId hängt das Gericht gezielt in DIESES Konzep
         ->and($res['concept_id'])->toBe($ziel->id)
         ->and($res['chapter_id'])->toBe($chapterId);
     // Gericht landet als Slot im Ziel-Konzept; KEIN zweites Konzept angelegt.
-    expect(FoodAlchemistConceptSlot::where('concept_id', $ziel->id)->where('sales_recipe_id', $this->dish->id)->count())->toBe(1)
+    expect(FoodAlchemistConceptSlot::where('concept_id', $ziel->id)->where('recipe_id', $this->dish->id)->count())->toBe(1)
         ->and(FoodAlchemistConcept::where('team_id', $this->rootTeam->id)->count())->toBe(1);
 });
 

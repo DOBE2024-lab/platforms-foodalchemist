@@ -113,7 +113,7 @@ it('B7 + D19 · Foodbooks, Speisekarten, Speisepläne, Pakete und Angebote blät
     $pakete = app(\Platform\FoodAlchemist\Services\Concepter\ConceptPaketService::class);
     $paket = $pakete->create($this->rootTeam, ['name' => 'Antipasti-Paket']);
     $pakete->create($this->rootTeam, ['name' => 'Dessert-Paket']);
-    $pakete->syncGerichte($this->rootTeam, $paket->id, [['sales_recipe_id' => $this->makeRecipe($this->rootTeam, 'Vitello tonnato', ['is_sales_recipe' => true])->id]]);
+    $pakete->syncGerichte($this->rootTeam, $paket->id, [['recipe_id' => $this->makeRecipe($this->rootTeam, 'Vitello tonnato', ['is_sales_recipe' => true])->id]]);
     FoodAlchemistAngebot::create(['team_id' => $t, 'name' => 'Sommerfest', 'status' => 'anfrage', 'personen' => 80, 'event_date' => '2027-06-12', 'total_price' => 3990]);
     FoodAlchemistAngebot::create(['team_id' => $t, 'name' => 'Weihnachtsfeier', 'status' => 'anfrage', 'personen' => 40]);
     $liste = fn (string $tool, string $schluessel, array $a) => app($tool)->execute($a, $this->ctx)->data[$schluessel];

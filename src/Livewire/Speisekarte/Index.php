@@ -580,7 +580,7 @@ class Index extends Component
     public function positionAusGericht(SpeisekarteService $svc, int $rubrikId, int $recipeId): void
     {
         $svc->addPosition($this->team(), $rubrikId, [
-            'type' => 'gericht_ref', 'sales_recipe_id' => $recipeId,
+            'type' => 'gericht_ref', 'recipe_id' => $recipeId,
         ]);
         // Werkstrang M Phase B: Picker + Suche + Facetten bleiben offen → mehrere Gerichte hintereinander.
     }

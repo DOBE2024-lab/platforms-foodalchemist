@@ -63,7 +63,7 @@ beforeEach(function () {
         foreach ($gerichte as $i => $g) {
             $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Gang ' . ($i + 1)]);
             $this->concepts->fillSlot($this->rootTeam, $slot->id, [
-                'sales_recipe_id' => $g['id'] ?? $g->id,
+                'recipe_id' => $g['id'] ?? $g->id,
                 'quantity' => $g['quantity'] ?? 1,
             ]);
         }
@@ -250,7 +250,7 @@ it('rechnet Pakete immer als Summe — ein Paket ist ein Gesamtpreis', function 
     // 98 · 2.6c: Paket = kind=paket-Concept (Gesamtpreis), Deklaration über conceptDeklaration
     $p = $this->concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall', 'price_mode' => 'manuell']);
     foreach ([$this->a, $this->b] as $r) {
-        $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $p->id, ['role' => 'Posten'])->id, ['sales_recipe_id' => $r->id]);
+        $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $p->id, ['role' => 'Posten'])->id, ['recipe_id' => $r->id]);
     }
 
     $blatt = $this->agg->conceptDeklaration($p->refresh());
@@ -269,7 +269,7 @@ it('gibt Kennzeichnung und Legende auf der Concept-KARTE aus', function () {
     // Kunden-Ausgabe nicht.
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Karten-Konzept']);
     $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->b->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->b->id]);
 
     $daten = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)
         ->conceptKarteDaten($this->rootTeam, $c->id);

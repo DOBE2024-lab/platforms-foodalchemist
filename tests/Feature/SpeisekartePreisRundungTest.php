@@ -36,7 +36,7 @@ it('dokumentDaten: Brutto-Rundung (auf_90) greift auf die Ausgabe-Preise, Netto 
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K', 'preis_anzeige_brutto' => true]);
     $this->karten->update($this->rootTeam, $karte->id, ['preis_rundung' => 'auf_90']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g->id]);
 
     $daten = $this->karten->dokumentDaten($this->rootTeam, $karte->fresh());
     $pos = collect($daten['rubriken'])->flatMap(fn ($r) => $r['positionen'])->firstWhere('typ', 'gericht_ref');

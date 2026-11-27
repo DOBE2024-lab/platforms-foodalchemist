@@ -57,7 +57,7 @@ beforeEach(function () {
     $this->actingAs($this->koch);
     $this->angebot = app(AngebotService::class)->create($this->broich, ['name' => 'Hochzeit']);
     $kapitel = app(OfferCompositionService::class)->addKapitel($this->broich, $this->angebot->id, ['title' => 'Menü']);
-    $kapitel->blocks()->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $this->lamm->id, 'position' => 1, 'visible' => true]);
+    $kapitel->blocks()->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'recipe_id' => $this->lamm->id, 'position' => 1, 'visible' => true]);
 
     config(['foodalchemist.team_sicht.stufe' => 1]);
 });

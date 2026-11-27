@@ -62,7 +62,7 @@ final class SpeiseplanAusgabe
 
             $zelle = ['name' => $this->ernaehrung->eintragName($e), 'codes' => $codes];
             // Gericht-Foto als Identifier (frische URL erst im Aushang, PresentationService::hydrateImages).
-            $dish = $e->sales_recipe_id !== null ? $e->dish : null;
+            $dish = $e->recipe_id !== null ? $e->dish : null;
             if ($dish !== null && ($dish->image_context_file_id || $dish->image_path)) {
                 $zelle['image'] = ['context_file_id' => $dish->image_context_file_id, 'path' => $dish->image_path];
             }

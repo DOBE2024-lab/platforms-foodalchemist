@@ -22,7 +22,7 @@ beforeEach(function () {
             'kind' => 'concept', 'consumer_name' => 'Sommergenuss', 'claim' => 'Leicht & frisch',
             'description' => 'Ein sommerliches Menü.', 'price_per_person_cache' => 42.50,
         ]);
-        $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Rinderfilet Rossini']);
+        $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Rinderfilet Rossini']);
 
         $format = $this->svc->create($team, ['name' => 'CHEFS.CORNER', 'claim' => 'WORLD ON A PLATE', 'story' => 'Die Welt auf dem Teller.']);
         $this->svc->slotConceptEinfuegen($team, $format->id, $concept->id);

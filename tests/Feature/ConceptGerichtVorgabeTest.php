@@ -58,7 +58,7 @@ it('setze: Vorgabe und Notiz an einer leeren Position, leerer Titel löscht beid
 
 it('setze: nicht an einer belegten Position und nicht im geerbten Concept', function () {
     $gericht = $this->makeRecipe($this->rootTeam, '[VOR] Rote Bete', ['is_sales_recipe' => true]);
-    $belegt = ($this->leer)(1, ['sales_recipe_id' => $gericht->id]);
+    $belegt = ($this->leer)(1, ['recipe_id' => $gericht->id]);
     expect(fn () => $this->vorgaben->setze($this->rootTeam, $belegt->id, VORGABE_KAROTTE))
         ->toThrow(RuntimeException::class, 'nur an einer leeren Position');
 
@@ -93,7 +93,7 @@ it('Fan-out: Vorgabe wird 1:1 zur Skizze, erfunden wird nur für die Position oh
         ->and($idee->title)->toBe(VORGABE_KAROTTE)
         ->and($idee->source_meta['quelle'])->toBe('vorgabe')
         ->and((int) $idee->source_meta['target_concept_slot_id'])->toBe((int) $mit->id)
-        ->and($idee->sales_recipe_id)->toBeNull();
+        ->and($idee->recipe_id)->toBeNull();
     expect((int) $erfunden->refresh()->source_meta['target_concept_slot_id'])->toBe((int) $ohne->id);
     Queue::assertNotPushed(MaterializeConceptIdeaJob::class);   // Vorschlag-Gate: gebaut wird erst nach der Freigabe
 });
@@ -134,7 +134,7 @@ it('setzeGericht: der Wortlaut der Vorgabe wird Kundenwording, ein gepflegtes Wo
 
     $a = ($this->leer)(1, ['dish_brief' => VORGABE_KAROTTE]);
     $this->vorgaben->setzeGericht($this->rootTeam, $a->id, $gericht->id, $idee($a, 'vorgabe'));
-    expect($a->refresh()->sales_recipe_id)->toBe($gericht->id)->and($a->wording)->toBe(VORGABE_KAROTTE);
+    expect($a->refresh()->recipe_id)->toBe($gericht->id)->and($a->wording)->toBe(VORGABE_KAROTTE);
 
     $b = ($this->leer)(2, ['dish_brief' => VORGABE_KAROTTE, 'wording' => 'Karotte, anders gedacht']);
     $this->vorgaben->setzeGericht($this->rootTeam, $b->id, $gericht->id, $idee($b, 'vorgabe'));
@@ -142,7 +142,7 @@ it('setzeGericht: der Wortlaut der Vorgabe wird Kundenwording, ein gepflegtes Wo
 
     $c = ($this->leer)(3);   // erfundenes Gericht: kein Wording aus einer Vorgabe
     $this->vorgaben->setzeGericht($this->rootTeam, $c->id, $gericht->id, $idee($c, 'ki_divergenz_concept'));
-    expect($c->refresh()->sales_recipe_id)->toBe($gericht->id)->and($c->wording)->toBeNull();
+    expect($c->refresh()->recipe_id)->toBe($gericht->id)->and($c->wording)->toBeNull();
 });
 
 // ── Bestand zuerst ──────────────────────────────────────────────────────────
@@ -158,11 +158,11 @@ it('Bestand zuerst: ein freigegebenes Gericht gleichen Namens wird vorgeschlagen
     $ideeId = (int) $step->context_snapshot['dish_idea_id'];
     expect($step->label)->toBe('Aus Bestand: ' . $bestand->name)
         ->and((int) $step->context_snapshot['bestand_recipe_id'])->toBe((int) $bestand->id)
-        ->and($slot->refresh()->sales_recipe_id)->toBeNull();   // noch nichts übernommen: erst die Freigabe
+        ->and($slot->refresh()->recipe_id)->toBeNull();   // noch nichts übernommen: erst die Freigabe
 
     expect($this->vorgaben->uebernimmBestand($this->rootTeam, $ideeId, (int) $step->id))->toBeTrue();
 
-    expect($slot->refresh()->sales_recipe_id)->toBe($bestand->id)
+    expect($slot->refresh()->recipe_id)->toBe($bestand->id)
         ->and($slot->wording)->toBe(VORGABE_KAROTTE)
         ->and($step->refresh()->status)->toBe('done')
         ->and((int) $step->ref_id)->toBe((int) $bestand->id)
@@ -187,7 +187,7 @@ it('uebernimmBestand lässt erfundene Skizzen und Vorgaben ohne Bestand in Ruhe'
         'status' => 'entwurf', 'target_form' => 'einzel', 'source_meta' => ['quelle' => 'vorgabe', 'target_concept_slot_id' => $slot->id]]);
 
     expect($this->vorgaben->uebernimmBestand($this->rootTeam, (int) $idee->id, (int) $step->id))->toBeFalse()
-        ->and($slot->refresh()->sales_recipe_id)->toBeNull()
+        ->and($slot->refresh()->recipe_id)->toBeNull()
         ->and($step->refresh()->status)->toBe('running');
 });
 
@@ -195,7 +195,7 @@ it('uebernimmBestand lässt erfundene Skizzen und Vorgaben ohne Bestand in Ruhe'
 
 it('Leitstelle: Plan-Panel zeigt Positionen, speichert die Vorgabe und hängt eine Position mit Vorgabe an', function () {
     $gericht = $this->makeRecipe($this->rootTeam, '[VOR] Rote Bete', ['is_sales_recipe' => true]);
-    ($this->leer)(1, ['role' => 'Vorspeise', 'sales_recipe_id' => $gericht->id]);
+    ($this->leer)(1, ['role' => 'Vorspeise', 'recipe_id' => $gericht->id]);
     $leer = ($this->leer)(2, ['role' => 'Hauptgang']);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Green & Tasty']);
 
@@ -252,7 +252,7 @@ it('MCP: concept_slots.POST und PUT setzen die Vorgabe, concepts.GET liefert sie
     $slotId = (int) $r->data['slot']['id'];
 
     $gericht = $this->makeRecipe($this->rootTeam, '[VOR] Rote Bete', ['is_sales_recipe' => true]);
-    $doppelt = $run('foodalchemist.concept_slots.POST', ['concept_id' => $this->concept->id, 'sales_recipe_id' => $gericht->id, 'dish_brief' => VORGABE_KAROTTE]);
+    $doppelt = $run('foodalchemist.concept_slots.POST', ['concept_id' => $this->concept->id, 'recipe_id' => $gericht->id, 'dish_brief' => VORGABE_KAROTTE]);
     expect($doppelt->success)->toBeFalse()->and($doppelt->errorCode)->toBe('VALIDATION_ERROR');
 
     expect($run('foodalchemist.concept_slots.PUT', ['slot_id' => $slotId, 'felder' => ['dish_brief_note' => 'ohne Kümmel']])->success)->toBeTrue();

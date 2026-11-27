@@ -121,11 +121,11 @@ class WordingResolver
     {
         $positionen = [];
         foreach ($concept->slots as $s) {
-            if ($s->sales_recipe_id !== null && $s->dish) {
+            if ($s->recipe_id !== null && $s->dish) {
                 $positionen[] = ['slot_id' => $s->id, 'name' => $s->dish->name, 'sales_wording_standard' => $s->dish->sales_wording_standard ?? null];
             } elseif ($s->embedded_concept_id !== null && $s->embeddedConcept) {
                 foreach ($s->embeddedConcept->slots as $ps) {
-                    if ($ps->sales_recipe_id !== null && $ps->dish) {
+                    if ($ps->recipe_id !== null && $ps->dish) {
                         $positionen[] = ['slot_id' => $ps->id, 'name' => $ps->dish->name, 'sales_wording_standard' => $ps->dish->sales_wording_standard ?? null];
                     }
                 }
@@ -199,11 +199,11 @@ class WordingResolver
 
                 continue;
             }
-            if ($slot->sales_recipe_id === null || $slot->dish === null) {
+            if ($slot->recipe_id === null || $slot->dish === null) {
                 continue; // spacer/text/leere Slots sind im Kundendokument unsichtbar
             }
             $r = $block !== null ? $this->fuerBlockSlot($block, $slot) : $this->fuerSlot($slot);
-            $zeilen[] = ['type' => 'gericht', 'text' => $r['text'], 'source' => $r['source'], 'einrueckung' => 0, 'slot_id' => $slot->id, 'recipe_id' => $slot->sales_recipe_id,
+            $zeilen[] = ['type' => 'gericht', 'text' => $r['text'], 'source' => $r['source'], 'einrueckung' => 0, 'slot_id' => $slot->id, 'recipe_id' => $slot->recipe_id,
                 'preis' => $einzel ? ($preisMap[$slot->id]['vk'] ?? null) : null,
                 'ek' => $einzel ? ($preisMap[$slot->id]['ek'] ?? null) : null] + ($mitMengen ? ['menge' => app(\Platform\FoodAlchemist\Services\Ausgabe\HandbuchPositionsMenge::class)->fuer($slot)] : []);
         }

@@ -98,7 +98,7 @@ class FoodbookReifeAdapter extends ContainerReifeAdapter
 
         $alleBloecke = $kapitel->flatMap(fn ($k) => $k->blocks);
         $refOhneZiel = $alleBloecke->filter(fn ($b) => in_array($b->type, self::INHALT, true)
-            && $b->concept_id === null && $b->sales_recipe_id === null);
+            && $b->concept_id === null && $b->recipe_id === null);
         if ($refOhneZiel->isNotEmpty()) {
             $luecken[] = $this->luecke('ref_ohne_ziel', 'blockiert',
                 $refOhneZiel->count() . ' Referenz-Blöcke zeigen auf kein Konzept und kein Gericht.',

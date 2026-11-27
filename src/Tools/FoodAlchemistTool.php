@@ -401,7 +401,7 @@ abstract class FoodAlchemistTool
             'description' => $i->description,
             'ziel_form' => $i->target_form,
             'paket_gruppe' => $i->group_id !== null ? (int) $i->group_id : null,
-            'sales_recipe_id' => $i->sales_recipe_id !== null ? (int) $i->sales_recipe_id : null,
+            ...\Platform\FoodAlchemist\Support\RezeptIdAlias::beide($i->recipe_id !== null ? (int) $i->recipe_id : null),
             'status' => $i->status,
             'created_via' => $i->created_via,
             'position' => (int) $i->position,

@@ -98,7 +98,7 @@ final class SpeiseplanAnsicht
 
             return ['vk' => (float) $c['price_per_person'], 'ek' => (float) $c['ek_per_person'], 'vorlaeufig' => \Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::unvollstaendig($c)];
         }
-        if ($e->sales_recipe_id !== null && $e->dish) {
+        if ($e->recipe_id !== null && $e->dish) {
             $dar = $this->eintragDarreichung($e);
             $vk = null;
             if ($dar !== null && $e->presentation_id !== null && (int) $dar->id === (int) $e->presentation_id) {
@@ -381,7 +381,7 @@ final class SpeiseplanAnsicht
     private function titelUndWording(FoodAlchemistSpeiseplanEintrag $e, Collection $gerichte): array
     {
         $name = $this->ernaehrung->eintragName($e);
-        if ($e->sales_recipe_id !== null) {
+        if ($e->recipe_id !== null) {
             $teile = array_values(array_filter(array_map('trim', explode('|', $name)), fn ($t) => $t !== ''));
             if (count($teile) > 1) {
                 return [$teile[0], implode(' · ', array_slice($teile, 1))];
@@ -403,7 +403,7 @@ final class SpeiseplanAnsicht
      */
     private function komponenten(FoodAlchemistSpeiseplanEintrag $e, Collection $gerichte): array
     {
-        if ($e->sales_recipe_id === null) {
+        if ($e->recipe_id === null) {
             return $gerichte->map(fn ($g) => ['name' => (string) $g->name, 'menge' => null])->values()->all();
         }
         $dish = $gerichte->first();

@@ -51,7 +51,7 @@ beforeEach(function () {
         'speisekarte_id' => $karteId, 'title' => 'Fisch', 'art' => 'speisen',
     ], $this->kontext)->data['rubrik']['id'];
     $this->registry->get('foodalchemist.speisekarte_positionen.POST')->execute([
-        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id,
+        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'recipe_id' => $this->gericht->id,
     ], $this->kontext);
     $this->karte = FoodAlchemistSpeisekarte::find($karteId);
     $this->karteId = $karteId;
@@ -88,7 +88,7 @@ it('Spec 85 F5: auch der veröffentlichte Angebots-Link wird geprüft; Gegenprob
     $comp = app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class);
     $angebot = app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)->create($this->childA, ['name' => 'Gala 2027', 'personen' => 40]);
     $kap = $comp->addKapitel($this->childA, $angebot->id, ['title' => 'Hauptgang', 'consumer_title' => 'Hauptgang']);
-    $comp->addBlock($this->childA, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $comp->addBlock($this->childA, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id]);
     $angebotDrift = fn () => array_values(array_filter(app(AusgabeDriftService::class)->abgedriftet($this->childA, null),
         fn ($d) => $d['doc_type'] === PresentationService::TYPE_ANGEBOT && $d['doc_id'] === (int) $angebot->id));
 

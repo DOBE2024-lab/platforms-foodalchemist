@@ -117,7 +117,7 @@ it('concepts.KALKULATION rechnet ein sichtbares Master-Concept für eine Gästez
     $concept = $this->makeConcept($this->rootTeam, 'Menü');
     $gericht = $this->makeRecipe($this->rootTeam, 'Lachs', ['is_sales_recipe' => true]);
     $this->makeStandardDarreichung($gericht, 12.0);
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => $gericht->id]);
+    $this->makeConceptSlot($concept, ['recipe_id' => $gericht->id]);
 
     $r = ($this->run)('foodalchemist.concepts.KALKULATION', ['concept_id' => $concept->id, 'pax' => 40], $this->childA);
 

@@ -148,12 +148,12 @@ final class SpeiseplanVorlage
             if ($e->entry_date === null || $e->meal !== $mahlzeit || ! $e->entry_date->between($mo, $so)) {
                 continue;
             }
-            if ($e->sales_recipe_id === null) {
+            if ($e->recipe_id === null) {
                 $nichtVergleichbar[] = $e->inhaltName();
 
                 continue;
             }
-            $gid = (int) $e->sales_recipe_id;
+            $gid = (int) $e->recipe_id;
             $pax = $this->basis->effektivePax($e, $plan);
             $proGericht[$gid]['name'] ??= $this->ernaehrung->eintragName($e);
             $proGericht[$gid]['plan'] = ($proGericht[$gid]['plan'] ?? 0) + $pax;

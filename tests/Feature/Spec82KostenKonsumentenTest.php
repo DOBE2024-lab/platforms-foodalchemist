@@ -79,7 +79,7 @@ beforeEach(function () {
         $angebot = app(AngebotService::class)->create($team, ['name' => 'Gala', 'personen' => 50]);
         $kap = FoodAlchemistOfferChapter::create(['team_id' => $team->id, 'offer_id' => $angebot->id, 'title' => 'Hauptgang', 'position' => 0]);
         FoodAlchemistOfferBlock::create(['team_id' => $team->id, 'chapter_id' => $kap->id, 'type' => 'recipe_ref', 'position' => 0,
-            'visible' => true, 'sales_recipe_id' => $this->jusF->id]);
+            'visible' => true, 'recipe_id' => $this->jusF->id]);
 
         return $kap->fresh();
     };

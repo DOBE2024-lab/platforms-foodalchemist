@@ -489,12 +489,12 @@ class Editor extends Component
         $team = $this->team();
         $concept = app(ConceptService::class)->detail($team, $this->id);
         $slot = $concept?->slots->firstWhere('id', $slotId);
-        if ($concept?->serving_form_id === null || $slot === null || $slot->sales_recipe_id === null) {
+        if ($concept?->serving_form_id === null || $slot === null || $slot->recipe_id === null) {
             return;
         }
         try {
             app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)
-                ->anlegen($team, $slot->sales_recipe_id, $concept->serving_form_id, [], 'fa_ui');
+                ->anlegen($team, $slot->recipe_id, $concept->serving_form_id, [], 'fa_ui');
         } catch (\Throwable $e) {
             $this->fehler = $e->getMessage();
 
@@ -735,7 +735,7 @@ class Editor extends Component
     public function fuelleGericht(int $slotId, int $vkRecipeId, string $typ = 'gericht'): void
     {
         if (! $this->positionFuellen($slotId, [
-            'sales_recipe_id' => $vkRecipeId, 'quantity' => 1, 'unit_vocab_id' => $this->portionEinheitId(),
+            'recipe_id' => $vkRecipeId, 'quantity' => 1, 'unit_vocab_id' => $this->portionEinheitId(),
             'type' => $typ === 'basisrezept' ? 'basisrezept' : 'gericht',
         ])) {
             return;
@@ -826,12 +826,12 @@ class Editor extends Component
             if ($ausserSlotId !== null && (int) $s->id === $ausserSlotId) {
                 continue;
             }
-            if ($s->sales_recipe_id !== null) {
-                $ids[(int) $s->sales_recipe_id] = true;
+            if ($s->recipe_id !== null) {
+                $ids[(int) $s->recipe_id] = true;
             } elseif ($s->embeddedConcept !== null) {   // Kaskade: eingebettetes Paket = kind=paket-Concept
                 foreach ($s->embeddedConcept->slots as $eps) {
-                    if ($eps->sales_recipe_id !== null) {
-                        $ids[(int) $eps->sales_recipe_id] = true;
+                    if ($eps->recipe_id !== null) {
+                        $ids[(int) $eps->recipe_id] = true;
                     }
                 }
             }
@@ -1139,7 +1139,7 @@ class Editor extends Component
                 'gefaess' => $d !== null ? $dar->gefaessInfo($d, $team) : null, 'beigaben' => $d !== null ? $dar->beigabenKosten($d, $team) : null];
         };
         if ($concept !== null) {
-            foreach ($concept->slots->filter(fn ($s) => $s->sales_recipe_id !== null) as $s) {
+            foreach ($concept->slots->filter(fn ($s) => $s->recipe_id !== null) as $s) {
                 $s->setRelation('concept', $concept);
                 $nimm('slot-'.$s->id, (string) ($s->wording ?: ($s->dish?->name ?: ($s->title ?: 'Position'))), $resolver->fuerSlot($s));
             }
@@ -1213,7 +1213,7 @@ class Editor extends Component
                     (new \Illuminate\Database\Eloquent\Collection($concept->slots->pluck('dish')->filter()->flatMap->presentations->all()))
                         ->load('zubehoer.gp:id,name,team_id,commodity_group_code,lead_la_supplier_item_id,piece_default_g');
                     foreach ($concept->slots as $slot) {
-                        if ($slot->sales_recipe_id === null) {
+                        if ($slot->recipe_id === null) {
                             continue;
                         }
                         $slot->setRelation('concept', $concept);
@@ -1285,8 +1285,8 @@ class Editor extends Component
         $slotZutaten = [];
         if ($istAufbau && $this->zutatenOffenSlotId !== null && $concept !== null) {
             $zSlot = $concept->slots->firstWhere('id', $this->zutatenOffenSlotId);
-            if ($zSlot?->sales_recipe_id !== null) {
-                $zutaten = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::where('recipe_id', $zSlot->sales_recipe_id)
+            if ($zSlot?->recipe_id !== null) {
+                $zutaten = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::where('recipe_id', $zSlot->recipe_id)
                     ->with(['gp:id,name', 'referencedRecipe:id,name', 'unit:id,slug'])
                     ->orderBy('position')->get();
                 $paare = $zutaten->map(fn ($z) => $z->gp_id !== null ? ['gp', (int) $z->gp_id] : ['recipe', (int) $z->referenced_recipe_id])
@@ -1340,7 +1340,7 @@ class Editor extends Component
             // B (UX-Umbau): aufgelöstes Wording je Gericht-Slot für die Menü-Ansicht
             // (Kette Konzept-Wording → VK-Wording-Standard → Name; Quelle für die Herkunft-Badge)
             'slotWording' => $istAufbau && $concept
-                ? collect($concept->slots)->filter(fn ($s) => $s->sales_recipe_id !== null)
+                ? collect($concept->slots)->filter(fn ($s) => $s->recipe_id !== null)
                     ->mapWithKeys(fn ($s) => [$s->id => app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class)->fuerSlot($s)])->all()
                 : [],
             'slotEinheiten' => $istAufbau && $concept ? app(\Platform\FoodAlchemist\Services\Concepter\SlotEinheitService::class)->auswahl($team, $concept) : [],   // 17.11.: nur wirksame Einheiten

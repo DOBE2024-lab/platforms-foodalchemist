@@ -32,7 +32,7 @@ beforeEach(function () {
     ]);
     $this->fb = $this->makeFoodbook($this->childA, 'Testbuch', ['personen' => 10]);
     $k = $this->makeChapter($this->fb, ['title' => 'Hauptgang']);
-    $this->makeFoodbookBlock($k, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $this->makeFoodbookBlock($k, ['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id]);
 });
 
 it('kapitelBoard: Positions-VK folgt der Brille (Baseline 99 vs Betrieb 50)', function () {

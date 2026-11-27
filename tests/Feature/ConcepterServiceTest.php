@@ -17,7 +17,7 @@ beforeEach(function () {
             $this->concepts->update($this->rootTeam, $p->id, ['price_mode' => 'manuell', 'price_per_person_manual' => $preis]);
         }
         foreach ($rezepte as $r) {
-            $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $p->id, ['role' => 'Posten'])->id, ['sales_recipe_id' => $r->id]);
+            $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $p->id, ['role' => 'Posten'])->id, ['recipe_id' => $r->id]);
         }
 
         return $p;
@@ -45,11 +45,11 @@ it('B2: fillSlot pflegt type (paket|gericht|basisrezept); basisKandidaten findet
     $this->concepts->fillSlot($this->rootTeam, $s->id, ['embedded_concept_id' => $paket->id]);
     expect($s->refresh()->type)->toBe('paket');
 
-    $this->concepts->fillSlot($this->rootTeam, $s->id, ['sales_recipe_id' => $this->green->id]);
+    $this->concepts->fillSlot($this->rootTeam, $s->id, ['recipe_id' => $this->green->id]);
     expect($s->refresh()->type)->toBe('gericht');
 
-    $this->concepts->fillSlot($this->rootTeam, $s->id, ['sales_recipe_id' => $basis->id, 'type' => 'basisrezept']);
-    expect($s->refresh()->type)->toBe('basisrezept')->and($s->sales_recipe_id)->toBe($basis->id);
+    $this->concepts->fillSlot($this->rootTeam, $s->id, ['recipe_id' => $basis->id, 'type' => 'basisrezept']);
+    expect($s->refresh()->type)->toBe('basisrezept')->and($s->recipe_id)->toBe($basis->id);
 
     // Basisrezept-Suche findet das Basisrezept, NICHT die VK-Gerichte
     $kandidaten = app(\Platform\FoodAlchemist\Services\Concepter\AufbauKandidatenService::class);
@@ -60,7 +60,7 @@ it('B2: fillSlot pflegt type (paket|gericht|basisrezept); basisKandidaten findet
 it('B3: Struktur-Blöcke (text/spacer/header/header_preis) zählen nicht zum Concept-Preis', function () {
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Menü']);
     $s = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'HG']);
-    $this->concepts->fillSlot($this->rootTeam, $s->id, ['sales_recipe_id' => $this->dessert->id]); // 5,50
+    $this->concepts->fillSlot($this->rootTeam, $s->id, ['recipe_id' => $this->dessert->id]); // 5,50
 
     // 98 · 3.6 P6: header_preis lässt sich nicht mehr neu anlegen (er rechnete nie mit) — der Bestand bleibt und zählt weiter nicht
     expect(fn () => $this->concepts->addBlock($this->rootTeam, $concept->id, 'header_preis', ['title' => 'Vorspeisen']))->toThrow(RuntimeException::class);
@@ -84,9 +84,9 @@ it('B4: bildePaketAusPositionen — markierte Gerichte → 1 wiederverwendbares 
     $s1 = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'HG']);
     $s2 = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'HG']);
     $s3 = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Dessert']);
-    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['sales_recipe_id' => $this->green->id]);   // 2,00
-    $this->concepts->fillSlot($this->rootTeam, $s2->id, ['sales_recipe_id' => $this->sunny->id]);   // 3,00
-    $this->concepts->fillSlot($this->rootTeam, $s3->id, ['sales_recipe_id' => $this->dessert->id]); // 5,50
+    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['recipe_id' => $this->green->id]);   // 2,00
+    $this->concepts->fillSlot($this->rootTeam, $s2->id, ['recipe_id' => $this->sunny->id]);   // 3,00
+    $this->concepts->fillSlot($this->rootTeam, $s3->id, ['recipe_id' => $this->dessert->id]); // 5,50
     expect($this->concepts->preisCockpit($concept->refresh())['price_per_person'])->toBe(10.50);
 
     $neu = $this->concepts->bildePaketAusPositionen($this->rootTeam, $concept->id, [$s1->id, $s2->id], 'Grill-HG', 'HG');
@@ -102,7 +102,7 @@ it('B4: bildePaketAusPositionen — markierte Gerichte → 1 wiederverwendbares 
 it('B5: setSlotMengeEinheit skaliert Preis/EK der Position (Zeilen-Editor)', function () {
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Menü']);
     $s = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'HG']);
-    $this->concepts->fillSlot($this->rootTeam, $s->id, ['sales_recipe_id' => $this->dessert->id]); // vk 5,50, menge null→1
+    $this->concepts->fillSlot($this->rootTeam, $s->id, ['recipe_id' => $this->dessert->id]); // vk 5,50, menge null→1
     expect($this->concepts->preisCockpit($concept->refresh())['price_per_person'])->toBe(5.50);
 
     $this->concepts->setSlotMengeEinheit($this->rootTeam, $s->id, 2.0, null);
@@ -116,11 +116,11 @@ it('ConceptService fillSlot erzwingt GENAU EINES (Paket XOR Gericht)', function 
     $slot = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
 
     $this->concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $b->id]);
-    expect($slot->refresh()->embedded_concept_id)->toBe($b->id)->and($slot->sales_recipe_id)->toBeNull();
+    expect($slot->refresh()->embedded_concept_id)->toBe($b->id)->and($slot->recipe_id)->toBeNull();
 
     // Auf festes Gericht umstellen → Paket wird geleert
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->dessert->id, 'quantity' => 1]);
-    expect($slot->refresh()->sales_recipe_id)->toBe($this->dessert->id)->and($slot->embedded_concept_id)->toBeNull();
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->dessert->id, 'quantity' => 1]);
+    expect($slot->refresh()->recipe_id)->toBe($this->dessert->id)->and($slot->embedded_concept_id)->toBeNull();
 });
 
 it('M10-04: Concept-Preis = Σ gespeicherte Paket-Preise + feste Gerichte', function () {
@@ -130,7 +130,7 @@ it('M10-04: Concept-Preis = Σ gespeicherte Paket-Preise + feste Gerichte', func
     $sVor = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
     $sDess = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Dessert']);
     $this->concepts->fillSlot($this->rootTeam, $sVor->id, ['embedded_concept_id' => $salad->id]);
-    $this->concepts->fillSlot($this->rootTeam, $sDess->id, ['sales_recipe_id' => $this->dessert->id]);
+    $this->concepts->fillSlot($this->rootTeam, $sDess->id, ['recipe_id' => $this->dessert->id]);
 
     $cockpit = $this->concepts->preisCockpit($concept->refresh());
     expect($cockpit['price_per_person'])->toBe(10.00)             // 4,50 + 5,50
@@ -151,7 +151,7 @@ it('M10-04: Paket-Tausch ändert nur die Differenz (kein Kaskaden-Recompute)', f
     $slot = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
     $sDess = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Dessert']);
     $this->concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $billig->id]);
-    $this->concepts->fillSlot($this->rootTeam, $sDess->id, ['sales_recipe_id' => $this->dessert->id]);
+    $this->concepts->fillSlot($this->rootTeam, $sDess->id, ['recipe_id' => $this->dessert->id]);
     expect($this->concepts->preisCockpit($concept->refresh())['price_per_person'])->toBe(10.00);
 
     // Tauschbare Pakete = jedes aktive Paket (Rolle rollen-agnostisch, 2026-08-24)
@@ -194,7 +194,7 @@ it('M10c-A: Concept ist person-unabhängig — Pax kommt erst beim Aufruf der Ho
     // 98 · 2.6c: festes Gericht mit 120 je Person statt Alt-Paket-Posten (mengenHochrechnung kannte nur Alt-Pakete und feste Gerichte)
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->green->id, 'quantity' => 120]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->green->id, 'quantity' => 120]);
 
     // Cockpit kennt KEINE Pax mehr (person-unabhängig) — nur €/Person
     $cockpit = $this->concepts->preisCockpit($c->refresh());
@@ -246,7 +246,7 @@ it('M10p C-09: Allergen-/Diät-Rollup — all-Flags vs enthält-Flags, Konfidenz
     $sVor = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Vorspeise']);
     $sHg = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
     $this->concepts->fillSlot($this->rootTeam, $sVor->id, ['embedded_concept_id' => $vorspeise->id]);
-    $this->concepts->fillSlot($this->rootTeam, $sHg->id, ['sales_recipe_id' => $pork->id]);
+    $this->concepts->fillSlot($this->rootTeam, $sHg->id, ['recipe_id' => $pork->id]);
 
     $rollup = $this->concepts->allergenRollup($c->refresh());
     expect($rollup['n_gerichte'])->toBe(3)

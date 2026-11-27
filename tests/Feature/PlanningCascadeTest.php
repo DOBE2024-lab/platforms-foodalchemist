@@ -1413,7 +1413,7 @@ it('materialisiereConceptGericht: erdet die Idee, verdrahtet ins Slot, Step done
 
     app(PlanningCascadeService::class)->materialisiereConceptGericht($this->rootTeam, (int) $idee->id, (int) $step->id);
 
-    expect((int) $slot->refresh()->sales_recipe_id)->toBe((int) $recipe->id)
+    expect((int) $slot->refresh()->recipe_id)->toBe((int) $recipe->id)
         ->and($step->refresh()->status)->toBe('done')
         ->and((int) $step->refresh()->ref_id)->toBe((int) $recipe->id)
         ->and($idee->refresh()->generation_status)->toBe('erstellt');
@@ -1433,7 +1433,7 @@ it('materialisiereConceptGericht: Generierungs-Fehler → Step failed, Idee fehl
 
     expect($step->refresh()->status)->toBe('failed')
         ->and($idee->refresh()->generation_status)->toBe('fehlgeschlagen')
-        ->and($slot->refresh()->sales_recipe_id)->toBeNull();   // nichts verdrahtet
+        ->and($slot->refresh()->recipe_id)->toBeNull();   // nichts verdrahtet
 });
 
 it('Lineage: erfundenes Rezept bekommt created_via=plan_go, die Trendradar-Herkunft bleibt an der Session', function () {
@@ -1752,7 +1752,7 @@ it('materialisiereSpeisekartePosition: erdet ein VK-Gericht → gericht_ref-Posi
     app(PlanningCascadeService::class)->materialisiereSpeisekartePosition($this->rootTeam, (int) $rubrik->id, 'Eine Vorspeise', (int) $step->id);
 
     expect($step->refresh()->status)->toBe('done')
-        ->and(\Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition::where('section_id', $rubrik->id)->where('type', 'gericht_ref')->where('sales_recipe_id', $recipe->id)->count())->toBe(1);
+        ->and(\Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition::where('section_id', $rubrik->id)->where('type', 'gericht_ref')->where('recipe_id', $recipe->id)->count())->toBe(1);
 });
 
 it('CoverageService kennt die Speisekarte (istSpeisekarte, kein Fehl-Read als Concept)', function () {
@@ -1897,7 +1897,7 @@ it('materialisiereSpeiseplanZelle: erdet die Zelle → Rezept + Speiseplan-Eintr
     app(PlanningCascadeService::class)->materialisiereSpeiseplanZelle($this->rootTeam, (int) $plan->id, '2026-08-03', 'mittag', (int) $line->id, 'Mittagsgericht', (int) $step->id);
 
     expect($step->refresh()->status)->toBe('done')
-        ->and(\Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag::where('menu_plan_id', $plan->id)->where('sales_recipe_id', $recipe->id)->count())->toBe(1);
+        ->and(\Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag::where('menu_plan_id', $plan->id)->where('recipe_id', $recipe->id)->count())->toBe(1);
 });
 
 it('Speiseplan-Editor: Voll-Kaskade-Go startet den Zell-Fan-out + redirected', function () {
@@ -2328,8 +2328,8 @@ beforeEach(function () {
         $rind = $mkGericht('rind', 'Rinderfilet', $bId);
 
         $concept = $this->makeConcept($this->rootTeam, 'Fan-out-Menü', ['status' => 'draft']);
-        $this->makeConceptSlot($concept, ['position' => 1, 'sales_recipe_id' => $pilz->id]);
-        $this->makeConceptSlot($concept, ['position' => 2, 'sales_recipe_id' => $rind->id]);
+        $this->makeConceptSlot($concept, ['position' => 1, 'recipe_id' => $pilz->id]);
+        $this->makeConceptSlot($concept, ['position' => 2, 'recipe_id' => $rind->id]);
 
         return $concept;
     };

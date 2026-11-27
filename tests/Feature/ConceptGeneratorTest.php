@@ -106,7 +106,7 @@ it('Gerüst-Pfad: nur echte Gerichte, No-Go hart, Graph rankt, leerer Slot mit B
     // Dessert: kein Gericht ≥50 € → LEER mit Begründung am Slot (nie halluziniert)
     $dessert = collect($e['protokoll'])->firstWhere('slot', 'Dessert');
     expect($dessert['status'])->toBe('leer')->and($dessert['begruendung'])->toContain('bewusst leer');
-    $leererSlot = FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNull('sales_recipe_id')
+    $leererSlot = FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNull('recipe_id')
         ->whereNotIn('type', \Platform\FoodAlchemist\Services\Concepter\ConceptService::STRUKTUR_TYPEN)->first();   // C-1: Header sind keine Positionen
     expect($leererSlot->note)->toContain('Kein VK-Gericht erfüllt');
     // Spec 50 C-1: vor jeder Gang-Gruppe steht eine Überschrift — auch vor dem bewusst leeren Dessert.
@@ -115,7 +115,7 @@ it('Gerüst-Pfad: nur echte Gerichte, No-Go hart, Graph rankt, leerer Slot mit B
         ->and($header->every(fn ($h) => $h->title === $h->role))->toBeTrue();
 
     // Alle befüllten Slots referenzieren echte Rezepte des Teams
-    $ids = FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNotNull('sales_recipe_id')->pluck('sales_recipe_id');
+    $ids = FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNotNull('recipe_id')->pluck('recipe_id');
     expect(FoodAlchemistRecipe::whereIn('id', $ids)->count())->toBe($ids->count());
 
     // Gerüst-Kopie hängt am Konzept, Coverage lief automatisch, Kohäsion trägt den Kanten-Beweis
@@ -682,12 +682,12 @@ it('Kreativ-Kopf planAusBrief: Draft + Gerüst + kreative Canvas + LEERE Fan-out
     // → exakt der fanoutConceptInvention-Filter. NICHTS wurde vom Assembler befüllt.
     expect($e['slots'])->toBe(3);
     $fanoutZiele = FoodAlchemistConceptSlot::where('concept_id', $concept->id)
-        ->whereNull('sales_recipe_id')
+        ->whereNull('recipe_id')
         ->whereNotIn('type', ['text', 'spacer', 'header', 'header_preis'])
         ->get();
     expect($fanoutZiele->count())->toBe(3)
         ->and($fanoutZiele->pluck('role')->sort()->values()->all())->toBe(['Hauptgang', 'Hauptgang', 'Vorspeise'])
-        ->and(FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNotNull('sales_recipe_id')->count())->toBe(0);
+        ->and(FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNotNull('recipe_id')->count())->toBe(0);
 
     // Kreative Canvas gefüllt: Skalare + Geschmackswelten (leere übersprungen, description im meta)
     $canvas = app(\Platform\FoodAlchemist\Services\Concepter\CanvasService::class);
@@ -722,7 +722,7 @@ it('Kreativ-Kopf planAusBrief: fail-soft — scheiternder concept.plan lässt Co
 
     // Gerüst + leerer Fan-out-Slot stehen trotz gescheitertem Plan
     expect($this->frames->find('concept', $concept->id))->not->toBeNull()
-        ->and(FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNull('sales_recipe_id')
+        ->and(FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNull('recipe_id')
             ->whereNotIn('type', \Platform\FoodAlchemist\Services\Concepter\ConceptService::STRUKTUR_TYPEN)->count())->toBe(1);   // C-1: + 1 Header
 
     // Canvas blieb leer (kein Entry angelegt)

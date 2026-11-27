@@ -17,7 +17,7 @@ beforeEach(function () {
     $this->paketAus = function (string $name, array $rezepte) {
         $p = $this->concepts->createPaket($this->rootTeam, ['name' => $name, 'price_mode' => 'manuell']);
         foreach ($rezepte as $r) {
-            $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $p->id, ['role' => 'Posten'])->id, ['sales_recipe_id' => $r->id]);
+            $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $p->id, ['role' => 'Posten'])->id, ['recipe_id' => $r->id]);
         }
 
         return $p;
@@ -87,7 +87,7 @@ it('Concept-Aggregat: festes Gericht ohne Portionsgramm degradiert ehrlich (Konf
     $slot1 = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Vorspeise']);
     $this->concepts->fillSlot($this->rootTeam, $slot1->id, ['embedded_concept_id' => $p->id]);
     $slot2 = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
-    $this->concepts->fillSlot($this->rootTeam, $slot2->id, ['sales_recipe_id' => $this->c->id, 'quantity' => 2]);
+    $this->concepts->fillSlot($this->rootTeam, $slot2->id, ['recipe_id' => $this->c->id, 'quantity' => 2]);
 
     $agg = $this->agg->conceptAggregat($c->refresh());
 
@@ -130,7 +130,7 @@ it('EK teilt durch die Portionszahl (Batch→Portion), nicht ek_total roh', func
 
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Batch-Test']);
     $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $batch->id, 'quantity' => 2]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $batch->id, 'quantity' => 2]);
 
     $agg = $this->agg->conceptAggregat($c->refresh());
 
@@ -159,7 +159,7 @@ it('Gramm-Einheit rechnet anteilig am Portionsgewicht', function () {
 
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Gramm-Test']);
     $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Beilage']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $beilage->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $beilage->id]);
     $this->concepts->setSlotMengeEinheit($this->rootTeam, $slot->id, 125, $gramm->id);
 
     $agg = $this->agg->conceptAggregat($c->refresh());
@@ -183,9 +183,9 @@ it('Gramm-Einheit ohne Portionsgewicht trägt ehrlich nicht bei', function () {
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Gramm-Lücke']);
     // 1 belastbare Portion + 1 Gramm-Position ohne Portionsgewicht.
     $s1 = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
-    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['sales_recipe_id' => $this->a->id, 'quantity' => 1]); // a: ek 0.60
+    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['recipe_id' => $this->a->id, 'quantity' => 1]); // a: ek 0.60
     $s2 = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Beilage']);
-    $this->concepts->fillSlot($this->rootTeam, $s2->id, ['sales_recipe_id' => $ohneG->id]);
+    $this->concepts->fillSlot($this->rootTeam, $s2->id, ['recipe_id' => $ohneG->id]);
     // Altbestand: g ohne Grammatur lässt sich seit 17.11. nicht mehr wählen (SlotEinheitService) — die Rechnung muss ihn trotzdem ehrlich tragen
     \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::whereKey($s2->id)->update(['quantity' => 100, 'unit_vocab_id' => $gramm->id]);
 
@@ -203,9 +203,9 @@ it('Gewicht/Person: Σ Effektiv-Gramm; Position ohne Portionsgewicht → unvolls
     // a: 250 g/Portion, b: 200 g/Portion (beide vollständig)
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Gewicht-voll']);
     $s1 = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['sales_recipe_id' => $this->a->id, 'quantity' => 1]); // 1 × 250 g
+    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['recipe_id' => $this->a->id, 'quantity' => 1]); // 1 × 250 g
     $s2 = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
-    $this->concepts->fillSlot($this->rootTeam, $s2->id, ['sales_recipe_id' => $this->b->id, 'quantity' => 2]); // 2 × 200 g
+    $this->concepts->fillSlot($this->rootTeam, $s2->id, ['recipe_id' => $this->b->id, 'quantity' => 2]); // 2 × 200 g
 
     $agg = $this->agg->conceptAggregat($c->refresh());
     expect((float) $agg['gewicht_pro_person_g'])->toBe(650.0)
@@ -214,9 +214,9 @@ it('Gewicht/Person: Σ Effektiv-Gramm; Position ohne Portionsgewicht → unvolls
     // + c ohne Portionsgewicht → Gewicht unvollständig (c trägt nichts bei)
     $c2 = $this->concepts->create($this->rootTeam, ['name' => 'Gewicht-Lücke']);
     $x1 = $this->concepts->addSlot($this->rootTeam, $c2->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $x1->id, ['sales_recipe_id' => $this->a->id, 'quantity' => 1]); // 250 g
+    $this->concepts->fillSlot($this->rootTeam, $x1->id, ['recipe_id' => $this->a->id, 'quantity' => 1]); // 250 g
     $x2 = $this->concepts->addSlot($this->rootTeam, $c2->id, ['role' => 'Extra']);
-    $this->concepts->fillSlot($this->rootTeam, $x2->id, ['sales_recipe_id' => $this->c->id, 'quantity' => 1]); // c: kein Portionsgewicht
+    $this->concepts->fillSlot($this->rootTeam, $x2->id, ['recipe_id' => $this->c->id, 'quantity' => 1]); // c: kein Portionsgewicht
 
     $agg2 = $this->agg->conceptAggregat($c2->refresh());
     expect((float) $agg2['gewicht_pro_person_g'])->toBe(250.0)
@@ -236,7 +236,7 @@ it('Stück-Modus (kg↔Stück): EK/Stück = ek_total÷ertrag, Gewicht/Stück = y
 
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Stück-Test']);
     $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Petit Four']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $toertchen->id, 'type' => 'basisrezept', 'quantity' => 2]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $toertchen->id, 'type' => 'basisrezept', 'quantity' => 2]);
     $this->concepts->setSlotMengeEinheit($this->rootTeam, $slot->id, 2, $stk->id);
 
     $agg = $this->agg->conceptAggregat($c->refresh());

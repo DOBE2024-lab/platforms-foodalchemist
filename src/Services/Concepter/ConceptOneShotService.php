@@ -74,7 +74,7 @@ class ConceptOneShotService
         // Gefüllte Positionen ohne Wording. Leere Positionen sind KEINE Wording-Lücke — sie
         // sind eine Befüllungs-Lücke (concept_slots.PUT), die kein Text schließt.
         $slotWording = $concept->slots
-            ->filter(fn ($s) => $s->sales_recipe_id !== null && trim((string) $s->wording) === '')
+            ->filter(fn ($s) => $s->recipe_id !== null && trim((string) $s->wording) === '')
             ->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
 
         return ['kopf' => $kopf, 'struktur' => ['header_titel' => $headerTitel, 'slot_wording' => $slotWording]];

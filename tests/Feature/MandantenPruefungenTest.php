@@ -35,10 +35,10 @@ it('Export: Gerichte eines eingebetteten Pakets stehen im Concept-Report (auch v
     $pork = ($this->mk)($this->childA, 'pork', 'Pulled Pork', true, ['allergen_gluten' => 'enthalten']);
     $innen = $this->concepts->createPaket($this->childA, ['name' => 'Smoker']);
     $is = $this->concepts->addSlot($this->childA, $innen->id, ['role' => 'x']);
-    $this->concepts->fillSlot($this->childA, $is->id, ['sales_recipe_id' => $pork->id]);
+    $this->concepts->fillSlot($this->childA, $is->id, ['recipe_id' => $pork->id]);
     $aussen = $this->concepts->createPaket($this->childA, ['name' => 'BBQ-Station']);
     $as = $this->concepts->addSlot($this->childA, $aussen->id, ['role' => 'x']);
-    $this->concepts->fillSlot($this->childA, $as->id, ['sales_recipe_id' => $this->eigen->id]);
+    $this->concepts->fillSlot($this->childA, $as->id, ['recipe_id' => $this->eigen->id]);
     $as2 = $this->concepts->addSlot($this->childA, $aussen->id, ['role' => 'y']);
     $this->concepts->fillSlot($this->childA, $as2->id, ['embedded_concept_id' => $innen->id]);
 
@@ -58,7 +58,7 @@ it('Export: Gerichte eines eingebetteten Pakets stehen im Concept-Report (auch v
 it('Export: ein Kreis im eingebetteten Paket hängt nicht', function () {
     $p = $this->concepts->createPaket($this->childA, ['name' => 'Kreis']);
     $ps = $this->concepts->addSlot($this->childA, $p->id, ['role' => 'x']);
-    $this->concepts->fillSlot($this->childA, $ps->id, ['sales_recipe_id' => $this->eigen->id]);
+    $this->concepts->fillSlot($this->childA, $ps->id, ['recipe_id' => $this->eigen->id]);
     FoodAlchemistConceptSlot::create(['team_id' => $this->childA->id, 'concept_id' => $p->id, 'role' => 'selbst',
         'position' => 5, 'type' => 'paket', 'embedded_concept_id' => $p->id]);
     $c = $this->concepts->create($this->childA, ['name' => 'Menü']);
@@ -121,7 +121,7 @@ it('Angebot: presentation_id muss zum Gericht des Blocks gehören', function () 
     $sf = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->childA->id, 'code' => 'kantine', 'label' => 'Kantine']);
     $fremdeForm = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create(['team_id' => $this->childA->id, 'recipe_id' => $anderes->id, 'serving_form_id' => $sf->id, 'is_standard' => false, 'quantity_per_unit_g' => 200, 'unit_count' => 1]);
     $eigeneForm = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create(['team_id' => $this->childA->id, 'recipe_id' => $this->eigen->id, 'serving_form_id' => $sf->id, 'is_standard' => false, 'quantity_per_unit_g' => 200, 'unit_count' => 1]);
-    $b = $svc->addBlock($this->childA, cqAngebotKapitel($this->childA)->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->eigen->id]);
+    $b = $svc->addBlock($this->childA, cqAngebotKapitel($this->childA)->id, ['type' => 'recipe_ref', 'recipe_id' => $this->eigen->id]);
 
     expect(fn () => $svc->updateBlock($this->childA, $b->id, ['presentation_id' => $fremdeForm->id]))->toThrow(\RuntimeException::class, 'Darreichung');
     expect($svc->updateBlock($this->childA, $b->id, ['presentation_id' => $eigeneForm->id])->presentation_id)->toBe($eigeneForm->id);
@@ -150,5 +150,5 @@ it('Editor: fuelleGericht mit fremdem Gericht zeigt einen Hinweis, der Slot blei
         ->call('fuelleGericht', $slot->id, $this->fremd->id)
         ->assertSet('fehler', fn ($f) => is_string($f) && $f !== '');
 
-    expect($slot->fresh()->sales_recipe_id)->toBeNull();
+    expect($slot->fresh()->recipe_id)->toBeNull();
 });

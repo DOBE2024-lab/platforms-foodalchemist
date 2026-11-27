@@ -42,7 +42,7 @@ beforeEach(function () {
         ->update(['price_per_person_cache' => 12, 'ek_per_person_cache' => 4, 'price_incomplete' => false]);
     $this->teil = $this->concepts->create($t, ['name' => 'Sommerfest']);
     $this->concepts->fillSlot($t, $this->concepts->addSlot($t, $this->teil->id, ['role' => 'Station'])->id, ['embedded_concept_id' => $paket->id]);
-    $this->concepts->fillSlot($t, $this->concepts->addSlot($t, $this->teil->id, ['role' => 'Dessert'])->id, ['sales_recipe_id' => $ohneVk->id]);
+    $this->concepts->fillSlot($t, $this->concepts->addSlot($t, $this->teil->id, ['role' => 'Dessert'])->id, ['recipe_id' => $ohneVk->id]);
     $this->teil->refresh();
     $this->voll = $paket->refresh();
     expect($this->teil->price_incomplete)->toBeTrue()->and((float) $this->teil->price_per_person_cache)->toBe(12.0);

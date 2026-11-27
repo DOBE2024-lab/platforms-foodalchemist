@@ -96,8 +96,8 @@ class HandbuchQuellenService
             $items = [];
             foreach ($r['positionen'] as $i => $p) {
                 $pos = $positionen->get($i);
-                if (($p['typ'] ?? '') === 'gericht_ref' && $pos?->sales_recipe_id !== null) {
-                    $items[] = $this->item((int) $pos->sales_recipe_id, (string) ($p['name'] ?? ''), 0, array_values((array) ($p['codes'] ?? [])));
+                if (($p['typ'] ?? '') === 'gericht_ref' && $pos?->recipe_id !== null) {
+                    $items[] = $this->item((int) $pos->recipe_id, (string) ($p['name'] ?? ''), 0, array_values((array) ($p['codes'] ?? [])));
                 } elseif (($p['typ'] ?? '') === 'menue_ref') {
                     foreach ($p['gaenge'] ?? [] as $g) {
                         if (! empty($g['recipe_id'])) {

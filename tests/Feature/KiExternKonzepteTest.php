@@ -81,7 +81,7 @@ it('Vergleichstest concepts.GENERATE (brief): Plattformweg und MCP-Weg bauen das
     $brief = 'Sommerfest, 60 Gäste, vegetarisch, regional, 45 EUR p. P.';
     $rp = $this->registry->get('foodalchemist.concepts.GENERATE')->execute(['brief' => $brief, 'name' => 'Plattform'], $this->intern);
     expect($rp->success)->toBeTrue($rp->error ?? '')->and(DB::table('foodalchemist_ki_auftraege')->count())->toBe(0);
-    $form = fn (int $id) => FoodAlchemistConcept::with('slots')->find($id)->slots->map(fn ($s) => [$s->role, $s->sales_recipe_id !== null])->all();
+    $form = fn (int $id) => FoodAlchemistConcept::with('slots')->find($id)->slots->map(fn ($s) => [$s->role, $s->recipe_id !== null])->all();
     $callsPlattform = DB::table('foodalchemist_ai_call_log')->whereNull('error')->pluck('feature')->all();
 
     [$rm, $runden] = ($this->loese)('foodalchemist.concepts.GENERATE', ['brief' => $brief, 'name' => 'MCP']);
@@ -100,7 +100,7 @@ it('Vergleichstest foodbook_kapitel.WORDING_GENERATE: dieselben Overrides am Blo
     $concepts = app(ConceptService::class);
     $menue = $concepts->create($this->rootTeam, ['name' => 'Menü', 'status' => 'active']);
     $slot = $concepts->addSlot($this->rootTeam, $menue->id, ['role' => 'Hauptgang']);
-    $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->gericht->id]);
+    $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->gericht->id]);
     $bau = function (string $titel) use ($fb, $menue) {
         $this->registry->get('foodalchemist.foodbook_kapitel.POST')->execute(['foodbook_id' => $fb->id, 'title' => $titel], $this->mcp);
         $k = FoodAlchemistFoodbookKapitel::where('foodbook_id', $fb->id)->where('title', $titel)->value('id');
@@ -126,7 +126,7 @@ it('Vergleichstest speisekarte_wording.GENERATE: dieselben Positions-Texte, ein 
     $bau = function (string $name) use ($karten) {
         $karte = $karten->create($this->rootTeam, ['name' => $name]);
         $rubrik = $karten->addRubrik($this->rootTeam, $karte->id);
-        $p1 = $karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+        $p1 = $karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
         FoodAlchemistSpeisekarte::whereKey($karte->id)->update(['writing_style_id' => $this->stil->id]);
 
         return [$karte->id, $p1];
@@ -148,7 +148,7 @@ it('Vergleichstest concepts.ENRICH: MCP-Aufruf legt Aufträge an statt den Provi
     $bau = function (string $name) use ($concepts) {
         $c = $concepts->create($this->rootTeam, ['name' => $name, 'status' => 'active']);
         $slot = $concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
-        $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->gericht->id]);
+        $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->gericht->id]);
 
         return $c;
     };
@@ -186,7 +186,7 @@ it('Wording-Tools ohne Schreibstil: kein KI-Aufruf, kein Auftrag (unverändert)'
     $karten = app(SpeisekarteService::class);
     $karte = $karten->create($this->rootTeam, ['name' => 'Ohne Stil']);
     $rubrik = $karten->addRubrik($this->rootTeam, $karte->id);
-    $karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
 
     $r = $this->registry->get('foodalchemist.speisekarte_wording.GENERATE')->execute(['speisekarte_id' => $karte->id], $this->mcp);
     expect($r->success)->toBeTrue()->and($r->data['updated_positions'])->toBe(0)->and(DB::table('foodalchemist_ki_auftraege')->count())->toBe(0);

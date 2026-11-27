@@ -276,7 +276,7 @@ class ReportExportService
                 'position' => (int) $slot->position,
                 'role' => $slot->role,
                 'title' => $slot->title,
-                'type' => $ep !== null ? 'paket' : ($slot->sales_recipe_id !== null ? 'gericht' : 'leer'),
+                'type' => $ep !== null ? 'paket' : ($slot->recipe_id !== null ? 'gericht' : 'leer'),
                 'package' => $ep !== null ? ['id' => (int) $ep->id, 'name' => $ep->name, 'price_per_person' => $ep->price_per_person_cache,
                     'ek_per_person' => $ep->ek_per_person_cache, 'food_cost_percent' => null, 'price_incomplete' => $ep->price_incomplete] : null,
                 'gerichte' => $gerichte->values()->all(),
@@ -473,9 +473,9 @@ class ReportExportService
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
                             continue; // Concept nicht (mehr) sichtbar → auslassen
                         }
-                    } elseif ($b->type === 'recipe_ref' && $b->sales_recipe_id !== null) {
+                    } elseif ($b->type === 'recipe_ref' && $b->recipe_id !== null) {
                         try {
-                            $positionen[] = ['kind' => 'recipe', 'name' => $b->dish?->name, 'recipe' => $this->rezeptDaten($team, (int) $b->sales_recipe_id, $optionen)['recipe']];
+                            $positionen[] = ['kind' => 'recipe', 'name' => $b->dish?->name, 'recipe' => $this->rezeptDaten($team, (int) $b->recipe_id, $optionen)['recipe']];
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
                             continue;
                         }
@@ -552,9 +552,9 @@ class ReportExportService
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
                             continue;
                         }
-                    } elseif ($b->type === 'recipe_ref' && $b->sales_recipe_id !== null) {
+                    } elseif ($b->type === 'recipe_ref' && $b->recipe_id !== null) {
                         try {
-                            $positionen[] = ['kind' => 'recipe', 'name' => $b->dish?->name, 'recipe' => $this->rezeptDaten($team, (int) $b->sales_recipe_id, $optionen)['recipe']];
+                            $positionen[] = ['kind' => 'recipe', 'name' => $b->dish?->name, 'recipe' => $this->rezeptDaten($team, (int) $b->recipe_id, $optionen)['recipe']];
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
                             continue;
                         }
@@ -637,9 +637,9 @@ class ReportExportService
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
                             continue; // Concept nicht (mehr) sichtbar → auslassen
                         }
-                    } elseif ($pos->type === 'gericht_ref' && $pos->sales_recipe_id !== null) {
+                    } elseif ($pos->type === 'gericht_ref' && $pos->recipe_id !== null) {
                         try {
-                            $positionen[] = ['kind' => 'recipe', 'name' => $pos->dish?->name, 'recipe' => $this->rezeptDaten($team, (int) $pos->sales_recipe_id, $optionen)['recipe']];
+                            $positionen[] = ['kind' => 'recipe', 'name' => $pos->dish?->name, 'recipe' => $this->rezeptDaten($team, (int) $pos->recipe_id, $optionen)['recipe']];
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
                             continue;
                         }

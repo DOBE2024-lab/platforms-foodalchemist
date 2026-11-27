@@ -125,12 +125,12 @@ final class GerichtHuelleService
      */
     public function planeHuellen(Team $team, FoodAlchemistCascadeRunStep $conceptStep, int $conceptId, int $sortAb = 0): int
     {
-        $slots = FoodAlchemistConceptSlot::where('concept_id', $conceptId)->whereNotNull('sales_recipe_id')->where('type', 'gericht')
-            ->orderBy('position')->orderBy('id')->get(['id', 'sales_recipe_id']);
+        $slots = FoodAlchemistConceptSlot::where('concept_id', $conceptId)->whereNotNull('recipe_id')->where('type', 'gericht')
+            ->orderBy('position')->orderBy('id')->get(['id', 'recipe_id']);
         $gesehen = [];
         $angelegt = 0;
         foreach ($slots as $slot) {
-            $recipeId = (int) $slot->sales_recipe_id;
+            $recipeId = (int) $slot->recipe_id;
             if (isset($gesehen[$recipeId])) {
                 continue;   // dasselbe Gericht an mehreren Positionen: ein Schritt reicht
             }
@@ -147,7 +147,7 @@ final class GerichtHuelleService
                 'position' => (int) FoodAlchemistDishIdea::where('team_id', $team->id)->where('concept_id', $conceptId)->max('position') + 1,
                 'title' => (string) $gericht->name,
                 'description' => $beschreibung !== '' ? $beschreibung : null,
-                'sales_recipe_id' => null,
+                'recipe_id' => null,
                 'target_form' => 'einzel',
                 'group_id' => null,
                 'status' => 'entwurf',

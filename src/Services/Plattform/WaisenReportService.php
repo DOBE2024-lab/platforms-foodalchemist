@@ -22,7 +22,7 @@ final class WaisenReportService
     /** Spaltenname → Elterntabelle (ohne Präfix `foodalchemist_`). */
     public const ZIEL = [
         'gp_id' => 'gps', 'vessel_gp_id' => 'gps', 'derivat_von_gp_id' => 'gps',
-        'recipe_id' => 'recipes', 'sales_recipe_id' => 'recipes', 'referenced_recipe_id' => 'recipes', 'variant_source_recipe_id' => 'recipes',
+        'recipe_id' => 'recipes', 'recipe_id' => 'recipes', 'referenced_recipe_id' => 'recipes', 'variant_source_recipe_id' => 'recipes',
         'recipe_ingredient_id' => 'recipe_ingredients', 'presentation_id' => 'recipe_presentations',
         'concept_id' => 'concepts', 'embedded_concept_id' => 'concepts', 'format_id' => 'formats', 'offer_id' => 'offers',
         'serving_form_id' => 'serving_forms', 'markup_class_id' => 'markup_classes', 'dish_main_group_id' => 'dish_main_groups',

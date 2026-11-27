@@ -111,7 +111,7 @@ it('„Neuere Fassung verfügbar“ (Aktion) entsteht für das Team mit dem eing
     $angebote = app(AngebotService::class);
     $angebot = $angebote->create($this->broich, ['name' => 'Hochzeit Müller']);
     app(OfferCompositionService::class)->addKapitel($this->broich, $angebot->id, ['title' => 'Menü'])->blocks()
-        ->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $lamm->id, 'position' => 1, 'visible' => true]);
+        ->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'recipe_id' => $lamm->id, 'position' => 1, 'visible' => true]);
     $angebote->setStatus($this->broich, $angebot->id, 'angebot');   // friert ein
     expect(($this->signale)($this->broich, SignalTyp::FassungNeuerVerfuegbar))->toHaveCount(0);   // noch nichts Neueres
 
@@ -142,7 +142,7 @@ it('Eine zweite neue Fassung bündelt im selben Aktions-Signal; Verwerfen des Sn
     $angebote = app(AngebotService::class);
     $angebot = $angebote->create($this->broich, ['name' => 'Taufe']);
     app(OfferCompositionService::class)->addKapitel($this->broich, $angebot->id, ['title' => 'Menü'])->blocks()
-        ->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $lamm->id, 'position' => 1, 'visible' => true]);
+        ->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'recipe_id' => $lamm->id, 'position' => 1, 'visible' => true]);
     $angebote->setStatus($this->broich, $angebot->id, 'angebot');
 
     ($this->knochenMenge)('2500');
@@ -197,7 +197,7 @@ it('Ein Fehler beim Nachführen nach dem Übernehmen rollt die Übernahme nicht 
     $angebote = app(AngebotService::class);
     $angebot = $angebote->create($this->broich, ['name' => 'Taufe']);
     app(OfferCompositionService::class)->addKapitel($this->broich, $angebot->id, ['title' => 'Menü'])->blocks()
-        ->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $lamm->id, 'position' => 1, 'visible' => true]);
+        ->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'recipe_id' => $lamm->id, 'position' => 1, 'visible' => true]);
     $angebote->setStatus($this->broich, $angebot->id, 'angebot');
     ($this->knochenMenge)('2500');
     ($this->publiziere)('Mehr Knochen');

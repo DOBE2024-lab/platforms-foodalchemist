@@ -31,7 +31,7 @@ beforeEach(function () {
 
 it('Konzept: leerer Pflicht-Slot ist blockierend, Kopf-Lücken zeigen auf concepts.ENRICH', function () {
     $c = $this->makeConcept($this->rootTeam, 'Reife-Konzept', ['status' => 'draft']);
-    $this->makeConceptSlot($c, ['sales_recipe_id' => null]);
+    $this->makeConceptSlot($c, ['recipe_id' => null]);
 
     $res = ($this->reife)('concept', (int) $c->id);
 
@@ -56,7 +56,7 @@ it('Konzept: belegter Slot mit Wording und gesetztem Kopf wird gelb/grün — ke
         'status' => 'draft', 'description' => 'Text', 'target_price_per_person' => 12.5,
         'consumer_name' => 'Kunde', 'claim' => 'Claim',
     ]);
-    $this->makeConceptSlot($c, ['sales_recipe_id' => $dish->id]);
+    $this->makeConceptSlot($c, ['recipe_id' => $dish->id]);
 
     $res = ($this->reife)('concept', (int) $c->id);
 
@@ -100,7 +100,7 @@ it('Foodbook: leeres Kapitel ist blockierend (kein Inhalt), befülltes Kapitel l
         ->and($res->data['ampel'])->toBe('rot');
 
     $dish = $this->makeRecipe($this->rootTeam, 'Gericht B', ['is_sales_recipe' => true]);
-    $this->makeFoodbookBlock($kap, ['sales_recipe_id' => $dish->id]);
+    $this->makeFoodbookBlock($kap, ['recipe_id' => $dish->id]);
 
     $res2 = ($this->reife)('foodbook', (int) $fb->id);
     expect(($this->codes)($res2))->not->toContain('kein_inhalt', 'kapitel_leer', 'keine_kapitel')

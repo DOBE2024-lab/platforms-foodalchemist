@@ -32,7 +32,7 @@ it('#3: mitKaskade hängt den Produktions-Baum an; EK nur intern; Blade rendert'
 
     $karte = $this->karten->create($this->rootTeam, ['name' => 'Testkarte']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g->id]);
 
     // Kundensicht
     $data = $this->karten->dokumentDaten($this->rootTeam, $karte->refresh(), intern: false, rubrikFilter: [], mitKaskade: true);

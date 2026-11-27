@@ -259,7 +259,7 @@ class SpeisekarteService
                         'team_id' => $neu->team_id, 'section_id' => $map[$r->id], 'position' => $pos->position,
                         'type' => $pos->type, 'level' => $pos->level, 'visible' => $pos->visible, 'label' => $pos->label,
                         'consumer_text' => $pos->consumer_text, 'interne_bemerkung' => $pos->interne_bemerkung,
-                        'variant_group_id' => $pos->variant_group_id, 'sales_recipe_id' => $pos->sales_recipe_id,
+                        'variant_group_id' => $pos->variant_group_id, 'recipe_id' => $pos->recipe_id,
                         'concept_id' => $pos->concept_id, 'presentation_id' => $pos->presentation_id,
                         'wording' => $pos->wording, 'price_mode' => $pos->price_mode, 'price_value' => $pos->price_value,
                         'height' => $pos->height, 'payload_json' => $pos->payload_json,
@@ -443,7 +443,7 @@ class SpeisekarteService
 
     private const POSITION_FELDER = [
         'type', 'level', 'visible', 'label', 'consumer_text', 'interne_bemerkung', 'variant_group_id',
-        'sales_recipe_id', 'concept_id', 'presentation_id', 'wording', 'price_mode', 'price_value',
+        'recipe_id', 'concept_id', 'presentation_id', 'wording', 'price_mode', 'price_value',
         'height', 'payload_json',
     ];
 
@@ -477,14 +477,14 @@ class SpeisekarteService
     {
         $typ = array_key_exists('type', $daten) ? $daten['type'] : $pos?->type;
         $wert = fn (string $f) => array_key_exists($f, $daten) ? $daten[$f] : $pos?->{$f};
-        foreach (['sales_recipe_id' => ['gericht_ref', 'pruefeGerichtRef'], 'concept_id' => ['menue_ref', 'pruefeMenueRef']] as $feld => [$refTyp, $pruefe]) {
+        foreach (['recipe_id' => ['gericht_ref', 'pruefeGerichtRef'], 'concept_id' => ['menue_ref', 'pruefeMenueRef']] as $feld => [$refTyp, $pruefe]) {
             $neu = $pos === null || array_key_exists($feld, $daten);
             if ($neu && ($typ === $refTyp || ($daten[$feld] ?? null) !== null)) {
                 $this->{$pruefe}($team, $wert($feld) !== null ? (int) $wert($feld) : null);
             }
         }
         $darreichung = (int) ($daten['presentation_id'] ?? 0);
-        if ($darreichung > 0 && ! \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::whereKey($darreichung)->where('recipe_id', (int) $wert('sales_recipe_id'))->exists()) {
+        if ($darreichung > 0 && ! \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::whereKey($darreichung)->where('recipe_id', (int) $wert('recipe_id'))->exists()) {
             throw new \RuntimeException('Darreichung gehört nicht zum Gericht dieser Position.');
         }
     }
@@ -496,13 +496,13 @@ class SpeisekarteService
     private function pruefeGerichtRef(Team $team, ?int $salesRecipeId): void
     {
         if ($salesRecipeId === null) {
-            throw new \RuntimeException('gericht_ref-Position braucht ein sales_recipe_id (VK-Gericht).');
+            throw new \RuntimeException('gericht_ref-Position braucht ein recipe_id (VK-Gericht).');
         }
         $ok = \Platform\FoodAlchemist\Support\Verweisziel::sichtbar(FoodAlchemistRecipe::class, $team)->verkauf()   // CQ 2.3f: inkl. Abo-Fassungen
             ->whereNull('variant_source_recipe_id')
             ->whereKey($salesRecipeId)->exists();
         if (! $ok) {
-            throw new \RuntimeException("sales_recipe_id {$salesRecipeId} ist kein gültiges, sichtbares VK-Gericht.");
+            throw new \RuntimeException("recipe_id {$salesRecipeId} ist kein gültiges, sichtbares VK-Gericht.");
         }
     }
 

@@ -58,7 +58,7 @@ it('designPreview rendert auch Speisekarte (typ-generisch, nicht nur Foodbook)',
         'speisekarte_id' => $karteId, 'title' => 'Fisch', 'consumer_title' => 'Aus dem Wasser', 'art' => 'speisen',
     ], $kontext)->data['rubrik']['id'];
     $registry->get('foodalchemist.speisekarte_positionen.POST')->execute([
-        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'sales_recipe_id' => $gericht->id,
+        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'recipe_id' => $gericht->id,
     ], $kontext);
 
     $b = $designs->builtins()['menu'];
@@ -81,7 +81,7 @@ it('Speisekarte-Präsentation zeigt Rubriken OHNE Kapitel-Kicker, Foodbook MIT',
         'speisekarte_id' => $karteId, 'title' => 'Fisch', 'consumer_title' => 'Aus dem Wasser', 'art' => 'speisen',
     ], $kontext)->data['rubrik']['id'];
     $registry->get('foodalchemist.speisekarte_positionen.POST')->execute([
-        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'sales_recipe_id' => $gericht->id,
+        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'recipe_id' => $gericht->id,
     ], $kontext);
     $karte = \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte::find($karteId);
     $skRes = $pres->publish($this->rootTeam, 'speisekarte', $karte->id, ['expires_at' => now()->addDays(30)->toDateString()]);
@@ -94,7 +94,7 @@ it('Speisekarte-Präsentation zeigt Rubriken OHNE Kapitel-Kicker, Foodbook MIT',
     // Foodbook: Kicker bleibt
     $c = $this->makeConcept($this->rootTeam, 'Menü', ['kind' => 'concept', 'consumer_name' => 'Gang']);
     $dish = $this->makeRecipe($this->rootTeam, 'Lachs', ['is_sales_recipe' => true, 'sales_net' => 12.0]);
-    $this->makeConceptSlot($c, ['sales_recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
+    $this->makeConceptSlot($c, ['recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
     $foodbook = $this->makeFoodbook($this->rootTeam, 'Katalog', ['personen' => 4]);
     $kap = $this->makeChapter($foodbook, ['title' => 'Vorspeisen', 'consumer_title' => 'Vorspeisen', 'position' => 1]);
     $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $c->id, 'position' => 1]);

@@ -86,7 +86,7 @@ it('Struktur/Tiefe/Kapitel-Aufbau/Anlegen/Preise schalten mit dem Bestand hoch',
         ->and($steps['kapitel_aufbau']['status'])->toBe('erledigt');
 
     // Anlegen + Preise: recipe_ref-Block (bepreist, sales_net 12) an EIN Kapitel.
-    $this->fbSvc->addBlock($this->rootTeam, $top->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->dish->id]);
+    $this->fbSvc->addBlock($this->rootTeam, $top->id, ['type' => 'recipe_ref', 'recipe_id' => $this->dish->id]);
     $steps = collect($this->svc->checkliste($this->rootTeam, $this->fb))->keyBy('key');
     // 2 Kapitel, 1 mit Inhalt → anlegen teil; das befüllte ist bepreist → preise erledigt (Bezug: befüllte Kapitel).
     expect($steps['anlegen']['status'])->toBe('teil')
@@ -96,7 +96,7 @@ it('Struktur/Tiefe/Kapitel-Aufbau/Anlegen/Preise schalten mit dem Bestand hoch',
 it('kapitelStand liefert Ziele, Aggregat, WE-Ampel, Inhalts-Zähler und Anlage-Stand', function () {
     $k = $this->fbSvc->addKapitel($this->rootTeam, $this->fb->id, ['title' => 'Hauptgänge']);
     $this->fbSvc->updateKapitel($this->rootTeam, $k->id, ['target_count' => 2, 'price_anchor' => 25.0]);
-    $this->fbSvc->addBlock($this->rootTeam, $k->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->dish->id]);
+    $this->fbSvc->addBlock($this->rootTeam, $k->id, ['type' => 'recipe_ref', 'recipe_id' => $this->dish->id]);
 
     $stand = $this->svc->kapitelStand($this->rootTeam, $k->refresh());
 
@@ -114,7 +114,7 @@ it('kapitelStand liefert Ziele, Aggregat, WE-Ampel, Inhalts-Zähler und Anlage-S
 it('speisenBaum trennt Paket (concept_ref, €/Gast) und Einzelgericht (recipe_ref, €/Pos)', function () {
     // Kapitel mit Einzelgericht.
     $k = $this->fbSvc->addKapitel($this->rootTeam, $this->fb->id, ['title' => 'Menü']);
-    $this->fbSvc->addBlock($this->rootTeam, $k->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->dish->id]);
+    $this->fbSvc->addBlock($this->rootTeam, $k->id, ['type' => 'recipe_ref', 'recipe_id' => $this->dish->id]);
 
     // Zweites Kapitel mit Paket über den Gerüst-/Übernahme-Weg (legt Konzept + concept_ref an).
     $frame = $this->frames->frameFor($this->rootTeam, 'foodbook', $this->fb->id);
@@ -142,7 +142,7 @@ it('speisenBaum trennt Paket (concept_ref, €/Gast) und Einzelgericht (recipe_r
 it('kapitelMatrix liefert je Kapitel Ziele-/Inhalts-/Preis-Status + WE-Ampel', function () {
     $mit = $this->fbSvc->addKapitel($this->rootTeam, $this->fb->id, ['title' => 'Hauptgänge']);
     $this->fbSvc->updateKapitel($this->rootTeam, $mit->id, ['target_count' => 2]);
-    $this->fbSvc->addBlock($this->rootTeam, $mit->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->dish->id]);
+    $this->fbSvc->addBlock($this->rootTeam, $mit->id, ['type' => 'recipe_ref', 'recipe_id' => $this->dish->id]);
     $leer = $this->fbSvc->addKapitel($this->rootTeam, $this->fb->id, ['title' => 'Leer']);
 
     $matrix = collect($this->svc->kapitelMatrix($this->rootTeam, $this->fb->refresh()))->keyBy('titel');
@@ -171,7 +171,7 @@ it('kapitelMatrix liefert je Kapitel Ziele-/Inhalts-/Preis-Status + WE-Ampel', f
 it('kapitelBoard liefert je Kapitel Aggregat, WE-Ampel und Positionen mit VK-Referenz', function () {
     // Einzelgericht (recipe_ref, €/Pos) + WE-Ziel am Kapitel für die Ampel.
     $k = $this->fbSvc->addKapitel($this->rootTeam, $this->fb->id, ['title' => 'Menü', 'target_food_cost_pct' => 30]);
-    $this->fbSvc->addBlock($this->rootTeam, $k->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->dish->id]);
+    $this->fbSvc->addBlock($this->rootTeam, $k->id, ['type' => 'recipe_ref', 'recipe_id' => $this->dish->id]);
 
     $baum = collect($this->svc->kapitelBoard($this->rootTeam, $this->fb->refresh()))->keyBy('titel');
 
@@ -196,7 +196,7 @@ it('kapitelBoard liefert je Kapitel Aggregat, WE-Ampel und Positionen mit VK-Ref
 // meldet das Signal vk_anpassung_empfohlen je veröffentlichter Ausgabe.
 it('kapitelBoard trägt kein Freigabe-Badge mehr an Positionen', function () {
     $k = $this->fbSvc->addKapitel($this->rootTeam, $this->fb->id, ['title' => 'Menü']);
-    $this->fbSvc->addBlock($this->rootTeam, $k->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->dish->id]);
+    $this->fbSvc->addBlock($this->rootTeam, $k->id, ['type' => 'recipe_ref', 'recipe_id' => $this->dish->id]);
 
     $pos = collect($this->svc->kapitelBoard($this->rootTeam, $this->fb->refresh()))->firstWhere('titel', 'Menü')['positionen'][0];
 

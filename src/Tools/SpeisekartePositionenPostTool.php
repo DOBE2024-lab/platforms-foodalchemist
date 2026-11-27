@@ -18,7 +18,7 @@ class SpeisekartePositionenPostTool extends FoodAlchemistTool implements ToolCon
 
     public function getDescription(): string
     {
-        return 'Fügt eine Position in eine Rubrik ein. type=gericht_ref braucht sales_recipe_id (VK-Gericht/Getränk), '
+        return 'Fügt eine Position in eine Rubrik ein. type=gericht_ref braucht recipe_id (VK-Gericht/Getränk), '
             . 'type=menue_ref braucht concept_id (Fix-Menü). Preis kommt automatisch aus Darreichung/Concept; '
             . 'price_mode=manuell + price_value übersteuert. header/text/spacer für Layout.';
     }
@@ -30,7 +30,8 @@ class SpeisekartePositionenPostTool extends FoodAlchemistTool implements ToolCon
             'properties' => [
                 'rubrik_id' => ['type' => 'integer'],
                 'type' => ['type' => 'string', 'enum' => ['gericht_ref', 'menue_ref', 'header', 'text', 'spacer'], 'default' => 'gericht_ref'],
-                'sales_recipe_id' => ['type' => 'integer', 'description' => 'Pflicht bei gericht_ref'],
+                'recipe_id' => ['type' => 'integer', 'description' => 'Pflicht bei gericht_ref'],
+                'sales_recipe_id' => \Platform\FoodAlchemist\Support\RezeptIdAlias::schema(),
                 'concept_id' => ['type' => 'integer', 'description' => 'Pflicht bei menue_ref'],
                 'wording' => ['type' => 'string', 'description' => 'Anzeige-Name-Override (optional)'],
                 'consumer_text' => ['type' => 'string'],
@@ -43,6 +44,7 @@ class SpeisekartePositionenPostTool extends FoodAlchemistTool implements ToolCon
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
@@ -52,7 +54,7 @@ class SpeisekartePositionenPostTool extends FoodAlchemistTool implements ToolCon
             $svc = app(SpeisekarteService::class);
             $pos = $svc->addPosition($team, (int) $arguments['rubrik_id'], [
                 'type' => (string) $arguments['type'],
-                'sales_recipe_id' => isset($arguments['sales_recipe_id']) ? (int) $arguments['sales_recipe_id'] : null,
+                'recipe_id' => isset($arguments['recipe_id']) ? (int) $arguments['recipe_id'] : null,
                 'concept_id' => isset($arguments['concept_id']) ? (int) $arguments['concept_id'] : null,
                 'wording' => $arguments['wording'] ?? null,
                 'consumer_text' => $arguments['consumer_text'] ?? null,

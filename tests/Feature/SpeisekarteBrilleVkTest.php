@@ -41,7 +41,7 @@ beforeEach(function () {
         'speisekarte_id' => $karteId, 'title' => 'Fisch', 'art' => 'speisen',
     ], $this->kontext)->data['rubrik']['id'];
     $this->posId = (int) $this->registry->get('foodalchemist.speisekarte_positionen.POST')->execute([
-        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id,
+        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'recipe_id' => $this->gericht->id,
     ], $this->kontext)->data['position']['id'];
     $this->karte = FoodAlchemistSpeisekarte::find($karteId);
 });

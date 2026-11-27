@@ -102,9 +102,9 @@ it('Weg 7 · 77d-Hüllen: eine Fassung kommt nur über das Abo, nie über die Te
 });
 
 it('Weg 8 · Verweise: Ausgaben eines Mandanten, die auf eine Abo-Fassung zeigen, lösen sie auf (kein stiller Leer-Block)', function () {
-    $block = new \Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock(['sales_recipe_id' => $this->fassungId]);
-    $slot = new \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot(['sales_recipe_id' => $this->fassungId]);
-    $fb = new \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock(['sales_recipe_id' => $this->fassungId]);
+    $block = new \Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock(['recipe_id' => $this->fassungId]);
+    $slot = new \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot(['recipe_id' => $this->fassungId]);
+    $fb = new \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock(['recipe_id' => $this->fassungId]);
 
     expect($block->dish?->id)->toBe($this->fassungId)
         ->and($slot->dish?->id)->toBe($this->fassungId)

@@ -46,7 +46,7 @@ class ConceptsGetTool extends FoodAlchemistTool implements ToolContract, ToolMet
 
         $resolver = app(DarreichungResolver::class);
 
-        return ToolResult::success([
+        return ToolResult::success(\Platform\FoodAlchemist\Support\RezeptIdAlias::ausgabe([
             'concept' => [
                 'id' => $c->id, 'name' => $c->name, 'status' => $c->status, 'phase' => $c->phase, 'class' => $c->class,
                 'occasion' => $c->occasion, 'level' => $c->level, 'description' => $c->description,
@@ -81,7 +81,7 @@ class ConceptsGetTool extends FoodAlchemistTool implements ToolContract, ToolMet
                     'quantity' => $s->quantity, 'unit' => $s->unit?->slug,
                 ];
             })->all(),
-        ]);
+        ]));
     }
 
     public function getMetadata(): array

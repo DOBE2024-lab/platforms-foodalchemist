@@ -33,7 +33,7 @@ it('Stufe A: Karte + Rubrik + gericht_ref-Position; Preis flach aus Rezept', fun
 
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge', 'art' => 'speisen']);
     $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, [
-        'type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id,
+        'type' => 'gericht_ref', 'recipe_id' => $this->gericht->id,
     ]);
     expect($pos->type)->toBe('gericht_ref')->and($pos->position)->toBe(1);
 
@@ -45,7 +45,7 @@ it('Stufe A: Manueller Preis übersteuert', function () {
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
     $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, [
-        'type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id,
+        'type' => 'gericht_ref', 'recipe_id' => $this->gericht->id,
         'price_mode' => 'manuell', 'price_value' => 29.50,
     ]);
     $preis = $this->karten->positionPreis($pos->refresh());
@@ -56,7 +56,7 @@ it('Stufe A: gericht_ref-Guard weist Nicht-VK-Rezept ab', function () {
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
     expect(fn () => $this->karten->addPosition($this->rootTeam, $rubrik->id, [
-        'type' => 'gericht_ref', 'sales_recipe_id' => $this->prodRezept->id,
+        'type' => 'gericht_ref', 'recipe_id' => $this->prodRezept->id,
     ]))->toThrow(\RuntimeException::class);
 });
 

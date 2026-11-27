@@ -42,7 +42,7 @@ it('baut ein Concept mit Slots: Paket ODER festes Gericht je Slot (Grill-Buffet)
     // Slot B: festes Gericht
     $concept->slots()->create([
         'team_id' => $this->rootTeam->id, 'role' => 'Dessert', 'title' => 'Dessert',
-        'position' => 1, 'sales_recipe_id' => $this->greenPower->id, 'quantity' => 1,
+        'position' => 1, 'recipe_id' => $this->greenPower->id, 'quantity' => 1,
     ]);
 
     $slots = $concept->slots()->get();

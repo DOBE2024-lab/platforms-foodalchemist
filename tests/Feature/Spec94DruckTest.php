@@ -29,10 +29,10 @@ beforeEach(function () {
     $gericht2 = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'lc', 'name' => '[VS] Lachs', 'status' => 'approved',
         'is_sales_recipe' => true, 'allergen_fish' => 'enthalten']);
     $slot(1, ['type' => 'header', 'title' => 'Vorspeise']);
-    $slot(2, ['type' => 'gericht', 'sales_recipe_id' => $gericht2->id, 'wording' => 'Gebeizter Lachs, Gurke, Dill']);
+    $slot(2, ['type' => 'gericht', 'recipe_id' => $gericht2->id, 'wording' => 'Gebeizter Lachs, Gurke, Dill']);
     $slot(3, ['type' => 'header', 'title' => 'Hauptgang']);
-    $slot(4, ['type' => 'gericht', 'sales_recipe_id' => $gericht->id, 'wording' => 'Rinderfilet vom Grill']);
-    $slot(5, ['type' => 'gericht', 'sales_recipe_id' => $gericht2->id, 'wording' => 'Lachs vom Holzfeuer, Fenchel']);
+    $slot(4, ['type' => 'gericht', 'recipe_id' => $gericht->id, 'wording' => 'Rinderfilet vom Grill']);
+    $slot(5, ['type' => 'gericht', 'recipe_id' => $gericht2->id, 'wording' => 'Lachs vom Holzfeuer, Fenchel']);
     $snack = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Snack', 'kind' => 'concept', 'status' => 'active',
         'price_per_person_cache' => 6, 'ek_per_person_cache' => 2]);
     $this->k = $svc->anlegen($this->rootTeam, ['name' => 'Druck', 'kunden_titel' => 'Sommerfest', 'gueltig_bis' => now()->addMonth()->format('Y-m-d'),

@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Services\FaRechte;
  * wenn alle seine Komponenten — rekursiv — freigegeben sind. Eine Stelle für Einzel-Freigabe, Mehrfachauswahl, Concept-Status, MCP-Tools,
  * Kaskade und Anreicherung; die Aufrufer rufen nur {@see pruefeRezept()} / {@see pruefeConcept()} bzw. {@see offenFuerRezept()}.
  *
- * Komponenten: Unterrezepte (Zutaten → `referenced_recipe_id`); beim Concept die Slot-Rezepte (`sales_recipe_id`), eingebettete Pakete/Concepts
+ * Komponenten: Unterrezepte (Zutaten → `referenced_recipe_id`); beim Concept die Slot-Rezepte (`recipe_id`), eingebettete Pakete/Concepts
  * (`embedded_concept_id`, freigegeben = `active`) samt deren Inhalt. Eine Fassung (Spec 82) ist ein
  * veröffentlichter Stand und gilt als freigegeben. Abwärts wird immer weiter gesucht, auch unter freigegebenen Komponenten (ein freigegebenes
  * Basisrezept aus der Zeit vor der Sperre kann noch einen Entwurf enthalten). Zyklen terminieren über die Besucht-Liste.
@@ -170,8 +170,8 @@ class FreigabeSperre
             $neueC = [];
             if ($concepts !== []) {
                 $slots = DB::table('foodalchemist_concept_slots')->whereIn('concept_id', $concepts)->whereNull('deleted_at')
-                    ->get(['sales_recipe_id', 'embedded_concept_id']);
-                $neueR = $slots->pluck('sales_recipe_id')->filter()->all();
+                    ->get(['recipe_id', 'embedded_concept_id']);
+                $neueR = $slots->pluck('recipe_id')->filter()->all();
                 $neueC = $slots->pluck('embedded_concept_id')->filter()->all();
             }
             if ($rezepte !== []) {

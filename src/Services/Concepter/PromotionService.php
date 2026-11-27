@@ -14,7 +14,7 @@ use Platform\Core\Models\Team;
  * Gültigkeitsfenster.
  *
  * ```
- * Ausgabe → Positionen → sales_recipe_id → sales_facts im Fenster
+ * Ausgabe → Positionen → recipe_id → sales_facts im Fenster
  * ```
  *
  * **Zwei Ehrlichkeiten sind fest eingebaut, nicht optional:**
@@ -125,7 +125,7 @@ class PromotionService
     }
 
     /**
-     * Die Verkaufsgerichte einer Ausgabe — direkt über `sales_recipe_id` und indirekt über
+     * Die Verkaufsgerichte einer Ausgabe — direkt über `recipe_id` und indirekt über
      * verlinkte Konzepte bzw. Pakete.
      *
      * @return list<int>
@@ -143,8 +143,8 @@ class PromotionService
         // Auflösung fehlte einer Menü-Karte ihr halber Umsatz.
         if ($konzepte !== []) {
             $direkt = array_merge($direkt, DB::table('foodalchemist_concept_slots')
-                ->whereIn('concept_id', $konzepte)->whereNotNull('sales_recipe_id')
-                ->whereNull('deleted_at')->pluck('sales_recipe_id')->all());
+                ->whereIn('concept_id', $konzepte)->whereNotNull('recipe_id')
+                ->whereNull('deleted_at')->pluck('recipe_id')->all());
         }
 
         return array_values(array_unique(array_map('intval', array_filter($direkt))));
@@ -158,9 +158,9 @@ class PromotionService
         $rows = DB::table('foodalchemist_foodbook_blocks as b')
             ->join('foodalchemist_foodbook_chapters as c', 'c.id', '=', 'b.chapter_id')
             ->where('c.foodbook_id', $id)->whereNull('b.deleted_at')->whereNull('c.deleted_at')
-            ->get(['b.sales_recipe_id', 'b.concept_id']);
+            ->get(['b.recipe_id', 'b.concept_id']);
 
-        return [$rows->pluck('sales_recipe_id')->filter()->all(),
+        return [$rows->pluck('recipe_id')->filter()->all(),
             $rows->pluck('concept_id')->filter()->unique()->all(), []];
     }
 
@@ -170,9 +170,9 @@ class PromotionService
         $rows = DB::table('foodalchemist_menu_card_items as i')
             ->join('foodalchemist_menu_card_sections as s', 's.id', '=', 'i.section_id')
             ->where('s.menu_card_id', $id)->whereNull('i.deleted_at')->whereNull('s.deleted_at')
-            ->get(['i.sales_recipe_id', 'i.concept_id']);
+            ->get(['i.recipe_id', 'i.concept_id']);
 
-        return [$rows->pluck('sales_recipe_id')->filter()->all(),
+        return [$rows->pluck('recipe_id')->filter()->all(),
             $rows->pluck('concept_id')->filter()->unique()->all(), []];
     }
 
@@ -181,9 +181,9 @@ class PromotionService
     {
         $rows = DB::table('foodalchemist_menu_plan_entries')
             ->where('menu_plan_id', $id)->whereNull('deleted_at')
-            ->get(['sales_recipe_id', 'concept_id']);
+            ->get(['recipe_id', 'concept_id']);
 
-        return [$rows->pluck('sales_recipe_id')->filter()->all(),
+        return [$rows->pluck('recipe_id')->filter()->all(),
             $rows->pluck('concept_id')->filter()->unique()->all(), []];
     }
 

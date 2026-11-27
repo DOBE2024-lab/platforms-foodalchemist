@@ -106,7 +106,7 @@ beforeEach(function () {
     // 98 · 2.6c: Paket = kind=paket-Concept, eingebettet über embedded_concept_id
     $cs = app(ConceptService::class);
     $this->paket = $cs->createPaket($this->master, ['name' => 'Jus-Duo']);
-    $cs->fillSlot($this->master, $cs->addSlot($this->master, $this->paket->id, ['role' => 'Beilage'])->id, ['sales_recipe_id' => $this->jus->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+    $cs->fillSlot($this->master, $cs->addSlot($this->master, $this->paket->id, ['role' => 'Beilage'])->id, ['recipe_id' => $this->jus->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $this->p1 = FoodAlchemistConcept::mitFassungen()->findOrFail(app(ConceptFassungService::class)->veroeffentlichen($this->master, $this->paket->id, 'Erst', $this->kurator)['fassung_id']);
     $this->konzept = $cs->create($this->master, ['name' => 'Jus-Menü']);
     $s1 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Beilage']);

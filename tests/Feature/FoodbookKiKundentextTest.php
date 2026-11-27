@@ -91,7 +91,7 @@ function fbMitInhalt(Team $team, string $briefing = ''): FoodAlchemistFoodbook
         'team_id' => $team->id, 'recipe_key' => 'l2g1', 'name' => 'Zanderfilet auf Linsen', 'status' => 'approved',
         'is_sales_recipe' => true, 'sales_net' => 18.50,
     ]);
-    $svc->addBlock($team, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $gericht->id]);
+    $svc->addBlock($team, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $gericht->id]);
 
     return $fb->refresh();
 }

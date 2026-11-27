@@ -90,18 +90,18 @@ beforeEach(function () {
     $cs = app(ConceptService::class);
     $this->paket = $cs->createPaket($this->master, ['name' => 'Jus-Duo']);
     $sp = $cs->addSlot($this->master, $this->paket->id, ['role' => 'Vorspeise']);
-    $cs->fillSlot($this->master, $sp->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+    $cs->fillSlot($this->master, $sp->id, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $cs->setSlotDarreichung($this->master, $sp->id, $this->kleine->id);
     $this->paketKonzept = $cs->createPaket($this->master, ['name' => 'Jus-Kompakt']);
     $s = $cs->addSlot($this->master, $this->paketKonzept->id, ['role' => 'Beilage']);
-    $cs->fillSlot($this->master, $s->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+    $cs->fillSlot($this->master, $s->id, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $this->konzept = $cs->create($this->master, ['name' => 'Jus-Menü']);
     $s1 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Vorspeise']);
     $cs->fillSlot($this->master, $s1->id, ['embedded_concept_id' => $this->paket->id]);
     $s2 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Beilage']);
     $cs->fillSlot($this->master, $s2->id, ['embedded_concept_id' => $this->paketKonzept->id]);
     $s3 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Hauptgang']);
-    $cs->fillSlot($this->master, $s3->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+    $cs->fillSlot($this->master, $s3->id, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $cs->setSlotDarreichung($this->master, $s3->id, $this->kleine->id);
     $cs->addBlock($this->master, $this->konzept->id, 'header', ['title' => 'Unser Menü']);
 
@@ -186,10 +186,10 @@ it('Kündigung: Kette ohne Doppel (Gericht EINMAL kopiert), Kopien sind normale 
         ->and($paketKonzeptK->kind)->toBe('paket')->and($paketK->kind)->toBe('paket');
     $slots = $konzeptK->slots()->orderBy('position')->get();
     expect($slots->pluck('embedded_concept_id')->filter()->values()->all())->toBe([$paketK->id, $paketKonzeptK->id])
-        ->and($slots->pluck('sales_recipe_id')->filter()->values()->all())->toBe([$gerichtK->id])
-        ->and($paketK->slots()->pluck('sales_recipe_id')->map(fn ($v) => (int) $v)->all())->toBe([$gerichtK->id]);
+        ->and($slots->pluck('recipe_id')->filter()->values()->all())->toBe([$gerichtK->id])
+        ->and($paketK->slots()->pluck('recipe_id')->map(fn ($v) => (int) $v)->all())->toBe([$gerichtK->id]);
     // gewählte Form: zeigt auf die Form der Rezept-KOPIE (kleine Portion), nie auf die der Fassung
-    $slotG = $slots->firstWhere('sales_recipe_id', $gerichtK->id);
+    $slotG = $slots->firstWhere('recipe_id', $gerichtK->id);
     $formKopie = FoodAlchemistRecipeDarreichung::find($slotG->presentation_id);
     expect($formKopie)->not->toBeNull()->and((int) $formKopie->recipe_id)->toBe((int) $gerichtK->id)->and((float) $formKopie->quantity_per_unit_g)->toBe(100.0);
     // Kette unter dem Gericht: der Fond ist Unter-Rezept der KOPIE

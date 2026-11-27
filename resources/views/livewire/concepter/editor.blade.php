@@ -437,13 +437,13 @@
                                         } elseif ($s->embedded_concept_id && $s->embeddedConcept) {
                                             $menueGruppen[] = $aktuelleGruppe;
                                             $_ref = $s->embeddedConcept;
-                                            $_dishes = $s->embeddedConcept->slots->filter(fn ($e) => $e->sales_recipe_id !== null)->values();
+                                            $_dishes = $s->embeddedConcept->slots->filter(fn ($e) => $e->recipe_id !== null)->values();
                                             $_preis = $s->embeddedConcept->price_per_person_cache;
                                             // B1 (Folge-PR EK-Lücke): EK je Person jeder Paket-Position aus EINEM Cockpit je Paket (Darreichung, Menge; unbekannt = null), nicht der Ansatz
                                             $_ekJeSlot = collect(app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->preisCockpit($_ref)['zeilen'])->filter(fn ($z) => isset($z['slot_id']))->pluck('ek', 'slot_id')->all();
                                             $menueGruppen[] = ['type' => 'paket', 'title' => $_ref->name, 'price' => $_preis, 'headerSlotId' => null, 'slots' => [], 'texte' => [], 'paket' => $_ref, 'dishes' => $_dishes, 'ekJeSlot' => $_ekJeSlot];
                                             $aktuelleGruppe = ['type' => 'sektion', 'title' => null, 'headerSlotId' => null, 'slots' => [], 'texte' => []];
-                                        } elseif ($s->sales_recipe_id && $s->dish) {
+                                        } elseif ($s->recipe_id && $s->dish) {
                                             $aktuelleGruppe['slots'][] = $s;
                                         } elseif ($s->type === 'text' && trim((string) $s->text_content) !== '') {
                                             // Freitext-Block erscheint als Sektions-Beschreibung in der Gäste-Sicht (Bug-Fix 2026-08-24)
@@ -498,7 +498,7 @@
                                                     <x-fa::card as="article" wire:key="mpcard-{{ $pg->id }}" class="flex flex-col gap-2 px-3.5 py-3">
                                                         <div class="flex items-start justify-between gap-2">
                                                             <x-fa::badge :tone="$qbTon">{{ $qbText }}</x-fa::badge>
-                                                            @if($pg->sales_recipe_id)<x-fa::icon-button href="#" icon="heroicon-o-eye" label="Gericht öffnen" size="sm" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $pg->sales_recipe_id }} })" />@endif
+                                                            @if($pg->recipe_id)<x-fa::icon-button href="#" icon="heroicon-o-eye" label="Gericht öffnen" size="sm" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $pg->recipe_id }} })" />@endif
                                                         </div>
                                                         <div class="min-w-0">
                                                             <p class="text-[length:var(--fa-text-base)] font-semibold leading-snug {{ $pw['source'] === 'name' ? 'italic text-[var(--fa-warn)]' : 'text-[var(--fa-ink)]' }}">{{ $pw['text'] }}</p>
@@ -507,7 +507,7 @@
                                                         <div class="flex flex-wrap items-center gap-1.5">
                                                             @if($pgG?->spec_is_vegan)<x-fa::badge tone="ok">vegan</x-fa::badge>@elseif($pgG?->spec_is_vegetarian)<x-fa::badge tone="ok">vegetarisch</x-fa::badge>@endif
                                                             @if(count($pgEnthaelt))<x-fa::badge tone="warn">enthält {{ implode(', ', $pgEnthaelt) }}</x-fa::badge>@endif
-                                                            @if($pw['source'] === 'name')<x-fa::button href="#" size="sm" variant="ghost" icon="heroicon-m-pencil" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $pg->sales_recipe_id }} })" title="Wording am Gericht ergänzen">Wording ergänzen</x-fa::button>@endif
+                                                            @if($pw['source'] === 'name')<x-fa::button href="#" size="sm" variant="ghost" icon="heroicon-m-pencil" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $pg->recipe_id }} })" title="Wording am Gericht ergänzen">Wording ergänzen</x-fa::button>@endif
                                                         </div>
                                                         <dl class="flex gap-4 pt-2 border-t border-[var(--fa-line)] tabular-nums">
                                                             <div class="flex flex-col"><dt class="{{ $kopfzelle }}">VK je Person</dt><dd class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink-2)]">im Paketpreis</dd></div>
@@ -529,7 +529,7 @@
                                                     <x-fa::card as="article" wire:key="mcard-{{ $s->id }}" class="flex flex-col gap-2 px-3.5 py-3">
                                                         <div class="flex items-start justify-between gap-2">
                                                             <x-fa::badge :tone="$qbTon">{{ $qbText }}</x-fa::badge>
-                                                            <x-fa::icon-button href="#" icon="heroicon-o-eye" label="Gericht öffnen" size="sm" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $s->sales_recipe_id }} })" />
+                                                            <x-fa::icon-button href="#" icon="heroicon-o-eye" label="Gericht öffnen" size="sm" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $s->recipe_id }} })" />
                                                         </div>
                                                         <div class="min-w-0">
                                                             <p class="text-[length:var(--fa-text-base)] font-semibold leading-snug {{ $w['source'] === 'name' ? 'italic text-[var(--fa-warn)]' : 'text-[var(--fa-ink)]' }}">{{ $w['text'] }}</p>
@@ -633,7 +633,7 @@
                                                             <button type="button" wire:click="slotHoch({{ $slot->id }})" class="text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]" title="Nach oben" aria-label="Nach oben">@svg('heroicon-m-chevron-up', 'w-4 h-4')</button>
                                                             <button type="button" wire:click="slotRunter({{ $slot->id }})" class="text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]" title="Nach unten" aria-label="Nach unten">@svg('heroicon-m-chevron-down', 'w-4 h-4')</button>
                                                         </span>
-                                                        @if(! $istStruktur && $slot->sales_recipe_id)
+                                                        @if(! $istStruktur && $slot->recipe_id)
                                                             <x-fa::checkbox class="ml-1" wire:click="toggleAuswahl({{ $slot->id }})" :checked="in_array($slot->id, $auswahl)" title="Für „Paket bilden“ markieren" aria-label="Für Paket bilden markieren" />
                                                         @endif
                                                     </div>
@@ -673,7 +673,7 @@
                                                     </td>
                                                 @else
                                                     <td class="align-top">
-                                                        @if($slot->sales_recipe_id)
+                                                        @if($slot->recipe_id)
                                                             <div class="flex items-center gap-1">
                                                                 <x-fa::input size="sm" numeric wire:model.blur="slotForm.{{ $slot->id }}.quantity" wire:change="mengeSpeichern({{ $slot->id }})" class="w-14" placeholder="1" aria-label="Menge" />
                                                                 <x-fa::select size="sm" wire:model="slotForm.{{ $slot->id }}.unit_vocab_id" wire:change="mengeSpeichern({{ $slot->id }})" class="w-28" aria-label="Einheit">
@@ -698,7 +698,7 @@
                                                                 @if($epkPreis !== null)<span class="{{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $euro($epkPreis) }} je Person</span>@endif
                                                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-top-right-on-square" href="#" x-on:click.prevent="" wire:click="paketOeffnen({{ $epkOpenId }})">Paket öffnen</x-fa::button>
                                                             </div>
-                                                        @elseif($slot->sales_recipe_id && $slot->dish)
+                                                        @elseif($slot->recipe_id && $slot->dish)
                                                             @php
                                                                 $g = $slot->dish;
                                                                 $istBasisPos = $slot->type === 'basisrezept';
@@ -710,7 +710,7 @@
                                                                     <span class="fa-t-strong break-words">{{ $g->name }}</span>@if($g->trashed())<x-fa::badge tone="neutral" class="ml-1 align-middle" data-gericht-geloescht>gelöscht</x-fa::badge>@endif
                                                                     {{-- Phase 6: ansehen — Basisrezept → Rezept-Fenster, VK-Gericht → Gericht-Fenster (über dem Editor) --}}
                                                                     <x-fa::icon-button href="#" :icon="$istBasisPos ? 'heroicon-o-book-open' : 'heroicon-o-eye'" :label="$istBasisPos ? 'Rezept ansehen' : 'Gericht ansehen'" size="sm"
-                                                                        x-on:click.prevent="Livewire.dispatch('{{ $istBasisPos ? 'recipe-modal' : 'vk-modal' }}.oeffnen', { id: {{ $slot->sales_recipe_id }} })" />
+                                                                        x-on:click.prevent="Livewire.dispatch('{{ $istBasisPos ? 'recipe-modal' : 'vk-modal' }}.oeffnen', { id: {{ $slot->recipe_id }} })" />
                                                                     {{-- R4.4: Zutaten lesen + konzept-lokale Variante --}}
                                                                     <a href="#" role="button" wire:click.prevent="zutatenToggle({{ $slot->id }})" aria-pressed="{{ $zutatenOffenSlotId === $slot->id ? 'true' : 'false' }}"
                                                                         class="inline-flex items-center gap-1 h-7 px-2 rounded-[var(--fa-radius-control)] {{ $klein }} font-medium {{ $zutatenOffenSlotId === $slot->id ? 'bg-[var(--fa-accent-soft)] text-[var(--fa-accent)]' : 'text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)] hover:text-[var(--fa-ink)]' }}"
@@ -786,13 +786,13 @@
                                                         <div class="ml-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-y divide-[var(--fa-line)]">
                                                             @if($slot->embeddedConcept)
                                                                 {{-- Kaskade: eingebettetes Paket = kind=paket-Concept → seine Posten --}}
-                                                                @forelse($slot->embeddedConcept->slots->filter(fn ($e) => $e->sales_recipe_id !== null) as $eps)
+                                                                @forelse($slot->embeddedConcept->slots->filter(fn ($e) => $e->recipe_id !== null) as $eps)
                                                                     <div wire:key="epaketc-{{ $slot->id }}-{{ $eps->id }}" class="flex items-center gap-2 px-3 py-1.5 text-[length:var(--fa-text-md)]">
                                                                         @if($eps->type === 'basisrezept')<x-fa::badge style="{{ $typStyle('basisrezept') }}">Basisrezept</x-fa::badge>@endif
                                                                         <span class="flex-1 min-w-0 break-words leading-snug text-[var(--fa-ink)]">{{ $eps->dish?->name ?? 'Gericht fehlt' }}</span>
                                                                         @if($eps->quantity !== null)<span class="shrink-0 {{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $menge($eps->quantity) }} ×</span>@endif
                                                                         <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-2)] tabular-nums w-20 text-right">{{ $euro($eps->dish?->vk_netto) }}</span>
-                                                                        @if($eps->sales_recipe_id)<x-fa::icon-button href="#" icon="heroicon-o-eye" label="Gericht ansehen" size="sm" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $eps->sales_recipe_id }} })" />@endif
+                                                                        @if($eps->recipe_id)<x-fa::icon-button href="#" icon="heroicon-o-eye" label="Gericht ansehen" size="sm" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $eps->recipe_id }} })" />@endif
                                                                     </div>
                                                                 @empty
                                                                     <p class="px-3 py-2 {{ $hinweis }}">Paket ohne Posten. Im Paket-Editor pflegen.</p>
@@ -803,7 +803,7 @@
                                                 </tr>
                                             @endif
                                             {{-- R4.4: Zutaten des Gerichts (erst lesen) — Tausch läuft IMMER über die Variante der Position --}}
-                                            @if($zutatenOffenSlotId === $slot->id && $slot->sales_recipe_id !== null)
+                                            @if($zutatenOffenSlotId === $slot->id && $slot->recipe_id !== null)
                                                 <tr wire:key="ezutaten-{{ $slot->id }}">
                                                     <td></td>
                                                     <td colspan="7" class="align-top">
@@ -829,7 +829,7 @@
                                                     </td>
                                                 </tr>
                                             @endif
-                                            @if(! $istStruktur && ($fillOpenId === $slot->id || (! $slot->embedded_concept_id && ! $slot->sales_recipe_id)))
+                                            @if(! $istStruktur && ($fillOpenId === $slot->id || (! $slot->embedded_concept_id && ! $slot->recipe_id)))
                                                 <tr wire:key="efill-{{ $slot->id }}">
                                                     <td></td>
                                                     <td colspan="7" class="align-top bg-[var(--fa-ground)]">
@@ -842,7 +842,7 @@
                                                             </select>
                                                             <x-fa::button size="sm" icon="heroicon-m-magnifying-glass" wire:click="gerichtPicker({{ $slot->id }})">Gericht oder Basisrezept wählen</x-fa::button>
                                                             <x-fa::button size="sm" icon="heroicon-m-archive-box" wire:click="neuesPaketImSlot({{ $slot->id }})" title="Direkt hier ein neues Paket schnüren">Neues Paket schnüren</x-fa::button>
-                                                            @if($slot->embedded_concept_id || $slot->sales_recipe_id)
+                                                            @if($slot->embedded_concept_id || $slot->recipe_id)
                                                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-x-mark" wire:click="slotLeeren({{ $slot->id }})">Position leeren</x-fa::button>
                                                             @else
                                                                 {{-- L4: fester Vorschlag aus dem Bestand (ohne KI) --}}

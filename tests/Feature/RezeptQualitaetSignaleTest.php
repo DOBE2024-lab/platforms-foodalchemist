@@ -279,7 +279,7 @@ it('flaggt verwaiste Rezepte — Nutzung auf einer Fläche genügt zum Freispruc
     ]);
     FoodAlchemistFoodbookBlock::create([
         'team_id' => $this->rootTeam->id, 'chapter_id' => $kapitel->id, 'position' => 1,
-        'type' => 'gericht', 'sales_recipe_id' => $inFoodbook->id,
+        'type' => 'gericht', 'recipe_id' => $inFoodbook->id,
     ]);
 
     $m = rqMetrik($this->dq->messeAlleEbenen($this->rootTeam), 'rezept_verwaist');
@@ -396,7 +396,7 @@ it('flaggt unbelastbare Allergene nur bei kundenexponierten Rezepten', function 
     foreach ([$imBuch, $sauber, $einzeln] as $i => $gericht) {
         FoodAlchemistFoodbookBlock::create([
             'team_id' => $this->rootTeam->id, 'chapter_id' => $kapitel->id, 'position' => $i + 1,
-            'type' => 'gericht', 'sales_recipe_id' => $gericht->id,
+            'type' => 'gericht', 'recipe_id' => $gericht->id,
         ]);
     }
 

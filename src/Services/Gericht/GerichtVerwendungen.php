@@ -137,7 +137,7 @@ final class GerichtVerwendungen
     private function konzepte(Team $team, int $gerichtId, Carbon $heute): array
     {
         $out = [];
-        $slots = FoodAlchemistConceptSlot::where('sales_recipe_id', $gerichtId)->with('concept:id,team_id,name,kind,offer_id')->get();
+        $slots = FoodAlchemistConceptSlot::where('recipe_id', $gerichtId)->with('concept:id,team_id,name,kind,offer_id')->get();
         foreach ($slots as $slot) {
             $c = $slot->concept;
             if ($c === null) {
@@ -261,7 +261,7 @@ final class GerichtVerwendungen
     private function speiseplan(Team $team, int $gerichtId, Carbon $heute): array
     {
         $out = [];
-        foreach (FoodAlchemistSpeiseplanEintrag::where('sales_recipe_id', $gerichtId)->with('mealPlan:id,name,team_id')->get() as $e) {
+        foreach (FoodAlchemistSpeiseplanEintrag::where('recipe_id', $gerichtId)->with('mealPlan:id,name,team_id')->get() as $e) {
             $plan = $e->mealPlan;
             if ($plan === null) {
                 continue;
@@ -283,7 +283,7 @@ final class GerichtVerwendungen
     private function speisekarte(Team $team, int $gerichtId, Carbon $heute): array
     {
         $out = [];
-        foreach (FoodAlchemistSpeisekartePosition::where('sales_recipe_id', $gerichtId)->with('rubrik.menuCard')->get() as $p) {
+        foreach (FoodAlchemistSpeisekartePosition::where('recipe_id', $gerichtId)->with('rubrik.menuCard')->get() as $p) {
             $karte = $p->rubrik?->menuCard;
             if ($karte === null) {
                 continue;
@@ -305,7 +305,7 @@ final class GerichtVerwendungen
     private function angebotsBloecke(Team $team, int $gerichtId): array
     {
         $out = [];
-        foreach (FoodAlchemistOfferBlock::where('sales_recipe_id', $gerichtId)->with('chapter:id,offer_id')->get() as $b) {
+        foreach (FoodAlchemistOfferBlock::where('recipe_id', $gerichtId)->with('chapter:id,offer_id')->get() as $b) {
             $angebot = $b->chapter?->offer_id !== null ? FoodAlchemistAngebot::find($b->chapter->offer_id) : null;
             if ($angebot === null) {
                 continue;
@@ -347,7 +347,7 @@ final class GerichtVerwendungen
     private function foodbooks(Team $team, int $gerichtId): array
     {
         $out = [];
-        foreach (FoodAlchemistFoodbookBlock::where('sales_recipe_id', $gerichtId)->with('chapter:id,foodbook_id')->get() as $b) {
+        foreach (FoodAlchemistFoodbookBlock::where('recipe_id', $gerichtId)->with('chapter:id,foodbook_id')->get() as $b) {
             $fb = $b->chapter?->foodbook_id !== null ? FoodAlchemistFoodbook::find($b->chapter->foodbook_id) : null;
             if ($fb === null) {
                 continue;

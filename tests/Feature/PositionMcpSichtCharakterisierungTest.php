@@ -49,10 +49,10 @@ it('Konzept-Slot: abonniertes Gericht überall angenommen, fremdes per Dienst un
     $ctx = new ToolContext($this->koch, $this->broich);
     $slot = app(ConceptService::class)->addSlot($this->broich, $this->konzept->id, ['role' => 'Hauptgang']);
 
-    expect(app(ConceptService::class)->fillSlot($this->broich, $slot->id, ['sales_recipe_id' => $this->fassung->id])->sales_recipe_id)->toBe($this->fassung->id)
-        ->and(app(ConceptSlotsPostTool::class)->execute(['concept_id' => $this->konzept->id, 'sales_recipe_id' => $this->fassung->id], $ctx)->success)->toBeTrue()
-        ->and(fn () => app(ConceptService::class)->fillSlot($this->broich, $slot->id, ['sales_recipe_id' => $this->fremd->id]))->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-    $res = app(ConceptSlotsPostTool::class)->execute(['concept_id' => $this->konzept->id, 'sales_recipe_id' => $this->fremd->id], $ctx);
+    expect(app(ConceptService::class)->fillSlot($this->broich, $slot->id, ['recipe_id' => $this->fassung->id])->recipe_id)->toBe($this->fassung->id)
+        ->and(app(ConceptSlotsPostTool::class)->execute(['concept_id' => $this->konzept->id, 'recipe_id' => $this->fassung->id], $ctx)->success)->toBeTrue()
+        ->and(fn () => app(ConceptService::class)->fillSlot($this->broich, $slot->id, ['recipe_id' => $this->fremd->id]))->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+    $res = app(ConceptSlotsPostTool::class)->execute(['concept_id' => $this->konzept->id, 'recipe_id' => $this->fremd->id], $ctx);
     expect($res->success)->toBeFalse()->and($res->errorCode)->toBe('NOT_FOUND')
         ->and($this->konzept->slots()->count())->toBe(2);   // keine leere Position übrig
 });
@@ -61,18 +61,18 @@ it('Konzept-Slot PUT: abonniertes Gericht angenommen, fremdes abgelehnt (NOT_FOU
     $ctx = new ToolContext($this->koch, $this->broich);
     $slot = app(ConceptService::class)->addSlot($this->broich, $this->konzept->id, ['role' => 'Hauptgang']);
 
-    expect(app(\Platform\FoodAlchemist\Tools\ConceptSlotsPutTool::class)->execute(['slot_id' => $slot->id, 'felder' => ['sales_recipe_id' => $this->fassung->id]], $ctx)->success)->toBeTrue();
-    $res = app(\Platform\FoodAlchemist\Tools\ConceptSlotsPutTool::class)->execute(['slot_id' => $slot->id, 'felder' => ['sales_recipe_id' => $this->fremd->id, 'role' => 'Dessert']], $ctx);
-    expect($res->success)->toBeFalse()->and($res->errorCode)->toBe('NOT_FOUND')->and($slot->fresh()->sales_recipe_id)->toBe($this->fassung->id)
+    expect(app(\Platform\FoodAlchemist\Tools\ConceptSlotsPutTool::class)->execute(['slot_id' => $slot->id, 'felder' => ['recipe_id' => $this->fassung->id]], $ctx)->success)->toBeTrue();
+    $res = app(\Platform\FoodAlchemist\Tools\ConceptSlotsPutTool::class)->execute(['slot_id' => $slot->id, 'felder' => ['recipe_id' => $this->fremd->id, 'role' => 'Dessert']], $ctx);
+    expect($res->success)->toBeFalse()->and($res->errorCode)->toBe('NOT_FOUND')->and($slot->fresh()->recipe_id)->toBe($this->fassung->id)
         ->and($slot->fresh()->role)->toBe('Hauptgang');   // abgelehnt heißt: nichts geschrieben, auch nicht die Rolle
 });
 
 it('Foodbook-Block: abonniertes Gericht überall angenommen, fremdes per Dienst und FoodbookBlocksPut abgelehnt (NOT_FOUND)', function () {
     $ctx = new ToolContext($this->koch, $this->broich);
     $kap = $this->makeChapter($this->makeFoodbook($this->broich, 'Broich-Foodbook', ['status' => 'entwurf']));
-    $block = app(FoodbookService::class)->addBlock($this->broich, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->fassung->id]);
+    $block = app(FoodbookService::class)->addBlock($this->broich, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->fassung->id]);
 
-    expect(app(FoodbookBlocksPutTool::class)->execute(['block_id' => $block->id, 'felder' => ['sales_recipe_id' => $this->fassung->id]], $ctx)->success)->toBeTrue();
-    $res = app(FoodbookBlocksPutTool::class)->execute(['block_id' => $block->id, 'felder' => ['sales_recipe_id' => $this->fremd->id]], $ctx);
-    expect($res->success)->toBeFalse()->and($res->errorCode)->toBe('NOT_FOUND')->and($block->fresh()->sales_recipe_id)->toBe($this->fassung->id);
+    expect(app(FoodbookBlocksPutTool::class)->execute(['block_id' => $block->id, 'felder' => ['recipe_id' => $this->fassung->id]], $ctx)->success)->toBeTrue();
+    $res = app(FoodbookBlocksPutTool::class)->execute(['block_id' => $block->id, 'felder' => ['recipe_id' => $this->fremd->id]], $ctx);
+    expect($res->success)->toBeFalse()->and($res->errorCode)->toBe('NOT_FOUND')->and($block->fresh()->recipe_id)->toBe($this->fassung->id);
 });

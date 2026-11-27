@@ -24,7 +24,7 @@ beforeEach(function () {
     // Gericht mit echtem EK je Portion (9 €) und festem VK (30 €) — das Konzept-Cockpit rechnet live aus Rezepten.
     $dish = $this->makeRecipe($this->rootTeam, 'Rinderfilet', ['is_sales_recipe' => true, 'status' => 'approved', 'ek_total_eur' => 9.0, 'sales_unit_count' => 1]);
     $this->makeStandardDarreichung($dish, 30.0);
-    $comp->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $dish->id]);
+    $comp->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $dish->id]);
     $this->render = function (array $snap) {
         $snap['resolved_design']['layout'] = [['block_type' => 'chapter_loop', 'style' => ['show_kapitel_preis' => true]]];
 

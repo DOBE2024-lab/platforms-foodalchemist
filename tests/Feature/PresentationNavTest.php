@@ -20,7 +20,7 @@ beforeEach(function () {
         for ($i = 1; $i <= $n; $i++) {
             $c = $this->makeConcept($team, "Menü {$i}", ['kind' => 'concept', 'consumer_name' => "Gang {$i}"]);
             $dish = $this->makeRecipe($team, "Gericht {$i}", ['is_sales_recipe' => true, 'sales_net' => 10.0]);
-            $this->makeConceptSlot($c, ['sales_recipe_id' => $dish->id, 'wording' => "Gericht {$i}", 'position' => 1]);
+            $this->makeConceptSlot($c, ['recipe_id' => $dish->id, 'wording' => "Gericht {$i}", 'position' => 1]);
             $kap = $this->makeChapter($fb, ['title' => "Kapitel {$i}", 'consumer_title' => "Kapitel {$i}", 'position' => $i]);
             $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $c->id, 'position' => 1]);
         }

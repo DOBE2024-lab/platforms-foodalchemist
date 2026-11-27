@@ -13,7 +13,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
  * Spec 50 · Paket C-1: Header bei Concepten — `concepts.POST geruest={typ,gaenge}` legt die kanonische
- * Struktur (Header + leere Positionen) ohne KI an; `concept_slots.PUT felder.sales_recipe_id` füllt sie.
+ * Struktur (Header + leere Positionen) ohne KI an; `concept_slots.PUT felder.recipe_id` füllt sie.
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
@@ -70,15 +70,15 @@ it('concepts.POST geruest: ungültiger Typ ⇒ VALIDATION_ERROR, Konzept wird ni
         ->and(FoodAlchemistConceptSlot::where('concept_id', FoodAlchemistConcept::latest('id')->first()->id)->count())->toBe(0);
 });
 
-it('concept_slots.PUT felder.sales_recipe_id füllt eine leere Gerüst-Position (vorher still verworfen)', function () {
+it('concept_slots.PUT felder.recipe_id füllt eine leere Gerüst-Position (vorher still verworfen)', function () {
     $res = ($this->run)('foodalchemist.concepts.POST', ['name' => 'Menü', 'geruest' => ['typ' => 'menue']]);
     $leer = FoodAlchemistConceptSlot::where('concept_id', $res->data['concept']['id'])->where('type', 'gericht')->orderBy('position')->first();
     $dish = $this->makeRecipe($this->rootTeam, 'VSP: Kürbissuppe', ['is_sales_recipe' => true, 'sales_net' => 9.5]);
 
-    $put = ($this->run)('foodalchemist.concept_slots.PUT', ['slot_id' => $leer->id, 'felder' => ['sales_recipe_id' => $dish->id, 'wording' => 'Kürbis & Ingwer']]);
+    $put = ($this->run)('foodalchemist.concept_slots.PUT', ['slot_id' => $leer->id, 'felder' => ['recipe_id' => $dish->id, 'wording' => 'Kürbis & Ingwer']]);
     expect($put->success)->toBeTrue();
     $leer->refresh();
-    expect((int) $leer->sales_recipe_id)->toBe($dish->id)
+    expect((int) $leer->recipe_id)->toBe($dish->id)
         ->and($leer->type)->toBe('gericht')
         ->and($leer->wording)->toBe('Kürbis & Ingwer');
 
@@ -95,9 +95,9 @@ it('concept_slots.PUT: fremdes/unsichtbares Gericht ⇒ NOT_FOUND, XOR-Verstoß 
     $leer = FoodAlchemistConceptSlot::where('concept_id', $res->data['concept']['id'])->where('type', 'gericht')->first();
     $fremd = $this->makeRecipe($this->childA, 'HG: Fremd', ['is_sales_recipe' => true]);
 
-    expect(($this->run)('foodalchemist.concept_slots.PUT', ['slot_id' => $leer->id, 'felder' => ['sales_recipe_id' => $fremd->id]])->errorCode)->toBe('NOT_FOUND')
-        ->and(($this->run)('foodalchemist.concept_slots.PUT', ['slot_id' => $leer->id, 'felder' => ['sales_recipe_id' => 1, 'package_id' => 1]])->errorCode)->toBe('VALIDATION_ERROR')
-        ->and($leer->refresh()->sales_recipe_id)->toBeNull();
+    expect(($this->run)('foodalchemist.concept_slots.PUT', ['slot_id' => $leer->id, 'felder' => ['recipe_id' => $fremd->id]])->errorCode)->toBe('NOT_FOUND')
+        ->and(($this->run)('foodalchemist.concept_slots.PUT', ['slot_id' => $leer->id, 'felder' => ['recipe_id' => 1, 'package_id' => 1]])->errorCode)->toBe('VALIDATION_ERROR')
+        ->and($leer->refresh()->recipe_id)->toBeNull();
 });
 
 it('kanonischesGeruest: schreibt nicht in ein Konzept mit Positionen oder eigenem Gerüst (GL 5)', function () {

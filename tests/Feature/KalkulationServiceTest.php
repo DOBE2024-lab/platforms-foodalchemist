@@ -44,7 +44,7 @@ it('M12: conceptHk — HK2 pro Person + DB gegen Concept-€/Person', function (
     ]);
     $paket = app(ConceptService::class)->createPaket($this->rootTeam, ['name' => 'Salad Wall']);
     app(ConceptService::class)->update($this->rootTeam, $paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
-    app(ConceptService::class)->fillSlot($this->rootTeam, app(ConceptService::class)->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise'])->id, ['sales_recipe_id' => $salat->id]);
+    app(ConceptService::class)->fillSlot($this->rootTeam, app(ConceptService::class)->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise'])->id, ['recipe_id' => $salat->id]);
     $concept = app(ConceptService::class)->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = app(ConceptService::class)->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
     app(ConceptService::class)->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);

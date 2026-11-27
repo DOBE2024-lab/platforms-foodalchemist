@@ -84,7 +84,7 @@ function c4Konzept($t): array
 
         $leer = FoodAlchemistConceptSlot::where('concept_id', $id)->where('type', 'gericht')->orderBy('position')->first();
         $dish = $this->makeRecipe($this->rootTeam, 'Kürbis & Ingwer', ['is_sales_recipe' => true, 'sales_net' => 9]);
-        expect(($this->run)('foodalchemist.concept_slots.PUT', ['slot_id' => $leer->id, 'felder' => ['sales_recipe_id' => $dish->id]])->success)->toBeTrue();
+        expect(($this->run)('foodalchemist.concept_slots.PUT', ['slot_id' => $leer->id, 'felder' => ['recipe_id' => $dish->id]])->success)->toBeTrue();
 
         return [$id, (int) $leer->id];
     })->call($t);

@@ -32,7 +32,7 @@ beforeEach(function () {
     ]);
     $paket = $this->concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall']);
     $this->concepts->update($this->rootTeam, $paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
-    $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise'])->id, ['sales_recipe_id' => $salat->id]);
+    $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise'])->id, ['recipe_id' => $salat->id]);
     $this->paket = $paket;
     $this->concept = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
@@ -64,11 +64,11 @@ it('Spec 19 E1.1: recipe_ref-Schreibpfad validiert das VK-Gericht (verkauf-Scope
     $kap = $this->foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Einzel']);
 
     // gültiges VK-Gericht → Block wird als recipe_ref persistiert
-    $block = $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $block = $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id]);
     expect($block->type)->toBe('recipe_ref')
-        ->and($block->sales_recipe_id)->toBe($this->gericht->id);
+        ->and($block->recipe_id)->toBe($this->gericht->id);
 
-    // ohne sales_recipe_id → wirft
+    // ohne recipe_id → wirft
     expect(fn () => $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref']))
         ->toThrow(\RuntimeException::class);
 
@@ -77,7 +77,7 @@ it('Spec 19 E1.1: recipe_ref-Schreibpfad validiert das VK-Gericht (verkauf-Scope
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'b1', 'name' => 'Basis: Fond', 'status' => 'approved',
         'is_sales_recipe' => false,
     ]);
-    expect(fn () => $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $basis->id]))
+    expect(fn () => $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $basis->id]))
         ->toThrow(\RuntimeException::class);
 
     // konzept-lokale Slot-Variante → wirft
@@ -85,7 +85,7 @@ it('Spec 19 E1.1: recipe_ref-Schreibpfad validiert das VK-Gericht (verkauf-Scope
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'v1', 'name' => 'Gruß: Amuse (Variante)', 'status' => 'approved',
         'is_sales_recipe' => true, 'sales_net' => 2.50, 'variant_source_recipe_id' => $this->gericht->id,
     ]);
-    expect(fn () => $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $variante->id]))
+    expect(fn () => $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $variante->id]))
         ->toThrow(\RuntimeException::class);
 });
 
@@ -96,7 +96,7 @@ it('Spec 19 E1.2: Mischkapitel — Konzept €/Gast + Einzel-Gericht pauschal (�
     // Konzept-Paket: 4,50 €/Gast (EK 1,35)
     $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->concept->id]);
     // Einzel-Gericht pauschal: 2,50 €/Position (Menge 3) → 7,50 flach, NICHT ×Pax; EK ungezählt
-    $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal', 'quantity' => 3]);
+    $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal', 'quantity' => 3]);
 
     $agg = $this->foodbooks->kapitelAggregat($this->rootTeam, $kap->refresh(), 100);
     expect($agg['vk_pro_person'])->toBe(4.50)                         // nur Konzept-€/Gast
@@ -112,7 +112,7 @@ it('Spec 19 E1.2: Einzel-Gericht per-Person (Default) bleibt ×Pax', function ()
     $kap = $this->foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Einzel']);
 
     // ohne price_basis → Default person: 2,50 €/Gast (EK 0,75)
-    $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id]);
 
     $agg = $this->foodbooks->kapitelAggregat($this->rootTeam, $kap->refresh(), 100);
     expect($agg['vk_pro_person'])->toBe(2.50)
@@ -412,7 +412,7 @@ it('E8.3: Dokument unterscheidet €/Gast (Konzept) vs. €/Position (Einzelgeri
     $fb = $this->foodbooks->create($this->rootTeam, ['label' => 'Duality-FB', 'personen' => 40]);
     $kap = $this->foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Gemischt']);
     $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->concept->id]);
-    $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id]);
 
     // Datenschicht: preis_einheit typ-getrieben
     $bloecke = collect($this->foodbooks->dokumentDaten($this->rootTeam, $fb->refresh(), false)['kapitel'][0]['bloecke']);

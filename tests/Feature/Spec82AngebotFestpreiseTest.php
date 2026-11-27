@@ -34,7 +34,7 @@ beforeEach(function () {
 
     $this->angebot = app(AngebotService::class)->create($this->rootTeam, ['name' => 'Gala', 'personen' => 10]);
     $this->kapitel = app(OfferCompositionService::class)->addKapitel($this->rootTeam, $this->angebot->id, ['title' => 'Hauptgang']);
-    $this->block = $this->kapitel->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'position' => 1, 'visible' => true]);
+    $this->block = $this->kapitel->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref', 'recipe_id' => $this->gericht->id, 'position' => 1, 'visible' => true]);
     $this->vk = fn () => app(OfferCompositionService::class)->blockPreis($this->block->fresh(), null, $this->rootTeam);
 
     // Kostenschicht festlegen (eigenes Gericht, EK vollständig) — die Einfrierung soll ihr Format nicht von ihr abhängig machen
@@ -81,7 +81,7 @@ it('eingefroren ohne VK (EK unvollständig): der Preis bleibt eine Lücke, kein 
 it('Paket-Position: der Slot mit Buffet-Form zeigt den eingefrorenen Buffet-VK', function () {
     ($this->kosten)(true);
     $concept = $this->makeConcept($this->rootTeam, 'Buffet-Menü');
-    $slot = $this->makeConceptSlot($concept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
+    $slot = $this->makeConceptSlot($concept, ['recipe_id' => $this->gericht->id, 'quantity' => 1]);
     $slot->forceFill(['presentation_id' => $this->buffetForm->id])->save();
     $paket = $this->kapitel->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'concept_ref', 'concept_id' => $concept->id, 'position' => 2, 'visible' => true]);
     ($this->svc)()->einfrieren($this->rootTeam, $this->koch, $this->angebot);

@@ -106,9 +106,9 @@ class ConceptReifeAdapter extends ContainerReifeAdapter
 
         // ── 2. Struktur der Positionen ──────────────────────────────────────────────
         $positionen = $c->slots->filter(fn ($s) => ! in_array($s->type, ConceptService::STRUKTUR_TYPEN, true));
-        $belegt = $positionen->filter(fn ($s) => $s->sales_recipe_id !== null || $s->embedded_concept_id !== null);
+        $belegt = $positionen->filter(fn ($s) => $s->recipe_id !== null || $s->embedded_concept_id !== null);
         $pflichtLeer = $positionen->filter(fn ($s) => (bool) $s->is_pflicht
-            && $s->sales_recipe_id === null && $s->embedded_concept_id === null);
+            && $s->recipe_id === null && $s->embedded_concept_id === null);
         $header = $c->slots->filter(fn ($s) => in_array($s->type, ['header', 'header_preis'], true));
 
         if ($positionen->isEmpty()) {
@@ -149,7 +149,7 @@ class ConceptReifeAdapter extends ContainerReifeAdapter
         // 17.11. (Dominique): Positionen mit einer Einheit, die nicht rechnet (ging still als Portion ein) — nur melden, nie ändern
         $c->slots->each(fn ($s) => $s->setRelation('concept', $c));
         $unwirksam = app(\Platform\FoodAlchemist\Services\Concepter\SlotEinheitService::class)
-            ->unwirksameSlots($c->slots->filter(fn ($s) => $s->unit_vocab_id !== null && $s->sales_recipe_id !== null));
+            ->unwirksameSlots($c->slots->filter(fn ($s) => $s->unit_vocab_id !== null && $s->recipe_id !== null));
         if ($unwirksam !== []) {
             $luecken[] = $this->luecke('einheit_unwirksam', 'wichtig',
                 count($unwirksam) . ' Positionen tragen eine Einheit, die nicht rechnet (z. B. ml, Karton, g ohne Grammatur, Stück ohne Stück-Ertrag) — sie zählt still als Portion. Einheit wählen oder leeren.',

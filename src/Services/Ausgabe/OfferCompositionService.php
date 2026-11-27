@@ -257,7 +257,7 @@ class OfferCompositionService
     // ── Blöcke ──────────────────────────────────────────────────────────────
 
     private const BLOCK_FELDER = ['type', 'level', 'visible', 'label', 'wording', 'customer_text', 'interne_bemerkung',
-        'concept_id', 'sales_recipe_id', 'quantity', 'unit_vocab_id', 'presentation_id', 'price_value', 'price_basis', 'height', 'payload_json',
+        'concept_id', 'recipe_id', 'quantity', 'unit_vocab_id', 'presentation_id', 'price_value', 'price_basis', 'height', 'payload_json',
         // Spec 50 · C-7: beide Spalten gibt es seit 2026_08_31_000033, sie fehlten nur hier —
         // uebergebene Werte wurden still verworfen (`header_source` = die Preset-Herkunft fuer
         // die KI-Lineage, `variant_group_id` = die Wahl-Gruppe).
@@ -765,12 +765,12 @@ class OfferCompositionService
             }
             $positionen = [];
             foreach ($block->concept->slots as $slot) {
-                if ($slot->sales_recipe_id !== null && $slot->dish !== null) {
+                if ($slot->recipe_id !== null && $slot->dish !== null) {
                     $positionen[] = ['slot_id' => $slot->id, 'name' => $slot->dish->name,
                         'sales_wording_standard' => $slot->dish->sales_wording_standard ?? null];
                 } elseif ($slot->embedded_concept_id !== null && $slot->embeddedConcept !== null) {
                     foreach ($slot->embeddedConcept->slots as $paketSlot) {
-                        if ($paketSlot->sales_recipe_id !== null && $paketSlot->dish !== null) {
+                        if ($paketSlot->recipe_id !== null && $paketSlot->dish !== null) {
                             $positionen[] = ['slot_id' => $paketSlot->id, 'name' => $paketSlot->dish->name,
                                 'sales_wording_standard' => $paketSlot->dish->sales_wording_standard ?? null];
                         }

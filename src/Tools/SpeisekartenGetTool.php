@@ -52,7 +52,7 @@ class SpeisekartenGetTool extends FoodAlchemistTool implements ToolContract, Too
             return $this->rubrikDaten($rubrik, $karte, $svc);
         })->values()->all();
 
-        return ToolResult::success([
+        return ToolResult::success(\Platform\FoodAlchemist\Support\RezeptIdAlias::ausgabe([
             'speisekarte' => [
                 'id' => $karte->id, 'name' => $karte->name,
                 'status' => $karte->status instanceof \BackedEnum ? $karte->status->value : $karte->status,
@@ -79,7 +79,7 @@ class SpeisekartenGetTool extends FoodAlchemistTool implements ToolContract, Too
                 ],
                 'rubriken' => $rubriken,
             ],
-        ]);
+        ]));
     }
 
     private function rubrikDaten($rubrik, $karte, SpeisekarteService $svc): array

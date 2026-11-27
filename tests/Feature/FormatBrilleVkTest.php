@@ -39,7 +39,7 @@ beforeEach(function () {
 
     // Concept mit einem Gericht-Slot → preisCockpit ist outlet-sensitiv.
     $this->concept = $this->makeConcept($this->childA, 'Edition A');
-    $this->makeConceptSlot($this->concept, ['sales_recipe_id' => $recipe->id]);
+    $this->makeConceptSlot($this->concept, ['recipe_id' => $recipe->id]);
 
     // Format mit dieser Edition.
     $this->format = app(FormatService::class)->create($this->childA, ['name' => 'Menü-Format']);

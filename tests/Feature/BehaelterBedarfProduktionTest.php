@@ -280,7 +280,7 @@ it('am Konzept skaliert der Bedarf mit der Personenzahl — aus dem Produktionsp
     ]);
     \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::create([
         'team_id' => $this->rootTeam->id, 'concept_id' => $concept->id, 'position' => 1,
-        'sales_recipe_id' => $teller->id, 'quantity' => 300,
+        'recipe_id' => $teller->id, 'quantity' => 300,
         'unit_vocab_id' => $this->unitG($this->rootTeam)->id,
     ]);
 

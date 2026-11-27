@@ -62,7 +62,7 @@ it('führt die Konzept-Ebene getrennt und kennt beide Tranche-C-Typen', function
 
 it('zählt ein sauberes Konzept in Gebrauch bei keinem Check mit (Negativfall)', function () {
     $k = $this->makeConcept($this->rootTeam, 'Sommer-Buffet');
-    $this->makeConceptSlot($k, ['sales_recipe_id' => $this->makeRecipe($this->rootTeam, '[FIX] Lachs | Spargel', KQ_GERICHT_SAUBER)->id]);
+    $this->makeConceptSlot($k, ['recipe_id' => $this->makeRecipe($this->rootTeam, '[FIX] Lachs | Spargel', KQ_GERICHT_SAUBER)->id]);
 
     $e = $this->dq->messeAlleEbenen($this->rootTeam);
 
@@ -93,11 +93,11 @@ it('flaggt ein aktives Konzept ohne belegten Inhalts-Slot', function () {
 
 it('flaggt einen unbesetzten Pflicht-Slot, aber nicht einen unbesetzten optionalen', function () {
     $pflicht = $this->makeConcept($this->rootTeam, 'Menü mit Loch');
-    $this->makeConceptSlot($pflicht, ['sales_recipe_id' => $this->makeRecipe($this->rootTeam, '[FIX] Lachs | Spargel', KQ_GERICHT_SAUBER)->id]);
+    $this->makeConceptSlot($pflicht, ['recipe_id' => $this->makeRecipe($this->rootTeam, '[FIX] Lachs | Spargel', KQ_GERICHT_SAUBER)->id]);
     $this->makeConceptSlot($pflicht, ['position' => 2]);                       // leer + Pflicht
 
     $optional = $this->makeConcept($this->rootTeam, 'Menü mit Kann-Slot');
-    $this->makeConceptSlot($optional, ['sales_recipe_id' => $this->makeRecipe($this->rootTeam, '[FIX] Reh | Rotkohl', KQ_GERICHT_SAUBER)->id]);
+    $this->makeConceptSlot($optional, ['recipe_id' => $this->makeRecipe($this->rootTeam, '[FIX] Reh | Rotkohl', KQ_GERICHT_SAUBER)->id]);
     $this->makeConceptSlot($optional, ['position' => 2, 'is_pflicht' => false]); // leer, aber optional
 
     $items = $this->dq->betroffene($this->rootTeam, 'konzept_slot_luecke');
@@ -111,11 +111,11 @@ it('flaggt eine Gericht-Zeile, deren Wording-Kette auf den internen Namen fällt
     // Ohne sales_wording_standard und ohne Slot-Wording druckt die Kette „[FIX] A | B".
     $ohne = $this->makeConcept($this->rootTeam, 'Menü ohne Wording');
     $nackt = $this->makeRecipe($this->rootTeam, '[FIX] Zander | Linsen', ['is_sales_recipe' => true]);
-    $this->makeConceptSlot($ohne, ['sales_recipe_id' => $nackt->id, 'wording' => null]);
+    $this->makeConceptSlot($ohne, ['recipe_id' => $nackt->id, 'wording' => null]);
 
     // Dasselbe nackte Gericht, aber der Slot trägt den Kundentext ⇒ Kette greift.
     $mit = $this->makeConcept($this->rootTeam, 'Menü mit Slot-Wording');
-    $this->makeConceptSlot($mit, ['sales_recipe_id' => $nackt->id, 'wording' => 'Zander auf Berglinsen']);
+    $this->makeConceptSlot($mit, ['recipe_id' => $nackt->id, 'wording' => 'Zander auf Berglinsen']);
 
     $items = $this->dq->betroffene($this->rootTeam, 'konzept_ohne_wording');
 
@@ -146,7 +146,7 @@ it('zählt ein Konzept über Foodbook-Nutzung zur Arbeitsmenge, auch als Entwurf
 it('löst Konzept-Objekte in beide Richtungen auf (trifftObjekt + signaleAmObjekt)', function () {
     $kaputt = $this->makeConcept($this->rootTeam, 'Menü mit Loch');
     $sauber = $this->makeConcept($this->rootTeam, 'Menü sauber');
-    $this->makeConceptSlot($sauber, ['sales_recipe_id' => $this->makeRecipe($this->rootTeam, '[FIX] Lachs | Spargel', KQ_GERICHT_SAUBER)->id]);
+    $this->makeConceptSlot($sauber, ['recipe_id' => $this->makeRecipe($this->rootTeam, '[FIX] Lachs | Spargel', KQ_GERICHT_SAUBER)->id]);
 
     expect($this->dq->trifftObjekt($this->rootTeam, 'konzept_slot_luecke', 'concept', $kaputt->id))->toBeTrue()
         ->and($this->dq->trifftObjekt($this->rootTeam, 'konzept_slot_luecke', 'concept', $sauber->id))->toBeFalse()
@@ -164,7 +164,7 @@ it('löst Konzept-Objekte in beide Richtungen auf (trifftObjekt + signaleAmObjek
 it('emittiert je Konzept-Check ein Signal mit Metrik im Payload', function () {
     $k = $this->makeConcept($this->rootTeam, 'Menü mit Loch');
     $nackt = $this->makeRecipe($this->rootTeam, '[FIX] Zander | Linsen', ['is_sales_recipe' => true]);
-    $this->makeConceptSlot($k, ['sales_recipe_id' => $nackt->id, 'wording' => null]);
+    $this->makeConceptSlot($k, ['recipe_id' => $nackt->id, 'wording' => null]);
     $this->makeConceptSlot($k, ['position' => 2]);   // leerer Pflicht-Slot
 
     $this->dq->emittiereSignale($this->rootTeam);

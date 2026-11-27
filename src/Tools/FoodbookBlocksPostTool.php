@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 /**
  * Phase B: Block in einem Kapitel anlegen — das inhaltliche Atom des Foodbooks.
  * Ein Kapitel trägt Konzepte (Paket, €/Gast) UND direkte Einzel-Gerichte (€/Position):
- * Paket-Block via concept_id (type=concept_ref) · Einzel-Gericht via sales_recipe_id
+ * Paket-Block via concept_id (type=concept_ref) · Einzel-Gericht via recipe_id
  * (type=recipe_ref, Spec 19 Entscheidung 5) · dazu Text/Header/Spacer.
  * Nur solange das Foodbook draft ist. Optional mit Preis-Staffel.
  */
@@ -31,7 +31,7 @@ class FoodbookBlocksPostTool extends FoodAlchemistTool implements ToolContract, 
         return 'Legt einen Block in einem Kapitel eines draft-Foodbooks an (Position ans Ende). '
             . 'Ein Kapitel trägt Paket-Blöcke UND direkte Einzel-Gerichte: '
             . 'concept_ref (concept_id = Konzept/Paket, €/Gast, via foodalchemist.concepts.SEARCH) '
-            . 'oder recipe_ref (sales_recipe_id = echtes VK-Gericht, €/Position, via foodalchemist.verkaufsrezepte.SEARCH). '
+            . 'oder recipe_ref (recipe_id = echtes VK-Gericht, €/Position, via foodalchemist.verkaufsrezepte.SEARCH). '
             . 'Weitere Typen: text (freier Text/Notiz) | header_neutral | header_frei | header_frei_preis | spacer. '
             . 'price_basis: pro_person (€/Gast, ×Pax) | pro_stueck (€/Position, flach) | pauschal (flach). '
             . 'Optional staffel: [{min_persons, price}] für Pax-abhängige Preise.';
@@ -47,7 +47,8 @@ class FoodbookBlocksPostTool extends FoodAlchemistTool implements ToolContract, 
                 'label' => ['type' => 'string', 'description' => 'Interner Titel des Blocks'],
                 'customer_text' => ['type' => 'string', 'description' => 'Kundenseitiger Angebotstext'],
                 'concept_id' => ['type' => 'integer', 'description' => 'Konzept/Paket bei type=concept_ref'],
-                'sales_recipe_id' => ['type' => 'integer', 'description' => 'Echtes VK-Gericht bei type=recipe_ref (verkauf()-Scope, keine Slot-Variante)'],
+                'recipe_id' => ['type' => 'integer', 'description' => 'Echtes VK-Gericht bei type=recipe_ref (verkauf()-Scope, keine Slot-Variante)'],
+                'sales_recipe_id' => \Platform\FoodAlchemist\Support\RezeptIdAlias::schema(),
                 'quantity' => ['type' => 'number'],
                 'unit' => ['type' => 'string', 'description' => 'Einheiten-Slug, z. B. stk, portion'],
                 'price_value' => ['type' => 'number'],
@@ -72,6 +73,7 @@ class FoodbookBlocksPostTool extends FoodAlchemistTool implements ToolContract, 
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
@@ -92,7 +94,7 @@ class FoodbookBlocksPostTool extends FoodAlchemistTool implements ToolContract, 
         // prüft der Positions-Kern im Dienst — keine zweite Prüfung hier.
         $daten = array_intersect_key($arguments, array_flip([
             'type', 'label', 'customer_text', 'interne_bemerkung',
-            'concept_id', 'sales_recipe_id', 'quantity', 'price_value', 'price_basis', 'visible', 'presentation_id',   // presentation_id: Dienst lehnt ab (B7)
+            'concept_id', 'recipe_id', 'quantity', 'price_value', 'price_basis', 'visible', 'presentation_id',   // presentation_id: Dienst lehnt ab (B7)
         ]));
         if (($arguments['unit'] ?? '') !== '') {
             $unit = app(VocabularyService::class)->findEinheit($team, (string) $arguments['unit']);
@@ -114,7 +116,7 @@ class FoodbookBlocksPostTool extends FoodAlchemistTool implements ToolContract, 
 
         return ToolResult::success(['block' => [
             'id' => $block->id, 'type' => $block->type, 'position' => $block->position,
-            'label' => $block->label, 'sales_recipe_id' => $block->sales_recipe_id,
+            'label' => $block->label, ...\Platform\FoodAlchemist\Support\RezeptIdAlias::beide($block->recipe_id),
             'staffel_zeilen' => count($arguments['staffel'] ?? []),
         ]]);
     }

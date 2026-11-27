@@ -31,18 +31,18 @@ it('die sechs Verweis-Relationen lösen ein weich gelöschtes Gericht weiter auf
         ->and($zeile->{$relation}->name)->toBe('Rinderroulade')
         ->and($zeile->{$relation}->trashed())->toBeTrue();
 })->with([
-    'Konzept-Position' => [FoodAlchemistConceptSlot::class, 'sales_recipe_id', 'dish'],
-    'Angebots-Block' => [FoodAlchemistOfferBlock::class, 'sales_recipe_id', 'dish'],
-    'Foodbook-Block' => [FoodAlchemistFoodbookBlock::class, 'sales_recipe_id', 'dish'],
-    'Speiseplan-Eintrag' => [FoodAlchemistSpeiseplanEintrag::class, 'sales_recipe_id', 'dish'],
-    'Speisekarten-Position' => [FoodAlchemistSpeisekartePosition::class, 'sales_recipe_id', 'dish'],
+    'Konzept-Position' => [FoodAlchemistConceptSlot::class, 'recipe_id', 'dish'],
+    'Angebots-Block' => [FoodAlchemistOfferBlock::class, 'recipe_id', 'dish'],
+    'Foodbook-Block' => [FoodAlchemistFoodbookBlock::class, 'recipe_id', 'dish'],
+    'Speiseplan-Eintrag' => [FoodAlchemistSpeiseplanEintrag::class, 'recipe_id', 'dish'],
+    'Speisekarten-Position' => [FoodAlchemistSpeisekartePosition::class, 'recipe_id', 'dish'],
     'Produktions-Zeile' => [FoodAlchemistProductionOrderLine::class, 'recipe_id', 'recipe'],
 ]);
 
 it('der Speiseplan-Eintrag zeigt den Namen statt „—“', function () {
-    expect((new FoodAlchemistSpeiseplanEintrag(['sales_recipe_id' => $this->gericht->id]))->inhaltName())->toBe('Rinderroulade');
+    expect((new FoodAlchemistSpeiseplanEintrag(['recipe_id' => $this->gericht->id]))->inhaltName())->toBe('Rinderroulade');
 });
 
 it('ein hart fehlendes Gericht bleibt null (kein Platzhalter-Objekt)', function () {
-    expect((new FoodAlchemistOfferBlock(['sales_recipe_id' => 999999]))->dish)->toBeNull();
+    expect((new FoodAlchemistOfferBlock(['recipe_id' => 999999]))->dish)->toBeNull();
 });

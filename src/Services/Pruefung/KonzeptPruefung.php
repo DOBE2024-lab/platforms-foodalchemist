@@ -198,8 +198,8 @@ final class KonzeptPruefung
         $direkt = DB::table('foodalchemist_concept_slots')
             ->where('concept_id', $conceptId)
             ->whereNull('deleted_at')
-            ->whereNotNull('sales_recipe_id')
-            ->pluck('sales_recipe_id')->all();
+            ->whereNotNull('recipe_id')
+            ->pluck('recipe_id')->all();
 
         return array_values(array_unique(array_map('intval', $direkt)));
     }
@@ -240,7 +240,7 @@ final class KonzeptPruefung
             ->whereNull('cs.deleted_at')
             ->whereNotIn('cs.type', \Platform\FoodAlchemist\Services\Concepter\ConceptService::STRUKTUR_TYPEN)
             ->where('cs.is_pflicht', true)
-            ->whereNull('cs.sales_recipe_id');
+            ->whereNull('cs.recipe_id');
     }
 
     /** EXISTS: mindestens ein Inhalts-Slot ist belegt (Gericht oder Paket). */
@@ -250,7 +250,7 @@ final class KonzeptPruefung
             ->whereColumn('cs.concept_id', 'foodalchemist_concepts.id')
             ->whereNull('cs.deleted_at')
             ->whereNotIn('cs.type', \Platform\FoodAlchemist\Services\Concepter\ConceptService::STRUKTUR_TYPEN)
-            ->whereNotNull('cs.sales_recipe_id');
+            ->whereNotNull('cs.recipe_id');
     }
 
     /**
@@ -273,9 +273,9 @@ final class KonzeptPruefung
             return $q->select(DB::raw(1))->from('foodalchemist_concept_slots as cs')
                 ->whereColumn('cs.concept_id', 'foodalchemist_concepts.id')
                 ->whereNull('cs.deleted_at')
-                ->whereNotNull('cs.sales_recipe_id')
+                ->whereNotNull('cs.recipe_id')
                 ->whereRaw("LENGTH(TRIM(COALESCE(cs.wording, ''))) = 0")
-                ->whereExists($ohneStandard('cs.sales_recipe_id'));
+                ->whereExists($ohneStandard('cs.recipe_id'));
         };
     }
 }

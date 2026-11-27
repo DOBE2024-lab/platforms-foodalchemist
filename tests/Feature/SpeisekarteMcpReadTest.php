@@ -26,7 +26,7 @@ beforeEach(function () {
 
     $this->karte = $this->karten->create($this->rootTeam, ['name' => 'Fischkarte', 'karten_typ' => 'alacarte']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $this->karte->id, ['title' => 'Fisch']);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g->id]);
 });
 
 it('Stufe E MCP: SEARCH findet die Karte', function () {

@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
 
 /**
  * @ai.description Kreativ-Skizze der Foodbook-Leitstelle (Spec 19, M4). Frei geschrieben ODER
- * Bestand-Ref (`sales_recipe_id` = echtes VK-Gericht), Einzel ODER Teil eines Paket-`group_id`.
+ * Bestand-Ref (`recipe_id` = echtes VK-Gericht), Einzel ODER Teil eines Paket-`group_id`.
  * **Invariante: erzeugt NIE Rezepte/GPs/Konzepte — erst das Kapitel-Go (E7.3) materialisiert.**
  * Bis dahin `status='entwurf'`. Das Original bleibt in `source_meta` erhalten (kein stiller
  * Kreativitätsverlust). `generation_status`/`generated_recipe_id` steuern die L7/L8-Freitext-Queue.
@@ -72,7 +72,7 @@ class FoodAlchemistDishIdea extends Model
     /** Referenziertes Bestand-VK-Gericht (loser Zeiger, kein Cascade). */
     public function salesRecipe(): BelongsTo
     {
-        return $this->belongsTo(FoodAlchemistRecipe::class, 'sales_recipe_id')
+        return $this->belongsTo(FoodAlchemistRecipe::class, 'recipe_id')
             ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis');   // Spec 82: Verweis löst auch Fassungen auf
     }
 

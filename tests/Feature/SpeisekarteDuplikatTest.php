@@ -23,7 +23,7 @@ it('Stufe D: dupliziere kopiert Rubrik-Baum + Positionen als neuen Entwurf', fun
     $karte = $this->karten->create($this->rootTeam, ['name' => 'Standardkarte', 'status' => 'aktiv']);
     $haupt = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
     $fleisch = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Fleisch'], $haupt->id);
-    $this->karten->addPosition($this->rootTeam, $fleisch->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $this->karten->addPosition($this->rootTeam, $fleisch->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
 
     $kopie = $this->karten->dupliziere($this->rootTeam, $karte->id, ['name' => 'Sommerkarte', 'karten_typ' => 'saisonkarte']);
 
@@ -39,7 +39,7 @@ it('Stufe D: dupliziere kopiert Rubrik-Baum + Positionen als neuen Entwurf', fun
     $kFleisch = $kopie->sections->firstWhere('title', 'Fleisch');
     expect($kFleisch->parent_id)->toBe($kHaupt->id)
         ->and($kFleisch->items)->toHaveCount(1)
-        ->and($kFleisch->items->first()->sales_recipe_id)->toBe($this->gericht->id);
+        ->and($kFleisch->items->first()->recipe_id)->toBe($this->gericht->id);
 });
 
 it('Stufe D MCP: speisekarten.DUPLICATE + speisekarte_rubrik.PUT', function () {

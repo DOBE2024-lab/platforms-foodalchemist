@@ -115,7 +115,7 @@ it('gerichtZeilen löst ein eingebettetes Paket in Paketname + seine Gerichte au
     $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Salatwand']);
     $concepts->update($this->rootTeam, $paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 7.90]);
     $ps = $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise']);
-    $concepts->fillSlot($this->rootTeam, $ps->id, ['sales_recipe_id' => $this->green->id]);
+    $concepts->fillSlot($this->rootTeam, $ps->id, ['recipe_id' => $this->green->id]);
     // ins Concept einbetten
     $slot = $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
     $concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);

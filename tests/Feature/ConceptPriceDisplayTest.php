@@ -30,8 +30,8 @@ beforeEach(function () {
         $a = $this->makeRecipe($this->rootTeam, 'Kuchen A', ['is_sales_recipe' => true, 'sales_net' => 2.0, 'ek_total_eur' => 0.5]);
         $b = $this->makeRecipe($this->rootTeam, 'Kuchen B', ['is_sales_recipe' => true, 'sales_net' => 2.5, 'ek_total_eur' => 0.75]);
         $c = $this->makeConcept($this->rootTeam, 'Kuchenauswahl', ['kind' => 'concept', 'status' => 'active', 'price_display' => $display]);
-        $this->makeConceptSlot($c, ['sales_recipe_id' => $a->id, 'position' => 1, 'wording' => 'Kuchen A']);
-        $this->makeConceptSlot($c, ['sales_recipe_id' => $b->id, 'position' => 2, 'wording' => 'Kuchen B']);
+        $this->makeConceptSlot($c, ['recipe_id' => $a->id, 'position' => 1, 'wording' => 'Kuchen A']);
+        $this->makeConceptSlot($c, ['recipe_id' => $b->id, 'position' => 2, 'wording' => 'Kuchen B']);
 
         return $c->fresh();
     };

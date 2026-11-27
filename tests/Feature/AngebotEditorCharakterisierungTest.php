@@ -115,10 +115,10 @@ it('Board-Daten: Form und Zahlen je Kapitel', function () {
     $gericht = $this->makeRecipe($this->rootTeam, 'Roulade', ['is_sales_recipe' => true, 'ek_total_eur' => 30.0, 'sales_unit_count' => 10]);
     $konzepte = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $k = $konzepte->create($this->rootTeam, ['name' => 'Grillmenü', 'status' => 'active']);
-    $konzepte->fillSlot($this->rootTeam, $konzepte->addSlot($this->rootTeam, $k->id, ['role' => 'Haupt'])->id, ['sales_recipe_id' => $gericht->id]);
+    $konzepte->fillSlot($this->rootTeam, $konzepte->addSlot($this->rootTeam, $k->id, ['role' => 'Haupt'])->id, ['recipe_id' => $gericht->id]);
     $this->comp->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $k->id]);
     $this->comp->addBlock($this->rootTeam, $kap->id, ['type' => 'header', 'label' => 'Zwischenzeile']);
-    $this->comp->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $gericht->id]);
+    $this->comp->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $gericht->id]);
     $this->comp->addBlock($this->rootTeam, $kap->id, ['type' => 'position', 'label' => 'Service', 'price_value' => 10, 'ek_value' => 4, 'quantity' => 1]);
     $this->comp->kapitelFortschritt($this->rootTeam, $kap->id, 'in_arbeit');
 

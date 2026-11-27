@@ -23,7 +23,7 @@ beforeEach(function () {
         $fb = $this->makeFoodbook($team, $name, ['personen' => 10, 'jahr' => 2027]);
         $kap = $this->makeChapter($fb, ['title' => 'INTERN', 'consumer_title' => 'Vorspeisen', 'position' => 1]);
         $suppe = $this->makeRecipe($team, 'Kürbissuppe', ['is_sales_recipe' => true, 'sales_net' => 6.5]);
-        $this->makeFoodbookBlock($kap, ['type' => 'recipe_ref', 'sales_recipe_id' => $suppe->id, 'position' => 1]);
+        $this->makeFoodbookBlock($kap, ['type' => 'recipe_ref', 'recipe_id' => $suppe->id, 'position' => 1]);
 
         return $fb;
     };

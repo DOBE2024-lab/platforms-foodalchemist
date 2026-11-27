@@ -157,7 +157,7 @@ it('APPLY übernimmt GENAU die Vorschau als Draft-Konzept — inkl. eigener Ger�
     // Spec 50 C-1: vor jeder Gang-Gruppe steht ein Header-Block (title = role = Frame-Label).
     $positionen = $concept->slots->where('type', 'gericht')->values();
     $header = $concept->slots->where('type', 'header')->values();
-    expect($positionen->pluck('sales_recipe_id')->all())->toBe($erwarteteIds)
+    expect($positionen->pluck('recipe_id')->all())->toBe($erwarteteIds)
         ->and($positionen->pluck('role')->all())->toBe(['Vorspeisen', 'Hauptgänge'])
         ->and($header->pluck('title')->all())->toBe(['Vorspeisen', 'Hauptgänge'])
         ->and($concept->slots->sortBy('position')->pluck('type')->all())->toBe(['header', 'gericht', 'header', 'gericht']);
@@ -188,7 +188,7 @@ it('veraltete Vorschau bricht ab — und hinterlässt kein halbes Konzept', func
 it('befülltes Zielkonzept wird abgelehnt statt überschrieben', function () {
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Handarbeit', 'status' => 'draft']);
     $slot = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeisen']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->b1->id, 'type' => 'gericht']);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->b1->id, 'type' => 'gericht']);
 
     $res = ($this->apply)($this->owner + ['concept_id' => $concept->id]);
 
@@ -198,7 +198,7 @@ it('befülltes Zielkonzept wird abgelehnt statt überschrieben', function () {
     // Der Bestand ist unangetastet — genau eine Position, und zwar die des Menschen.
     $concept->refresh()->load('slots');
     expect($concept->slots)->toHaveCount(1)
-        ->and($concept->slots->first()->sales_recipe_id)->toBe($this->b1->id);
+        ->and($concept->slots->first()->recipe_id)->toBe($this->b1->id);
 });
 
 it('nicht-Entwurf wird abgelehnt — die Übernahme schreibt nur in Entwürfe', function () {
@@ -243,7 +243,7 @@ it('unbefüllbarer Slot landet als leere Position MIT Begründung — nie ein er
 
     $slots = FoodAlchemistConcept::with('slots')->findOrFail($res->data['concept_id'])->slots;
     $leerSlot = $slots->where('type', 'gericht')->firstWhere('role', 'Desserts');   // C-1: der Header trägt die Rolle auch
-    expect($leerSlot->sales_recipe_id)->toBeNull()
+    expect($leerSlot->recipe_id)->toBeNull()
         ->and($leerSlot->note)->toContain('Slot bleibt leer');
 });
 

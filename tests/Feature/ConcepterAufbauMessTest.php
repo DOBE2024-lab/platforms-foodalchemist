@@ -32,7 +32,7 @@ beforeEach(function () {
                 FoodAlchemistRecipeDarreichung::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $r->id, 'serving_form_id' => $this->teller->id,
                     'is_standard' => false, 'ek_portion' => 3.5, 'sales_net' => 11.0]);
             }
-            $this->makeConceptSlot($concept, ['sales_recipe_id' => $r->id, 'position' => $i]);
+            $this->makeConceptSlot($concept, ['recipe_id' => $r->id, 'position' => $i]);
         }
 
         return $concept;

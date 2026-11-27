@@ -57,7 +57,7 @@ beforeEach(function () {
 });
 
 it('EK je Person ist die Portion (ek_portion der Standard-Form), nicht der ganze Ansatz', function () {
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $this->gericht->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $this->gericht->id]);
 
     $preis = $this->svc->eintragPreis($e->fresh());
     expect($preis['vk'])->toBe(4.0)
@@ -69,13 +69,13 @@ it('ohne Darreichung: EK = Ansatz ÷ Portionen (Fallback wie Paket)', function (
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'suppe', 'name' => 'Suppe', 'status' => 'approved',
         'is_sales_recipe' => true, 'sales_net' => 3.00, 'ek_total_eur' => 8.00, 'sales_unit_count' => 8,
     ]);
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $ohne->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $ohne->id]);
 
     expect($this->svc->eintragPreis($e->fresh())['ek'])->toBe(1.0);
 });
 
 it('gewählte Darreichung bestimmt VK, EK und Portionsgewicht der Zelle', function () {
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $this->gericht->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $this->gericht->id]);
     $this->svc->setEintragDarreichung($this->rootTeam, $e->id, $this->kinder->id);
 
     $preis = $this->svc->eintragPreis($e->fresh());
@@ -95,18 +95,18 @@ it('fremde Darreichung wird abgelehnt', function () {
     $anderes = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'x', 'name' => 'Anderes Gericht', 'status' => 'approved', 'is_sales_recipe' => true,
     ]);
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $anderes->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $anderes->id]);
 
     expect(fn () => $this->svc->setEintragDarreichung($this->rootTeam, $e->id, $this->kinder->id))
         ->toThrow(\RuntimeException::class, 'gehört nicht zum Gericht');
     expect(fn () => $this->svc->addEintrag($this->rootTeam, $this->plan->id, [
-        'entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $anderes->id, 'presentation_id' => $this->kinder->id,
+        'entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $anderes->id, 'presentation_id' => $this->kinder->id,
     ]))->toThrow(\RuntimeException::class, 'gehört nicht zum Gericht');
 });
 
 it('Ersetzen setzt die Darreichung zurück, Kopieren übernimmt sie', function () {
     $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, [
-        'entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $this->gericht->id, 'presentation_id' => $this->kinder->id,
+        'entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $this->gericht->id, 'presentation_id' => $this->kinder->id,
     ]);
     expect($e->presentation_id)->toBe($this->kinder->id);
 
@@ -121,13 +121,13 @@ it('Ersetzen setzt die Darreichung zurück, Kopieren übernimmt sie', function (
     $anderes = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'y', 'name' => 'Rahmspinat', 'status' => 'approved', 'is_sales_recipe' => true,
     ]);
-    $this->svc->ersetzeEintrag($this->rootTeam, $e->id, ['sales_recipe_id' => $anderes->id]);
+    $this->svc->ersetzeEintrag($this->rootTeam, $e->id, ['recipe_id' => $anderes->id]);
     expect($e->fresh()->presentation_id)->toBeNull();
 });
 
 it('Duplizieren eines Plans übernimmt die Darreichung', function () {
     $this->svc->addEintrag($this->rootTeam, $this->plan->id, [
-        'entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $this->gericht->id, 'presentation_id' => $this->kinder->id,
+        'entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $this->gericht->id, 'presentation_id' => $this->kinder->id,
     ]);
     $kopie = $this->svc->dupliziere($this->rootTeam, $this->plan->id);
 
@@ -136,7 +136,7 @@ it('Duplizieren eines Plans übernimmt die Darreichung', function () {
 
 it('Speiseplan nimmt kein Basisrezept an (auch nicht über den Service)', function () {
     expect(fn () => $this->svc->addEintrag($this->rootTeam, $this->plan->id, [
-        'entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $this->basis->id,
+        'entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $this->basis->id,
     ]))->toThrow(\RuntimeException::class, 'kein Gericht');
 });
 
@@ -178,7 +178,7 @@ it('MCP: POST/PUT setzen presentation_id, GET liefert Form und Preis je Portion'
     $ctx = new ToolContext($this->user, $this->rootTeam);
 
     $post = app(SpeiseplanEintraegePostTool::class)->execute([
-        'menu_plan_id' => $this->plan->id, 'entry_date' => $this->mo, 'sales_recipe_id' => $this->gericht->id,
+        'menu_plan_id' => $this->plan->id, 'entry_date' => $this->mo, 'recipe_id' => $this->gericht->id,
         'presentation_id' => $this->kinder->id,
     ], $ctx);
     expect($post->success)->toBeTrue('post: ' . ($post->error ?? ''))
@@ -198,13 +198,13 @@ it('MCP: POST/PUT setzen presentation_id, GET liefert Form und Preis je Portion'
         ->and($put->data['eintrag']['presentation_id'])->toBeNull();
 
     $basis = app(SpeiseplanEintraegePostTool::class)->execute([
-        'menu_plan_id' => $this->plan->id, 'entry_date' => $this->mo, 'sales_recipe_id' => $this->basis->id,
+        'menu_plan_id' => $this->plan->id, 'entry_date' => $this->mo, 'recipe_id' => $this->basis->id,
     ], $ctx);
     expect($basis->success)->toBeFalse();
 });
 
 it('UI: Detail-Panel zeigt die Form-Wahl und setzt die Darreichung', function () {
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $this->gericht->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $this->gericht->id]);
 
     Livewire::test(Editor::class)
         ->call('oeffnenBearbeiten', $this->plan->id)
@@ -230,8 +230,8 @@ it('Einträge ohne Verkaufspreis zählen nicht in den Wareneinsatz (EK-Summe sch
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'bananenbrot', 'name' => 'Bananenbrot', 'status' => 'approved',
         'is_sales_recipe' => true, 'ek_total_eur' => 141.43, 'yield_kg' => 8.2,
     ]);
-    $a = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $bananenbrot->id]);
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $this->gericht->id]);
+    $a = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $bananenbrot->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $this->gericht->id]);
 
     // Konvention: ohne Portionszahl ist das Gericht EINE Portion (wie DarreichungService::recomputePreise).
     expect($this->svc->eintragPreis($a->fresh())['ek'])->toBe(141.43);
@@ -253,7 +253,7 @@ it('UI: Darreichung steht auch bei nur einer Form, mit Weg zum Gericht', functio
         'team_id' => $this->rootTeam->id, 'recipe_id' => $einzeln->id, 'serving_form_id' => $this->standard->serving_form_id, 'is_standard' => true,
         'quantity_per_unit_g' => 220, 'unit_count' => 1, 'ek_portion' => 1.56, 'sales_net' => 5.61, 'price_mode' => 'auto',
     ]);
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'sales_recipe_id' => $einzeln->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $einzeln->id]);
 
     Livewire::test(Editor::class)
         ->call('oeffnenBearbeiten', $this->plan->id)

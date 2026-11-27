@@ -240,7 +240,7 @@ it('blockiert das Löschen bei Eltern-Zeile, Ersatz-Verknüpfung und gepinnter A
 
     // (c) direkt in einen Foodbook-Block gepinnt (Spalte nimmt technisch jede Rezept-ID)
     $gepinnt = $this->makeRecipe($this->rootTeam, 'Fond: gepinnt');
-    $this->makeFoodbookBlock($this->makeChapter($this->makeFoodbook($this->rootTeam, 'FB')), ['sales_recipe_id' => $gepinnt->id]);
+    $this->makeFoodbookBlock($this->makeChapter($this->makeFoodbook($this->rootTeam, 'FB')), ['recipe_id' => $gepinnt->id]);
     Livewire::test(DetailPanel::class)->call('zeige', $gepinnt->id)->call('rezeptLoeschen')
         ->assertSet('fehlerTausch', fn ($f) => is_string($f) && str_contains($f, 'Ausgabe-Position'));
     expect(FoodAlchemistRecipe::find($gepinnt->id))->not->toBeNull();

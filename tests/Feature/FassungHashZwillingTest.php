@@ -55,13 +55,13 @@ beforeEach(function () {
     $cs = app(ConceptService::class);
     $this->paket = $cs->createPaket($this->master, ['name' => 'Jus-Duo']);
     $sp = $cs->addSlot($this->master, $this->paket->id, ['role' => 'Vorspeise']);
-    $cs->fillSlot($this->master, $sp->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $portion->id]);
+    $cs->fillSlot($this->master, $sp->id, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $portion->id]);
     $cs->setSlotDarreichung($this->master, $sp->id, $kleine->id);
     $this->konzept = $cs->create($this->master, ['name' => 'Jus-Menü']);
     $s1 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Vorspeise']);
     $cs->fillSlot($this->master, $s1->id, ['embedded_concept_id' => $this->paket->id]);
     $this->hauptSlot = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Hauptgang']);
-    $cs->fillSlot($this->master, $this->hauptSlot->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $portion->id]);
+    $cs->fillSlot($this->master, $this->hauptSlot->id, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $portion->id]);
     $cs->setSlotDarreichung($this->master, $this->hauptSlot->id, $kleine->id);
     $cs->addBlock($this->master, $this->konzept->id, 'header', ['title' => 'Unser Menü']);
 

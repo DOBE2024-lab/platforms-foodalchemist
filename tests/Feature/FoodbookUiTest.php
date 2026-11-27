@@ -164,7 +164,7 @@ it('#7/#1: Block-Vorschau löst ein eingebettetes Paket auf (Gerichte + Paket-Pr
     $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Salatwand']);
     $concepts->update($this->rootTeam, $paket->id, ['status' => 'active', 'price_mode' => 'manuell', 'price_per_person_manual' => 7.90]);
     $ps = $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise']);
-    $concepts->fillSlot($this->rootTeam, $ps->id, ['sales_recipe_id' => $green->id]);
+    $concepts->fillSlot($this->rootTeam, $ps->id, ['recipe_id' => $green->id]);
     // Concept, das das Paket einbettet
     $concept = $concepts->create($this->rootTeam, ['name' => 'Grill-Menü', 'status' => 'active']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
@@ -190,7 +190,7 @@ it('C1: Gericht-Zeile inline editieren schreibt den foodbook-lokalen Override + 
     ]);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Menü', 'status' => 'active']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
-    $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $green->id]);
+    $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $green->id]);
 
     Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
@@ -225,7 +225,7 @@ it('Paket-in-Kapitel-Wording: das Kapitel-Wording betextet AUCH die Gerichte ein
     $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Salatwand']);
     $concepts->update($this->rootTeam, $paket->id, ['status' => 'active']);
     $pslot = $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise']);
-    $concepts->fillSlot($this->rootTeam, $pslot->id, ['sales_recipe_id' => $green->id]);
+    $concepts->fillSlot($this->rootTeam, $pslot->id, ['recipe_id' => $green->id]);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Menü', 'status' => 'active']);
     $eslot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
     $concepts->fillSlot($this->rootTeam, $eslot->id, ['embedded_concept_id' => $paket->id]);
@@ -291,7 +291,7 @@ it('#2: Kapitel-Schreibstil betextet die Konzepte im Kapitel-Stil (sprach_duktus
     ]);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Grill-Menü', 'status' => 'active']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
-    $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $green->id]);
+    $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $green->id]);
 
     $stil = \Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle::create([
         'team_id' => $this->rootTeam->id, 'slug' => 'kap-duktus', 'name' => 'Verspielt',

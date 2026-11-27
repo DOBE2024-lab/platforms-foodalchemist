@@ -35,7 +35,7 @@ beforeEach(function () {
     $this->vorlage = $this->svc->create($this->rootTeam, ['name' => 'Zentrale Vorlage', 'start_date' => $this->heute->format('Y-m-d')]);
     $this->linie = $this->vorlage->lines()->first();
     $this->a = ($this->gericht)($this->rootTeam, 'Gulasch');
-    $this->svc->addEintrag($this->rootTeam, $this->vorlage->id, ['entry_date' => $this->heute->format('Y-m-d'), 'line_id' => $this->linie->id, 'sales_recipe_id' => $this->a->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->vorlage->id, ['entry_date' => $this->heute->format('Y-m-d'), 'line_id' => $this->linie->id, 'recipe_id' => $this->a->id]);
 });
 
 it('Paket 7: Kopie je Betrieb nur aus einer Vorlage, nur für eigene Betriebe, je Betrieb einmal', function () {
@@ -65,9 +65,9 @@ it('Paket 7: Abgleich trennt Vorlage-Änderungen von lokalen Abweichungen; Über
 
     $this->travel(2)->minutes();
     // Vorlage ändert Dienstag; der Betrieb setzt am Mittwoch lokal etwas anderes.
-    $this->svc->addEintrag($this->rootTeam, $this->vorlage->id, ['entry_date' => $di, 'line_id' => $this->linie->id, 'sales_recipe_id' => $b->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->vorlage->id, ['entry_date' => $di, 'line_id' => $this->linie->id, 'recipe_id' => $b->id]);
     $kLinie = $kopie->lines()->where('source_line_id', $this->linie->id)->first();
-    $this->svc->addEintrag($this->rootTeam, $kopie->id, ['entry_date' => $mi, 'line_id' => $kLinie->id, 'sales_recipe_id' => $c->id]);
+    $this->svc->addEintrag($this->rootTeam, $kopie->id, ['entry_date' => $mi, 'line_id' => $kLinie->id, 'recipe_id' => $c->id]);
     $this->svc->addLinie($this->rootTeam, $this->vorlage->id, ['name' => 'Wok']);
 
     $abgleich = $this->svc->vorlagenAbgleich($this->rootTeam, $kopie->id);
@@ -77,8 +77,8 @@ it('Paket 7: Abgleich trennt Vorlage-Änderungen von lokalen Abweichungen; Über
     expect(collect($this->svc->betriebsKopien($this->rootTeam, $this->vorlage->id))->first()['aus_vorlage'])->toBe(2);   // Zelle + neue Linie
 
     expect($this->svc->ausVorlageUebernehmen($this->rootTeam, $kopie->id))->toBe(1);
-    expect($kopie->entries()->whereDate('entry_date', $di)->first()->sales_recipe_id)->toBe($b->id)
-        ->and($kopie->entries()->whereDate('entry_date', $mi)->first()->sales_recipe_id)->toBe($c->id)   // lokal bleibt
+    expect($kopie->entries()->whereDate('entry_date', $di)->first()->recipe_id)->toBe($b->id)
+        ->and($kopie->entries()->whereDate('entry_date', $mi)->first()->recipe_id)->toBe($c->id)   // lokal bleibt
         ->and($kopie->lines()->where('name', 'Wok')->exists())->toBeTrue();
 
     $danach = $this->svc->vorlagenAbgleich($this->rootTeam, $kopie->id);
@@ -106,7 +106,7 @@ it('Paket 10.2: Zell-Brief trägt Leitplanken aus dem Plan — nicht wiederholen
     $plan = $this->svc->create($this->rootTeam, ['name' => 'Kaskade', 'start_date' => $this->heute->format('Y-m-d'), 'cycle_weeks' => 1]);
     [$menue, $veg, $dessert] = $plan->lines()->get()->all();
     $this->svc->updateLinie($this->rootTeam, $menue->id, ['price_mode' => 'manuell', 'price_value' => 6.9, 'target_wes_min_pct' => 28, 'target_wes_max_pct' => 36]);
-    $this->svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => $this->heute->format('Y-m-d'), 'line_id' => $dessert->id, 'sales_recipe_id' => $this->a->id]);
+    $this->svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => $this->heute->format('Y-m-d'), 'line_id' => $dessert->id, 'recipe_id' => $this->a->id]);
 
     Livewire::test(SpeiseplanEditor::class)->set('planId', $plan->id)->call('vollKaskadeStarten')->assertRedirect();
 

@@ -91,7 +91,7 @@ class LeitstelleGetTool extends FoodAlchemistTool implements ToolContract, ToolM
             $out['kapitel_matrix'] = $leit->kapitelMatrix($team, $fb);
         }
 
-        return ToolResult::success($out);
+        return ToolResult::success(\Platform\FoodAlchemist\Support\RezeptIdAlias::ausgabe($out));
     }
 
     public function getMetadata(): array

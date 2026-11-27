@@ -72,7 +72,7 @@ it('Format C1: eine Gericht-Zeile format-lokal überschreiben (Concept unangetas
     $this->actingAs($this->makeUser($this->rootTeam));
     $dish = $this->makeRecipe($this->rootTeam, 'Rinderfilet', ['is_sales_recipe' => true, 'sales_net' => 30.0]);
     $concept = $this->makeConcept($this->rootTeam, 'Menü', ['kind' => 'concept', 'status' => 'active']);
-    $cslot = $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id]);
+    $cslot = $this->makeConceptSlot($concept, ['recipe_id' => $dish->id]);
     $f = $this->fsvc->create($this->rootTeam, ['name' => 'CHEFS.CORNER']);
     $fslot = $this->fsvc->slotConceptEinfuegen($this->rootTeam, $f->id, $concept->id);
 

@@ -32,7 +32,7 @@ it('Foodbook: Mappe mit Kunde + Pax, Kapitel-Baum, Blöcke (concept_ref + recipe
 
     $top->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'header', 'label' => 'Willkommen', 'position' => 0]);
     $sub->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'concept_ref', 'concept_id' => $this->concept->id, 'position' => 0]);
-    $sub->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'position' => 1]);
+    $sub->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref', 'recipe_id' => $this->gericht->id, 'quantity' => 1, 'position' => 1]);
 
     expect($fb->customer)->toBe('Hotel Adler')
         ->and($fb->personen)->toBe(120)

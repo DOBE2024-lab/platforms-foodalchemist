@@ -80,7 +80,7 @@ beforeEach(function () {
     $cs = app(ConceptService::class);
     $this->paket = $cs->createPaket($this->master, ['name' => 'Jus-Duo']);
     $slot = $cs->addSlot($this->master, $this->paket->id, ['role' => 'Beilage']);
-    $cs->fillSlot($this->master, $slot->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+    $cs->fillSlot($this->master, $slot->id, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $cs->setSlotDarreichung($this->master, $slot->id, $this->kleine->id);   // das Paket führt die kleine Portion
 
     $this->fassungen = app(FassungService::class);
@@ -101,7 +101,7 @@ beforeEach(function () {
 
     // Paket-Fassung: die gewählte kleine Portion hängt samt Deltas an der Rezept-Fassung
     $r = app(ConceptFassungService::class)->veroeffentlichen($this->master, $this->paket->id, 'Kleine Portion', $this->kurator);
-    $zeile = FoodAlchemistConcept::mitFassungen()->findOrFail($r['fassung_id'])->slots()->whereNotNull('sales_recipe_id')->sole();
+    $zeile = FoodAlchemistConcept::mitFassungen()->findOrFail($r['fassung_id'])->slots()->whereNotNull('recipe_id')->sole();
     $this->kleinF = FoodAlchemistRecipeDarreichung::findOrFail($zeile->presentation_id);
     $this->gerichtF = FoodAlchemistRecipe::mitFassungen()->findOrFail($this->kleinF->recipe_id);
     expect($this->kleinF->is_standard)->toBeFalse()->and($this->kleinF->deltas()->count())->toBe(2);

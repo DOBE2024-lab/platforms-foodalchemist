@@ -519,7 +519,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
         }
 
         $cslot = $this->concepts->addSlot($team, $zielConceptId, ['role' => $rolle]);
-        $this->concepts->fillSlot($team, $cslot->id, ['sales_recipe_id' => $recipeId]);
+        $this->concepts->fillSlot($team, $cslot->id, ['recipe_id' => $recipeId]);
 
         return ['concept_id' => $zielConceptId, 'chapter_id' => $chapterId, 'schon_drin' => false];
     }
@@ -532,7 +532,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
      */
     private function gerichtImKapitel(FoodAlchemistFoodbookKapitel $kapitel, int $recipeId): bool
     {
-        if ($kapitel->blocks()->where('type', 'recipe_ref')->where('sales_recipe_id', $recipeId)->exists()) {
+        if ($kapitel->blocks()->where('type', 'recipe_ref')->where('recipe_id', $recipeId)->exists()) {
             return true;
         }
         $conceptIds = $kapitel->blocks()->where('type', 'concept_ref')->whereNotNull('concept_id')->pluck('concept_id');
@@ -541,7 +541,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
         }
 
         return \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::whereIn('concept_id', $conceptIds)
-            ->where('sales_recipe_id', $recipeId)->exists();
+            ->where('recipe_id', $recipeId)->exists();
     }
 
     /**
@@ -568,7 +568,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
             throw new \RuntimeException('Skizze nicht gefunden oder aus einem anderen Team geerbt.');
         }
         // Nur echte, noch offene Freitext-Skizzen erden; Bestands-Refs / bereits materialisierte überspringen.
-        if ($idee->sales_recipe_id !== null || $idee->generation_status !== 'queued' || $idee->materialized_at !== null) {
+        if ($idee->recipe_id !== null || $idee->generation_status !== 'queued' || $idee->materialized_at !== null) {
             return ['status' => 'uebersprungen', 'idea_id' => (int) $idee->id];
         }
         $kapitelId = (int) $idee->chapter_id;
@@ -606,11 +606,11 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
                 if ($gruppe !== null && $gruppe->materialized_concept_id !== null) {
                     $this->uebernehmeGericht($team, $fbId, $kapitelId, (int) $recipe->id, $idee->title, 'kapitel_freigabe_ki', (int) $gruppe->materialized_concept_id);
                     $cslot = FoodAlchemistConceptSlot::where('concept_id', $gruppe->materialized_concept_id)
-                        ->where('sales_recipe_id', $recipe->id)->orderByDesc('id')->first();
+                        ->where('recipe_id', $recipe->id)->orderByDesc('id')->first();
 
                     return ['concept_id' => (int) $gruppe->materialized_concept_id, 'concept_slot_id' => (int) ($cslot->id ?? 0)];
                 }
-                $block = $this->addBlock($team, $kapitelId, ['type' => 'recipe_ref', 'sales_recipe_id' => (int) $recipe->id]);
+                $block = $this->addBlock($team, $kapitelId, ['type' => 'recipe_ref', 'recipe_id' => (int) $recipe->id]);
 
                 return ['block_id' => (int) $block->id];
             });
@@ -840,7 +840,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
      * (GP→Rezept→Gericht→Concept→Foodbook). **Teilrevidiert Spec 19 (Dominique 2026-07-23,
      * Entscheidung 5):** Ein Kapitel trägt jetzt 0–n Concepts (Paket, €/Gast) UND 0–n
      * direkte Einzel-Gerichte als `recipe_ref`-Block (€/Position). Damit ist „Weg B
-     * exklusiv" nicht mehr gültig. `recipe_ref` referenziert per `sales_recipe_id` ein
+     * exklusiv" nicht mehr gültig. `recipe_ref` referenziert per `recipe_id` ein
      * echtes VK-Gericht (`verkauf()`-Scope, KEINE konzept-lokale Slot-Variante) — Validierung
      * siehe `Support\BlockReferenz`. Lesepfade (blockPreis/kapitelAggregat/dokBlockLabel) kannten
      * recipe_ref bereits; hier wird nur der Schreibpfad freigeschaltet. Wahl-Gruppen A|B|C
@@ -854,7 +854,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     public const BLOCK_TYPES = ['concept_ref', 'recipe_ref', 'header_neutral', 'header_frei', 'header_frei_preis', 'spacer', 'text'];
 
     private const BLOCK_FELDER = ['type', 'level', 'visible', 'label', 'wording', 'customer_text', 'interne_bemerkung',
-        'variant_group_id', 'concept_id', 'sales_recipe_id', 'quantity', 'unit_vocab_id', 'price_value', 'price_basis', 'height', 'header_source', 'payload_json'];
+        'variant_group_id', 'concept_id', 'recipe_id', 'quantity', 'unit_vocab_id', 'price_value', 'price_basis', 'height', 'header_source', 'payload_json'];
 
     public function addBlock(Team $team, int $kapitelId, array $in): FoodAlchemistFoodbookBlock
     {

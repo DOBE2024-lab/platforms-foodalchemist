@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
  * Gilt für kind=concept UND kind=paket (D6). Der alte Paket-Weg (PaketFassungService) ist mit Plan 98 · 2.6c entfallen.
  *
  * Ein Slot zeigt auf GENAU eines von: eingebettetes Paket-Konzept (`embedded_concept_id`, kind=paket),
- * Gericht/Basisrezept (`sales_recipe_id`). Jedes Ziel braucht eine veröffentlichte Fassung (D2/D11), sonst bricht das
+ * Gericht/Basisrezept (`recipe_id`). Jedes Ziel braucht eine veröffentlichte Fassung (D2/D11), sonst bricht das
  * Veröffentlichen mit einer Liste ab; die Fassung zeigt danach auf die jüngste Fassung des Ziels (Baum eingefroren, §12 B 2).
  * D10: unveröffentlichte Änderungen an einem Rezept sind nur ein Hinweis. D9: eine am Slot gewählte nicht-Standard-Darreichung
  * wird an die Rezept-Fassung angehängt. Leck-Sperre: keine Master-Preise (Konzept-Cache, manueller Preis, Slot-Preise der
@@ -35,7 +35,7 @@ class ConceptFassungService extends FassungBasis
 
     /** Slot-Spalten, die nicht in Hash und Kopie gehören bzw. umgehängt werden. `package_id` bleibt gelistet: auf MySQL seit 98 · 3.1
      *  gedroppt, auf SQLite (Testbasis) steht die Spalte noch — so ist der Hash auf beiden gleich. */
-    private const SLOT_NIE = ['id', 'uuid', 'team_id', 'concept_id', 'package_id', 'embedded_concept_id', 'sales_recipe_id', 'presentation_id',
+    private const SLOT_NIE = ['id', 'uuid', 'team_id', 'concept_id', 'package_id', 'embedded_concept_id', 'recipe_id', 'presentation_id',
         'price_value', 'price_basis', 'created_at', 'updated_at', 'deleted_at'];
 
     public function __construct(
@@ -118,13 +118,13 @@ class ConceptFassungService extends FassungBasis
                 $f = $c === null ? null : $this->letzteFassung((int) $c->id);
                 $f === null ? ($c !== null ? $fehlt[] = "Paket-Konzept „{$c->name}“" : null) : $ziele['concept'][(int) $s->embedded_concept_id] = $f;
             }
-            if ($s->sales_recipe_id !== null && ! isset($ziele['recipe'][(int) $s->sales_recipe_id])) {
-                $r = FoodAlchemistRecipe::mitFassungen()->find($s->sales_recipe_id);
+            if ($s->recipe_id !== null && ! isset($ziele['recipe'][(int) $s->recipe_id])) {
+                $r = FoodAlchemistRecipe::mitFassungen()->find($s->recipe_id);
                 $f = $r === null ? null : $this->letzteFassung((int) $r->id, modell: FoodAlchemistRecipe::class);
                 if ($f === null) {
                     $r !== null ? $fehlt[] = "Rezept „{$r->name}“" : null;
                 } else {
-                    $ziele['recipe'][(int) $s->sales_recipe_id] = $f;
+                    $ziele['recipe'][(int) $s->recipe_id] = $f;
                     if ($this->rezeptFassungen->status($r)['weicht_ab']) {
                         $hinweise[] = "Rezept „{$r->name}“ hat unveröffentlichte Änderungen";
                     }
@@ -147,7 +147,7 @@ class ConceptFassungService extends FassungBasis
             return [$felder,
                 null,   // ehemals Alt-Paket (entfallen mit 98 · 2.6c); Platzhalter hält den Inhalts-Hash bestehender Fassungen stabil
                 $s->embedded_concept_id !== null ? (int) ($ziele['concept'][(int) $s->embedded_concept_id]->id ?? 0) : null,
-                $s->sales_recipe_id !== null ? (int) ($ziele['recipe'][(int) $s->sales_recipe_id]->id ?? 0) : null,
+                $s->recipe_id !== null ? (int) ($ziele['recipe'][(int) $s->recipe_id]->id ?? 0) : null,
                 $quelle === null ? null : [$quelle->only(['serving_form_id', 'quantity_per_unit_g', 'unit_vocab_id', 'unit_count']) + $quelle->inhaltErgaenzung(), (bool) $quelle->is_standard],
             ];
         })->values()->all();
@@ -161,8 +161,8 @@ class ConceptFassungService extends FassungBasis
         if ($s->embedded_concept_id !== null) {
             return isset($ziele['concept'][(int) $s->embedded_concept_id]);
         }
-        if ($s->sales_recipe_id !== null) {
-            return isset($ziele['recipe'][(int) $s->sales_recipe_id]);
+        if ($s->recipe_id !== null) {
+            return isset($ziele['recipe'][(int) $s->recipe_id]);
         }
 
         return true;
@@ -176,13 +176,13 @@ class ConceptFassungService extends FassungBasis
             if (! $this->hatZiel($s, $ziele)) {
                 continue;
             }
-            $rezept = $s->sales_recipe_id !== null ? $ziele['recipe'][(int) $s->sales_recipe_id] : null;
+            $rezept = $s->recipe_id !== null ? $ziele['recipe'][(int) $s->recipe_id] : null;
             $quelle = $s->presentation_id ? FoodAlchemistRecipeDarreichung::find($s->presentation_id) : null;
             $zeile = $s->replicate(['uuid', 'created_at', 'updated_at', 'deleted_at']);
             $zeile->forceFill([
                 'concept_id' => $fassung->id,
                 'embedded_concept_id' => $s->embedded_concept_id !== null ? $ziele['concept'][(int) $s->embedded_concept_id]->id : null,
-                'sales_recipe_id' => $rezept?->id,
+                'recipe_id' => $rezept?->id,
                 'presentation_id' => $rezept !== null && $quelle !== null ? $this->fassungsDarreichungen->fassungsDarreichung($rezept, $quelle)?->id : null,
                 'price_value' => null, 'price_basis' => null,   // Preise der Layout-Blöcke gehören dem Master
             ])->save();

@@ -223,9 +223,9 @@ it('Fan-out: eine Hülle in einer Position bekommt einen geplanten Schritt, frei
     $concept = $this->makeConcept($this->rootTeam, 'Green & Tasty', ['status' => 'draft']);
     $huelle = ($this->huelle)();
     $bestand = ($this->huelle)('[VOR] Rote Bete', ['status' => 'approved']);
-    $a = $this->makeConceptSlot($concept, ['position' => 1, 'sales_recipe_id' => $huelle->id, 'quantity' => 2]);
-    $this->makeConceptSlot($concept, ['position' => 2, 'sales_recipe_id' => $bestand->id]);
-    $this->makeConceptSlot($concept, ['position' => 3, 'sales_recipe_id' => $huelle->id]);   // dasselbe Gericht noch einmal
+    $a = $this->makeConceptSlot($concept, ['position' => 1, 'recipe_id' => $huelle->id, 'quantity' => 2]);
+    $this->makeConceptSlot($concept, ['position' => 2, 'recipe_id' => $bestand->id]);
+    $this->makeConceptSlot($concept, ['position' => 3, 'recipe_id' => $huelle->id]);   // dasselbe Gericht noch einmal
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'concept', 'status' => 'running']);
     $conceptStep = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'concept',
         'status' => 'running', 'ref_type' => 'concept', 'ref_id' => $concept->id]);
@@ -245,5 +245,5 @@ it('Fan-out: eine Hülle in einer Position bekommt einen geplanten Schritt, frei
 
     // Nach dem Bau bleibt die Position, wie sie war: dasselbe Gericht, Menge unverändert.
     app(ConceptVorgabenService::class)->setzeGericht($this->rootTeam, (int) $a->id, (int) $huelle->id, $idee);
-    expect((float) $a->refresh()->quantity)->toBe(2.0)->and($a->sales_recipe_id)->toBe($huelle->id);
+    expect((float) $a->refresh()->quantity)->toBe(2.0)->and($a->recipe_id)->toBe($huelle->id);
 });

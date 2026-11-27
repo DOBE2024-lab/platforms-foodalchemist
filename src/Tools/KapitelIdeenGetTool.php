@@ -87,11 +87,11 @@ class KapitelIdeenGetTool extends FoodAlchemistTool implements ToolContract, Too
         );
         $einzel = $liste['einzel']->map(fn ($i) => $this->skizzeArr($i))->all();
 
-        return ToolResult::success([
+        return ToolResult::success(\Platform\FoodAlchemist\Support\RezeptIdAlias::ausgabe([
             'gruppen' => $gruppen,
             'einzel' => $einzel,
             'total' => count($einzel) + array_sum(array_map(fn ($g) => count($g['ideen']), $gruppen)),
-        ]);
+        ]));
     }
 
     public function getMetadata(): array

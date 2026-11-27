@@ -103,7 +103,7 @@ it('flaggt ein unbesetztes Mengengerüst, nicht aber ein teilweise erfülltes', 
 
     // 1 von 3 ⇒ gelb (teilerfuellt) — Arbeitsstand, kein Signal.
     [$gericht] = ($this->gerichtMitVk)('Ceviche', 12.00);
-    $this->makeFoodbookBlock($kapitel, ['sales_recipe_id' => $gericht->id]);
+    $this->makeFoodbookBlock($kapitel, ['recipe_id' => $gericht->id]);
 
     expect($this->dq->countFor($this->rootTeam, 'foodbook_ziel_verfehlt'))->toBe(0);
 });
@@ -122,7 +122,7 @@ it('vererbt das Kapitel-Ziel n-tief und rollt den Ist-Bezug über die Nachfahren
 
     // Ein Gericht ganz unten erfüllt das Ziel der Klammer (Rollup über Nachfahren).
     [$gericht] = ($this->gerichtMitVk)('Kalbsbraten', 24.00);
-    $this->makeFoodbookBlock($blatt, ['sales_recipe_id' => $gericht->id]);
+    $this->makeFoodbookBlock($blatt, ['recipe_id' => $gericht->id]);
 
     expect($this->dq->countFor($this->rootTeam, 'foodbook_ziel_verfehlt'))->toBe(0);
 });
@@ -132,7 +132,7 @@ it('flaggt eine gerissene Kapitel-Preisspanne, nicht aber eine Anker-Abweichung'
     $this->frames->frameFor($this->rootTeam, 'foodbook', $fb->id);
     $kapitel = $this->makeChapter($fb, ['title' => 'Hauptgänge', 'price_max' => 20]);
     [$gericht] = ($this->gerichtMitVk)('Steinbutt', 30.00);
-    $this->makeFoodbookBlock($kapitel, ['sales_recipe_id' => $gericht->id]);
+    $this->makeFoodbookBlock($kapitel, ['recipe_id' => $gericht->id]);
 
     // Ø 30 € über dem Deckel 20 € ⇒ rot.
     expect($this->dq->countFor($this->rootTeam, 'foodbook_ziel_verfehlt'))->toBe(1);

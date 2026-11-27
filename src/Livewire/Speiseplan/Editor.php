@@ -998,7 +998,7 @@ class Editor extends Component
         if ($this->planId === null || $this->cellDatum === null) {
             return;
         }
-        $feld = ['concept' => 'concept_id', 'gericht' => 'sales_recipe_id'][$typ] ?? 'sales_recipe_id';
+        $feld = ['concept' => 'concept_id', 'gericht' => 'recipe_id'][$typ] ?? 'recipe_id';
         // Spec 57 · Paket 5: Picker im Ersetzen-Modus tauscht den Inhalt statt einen neuen Eintrag anzulegen.
         if ($this->pickerErsetzenId !== null && $this->eintragDesPlans($svc, $this->pickerErsetzenId) !== null) {
             $svc->ersetzeEintrag($this->team(), $this->pickerErsetzenId, [$feld => $id]);
@@ -1258,9 +1258,9 @@ class Editor extends Component
             : null;
         // Darreichung im Detail: bei jedem Gericht-Eintrag. Ab zwei Formen als Auswahl, sonst als
         // Anzeige mit dem Weg zum Gericht (dort werden Darreichungen angelegt).
-        $detailFormen = $detailEintrag?->sales_recipe_id !== null
+        $detailFormen = $detailEintrag?->recipe_id !== null
             ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::with('servingForm')
-                ->where('recipe_id', $detailEintrag->sales_recipe_id)->orderByDesc('is_standard')->orderBy('id')->get()
+                ->where('recipe_id', $detailEintrag->recipe_id)->orderByDesc('is_standard')->orderBy('id')->get()
             : collect();
         // Spec 57 · Paket 3: Mengen-Matrix der sichtbaren Woche/Mahlzeit.
         $mengen = $sp !== null ? $svc->mengenMatrix($team, $sp, $this->mahlzeit, $montag, $outlet) : null;

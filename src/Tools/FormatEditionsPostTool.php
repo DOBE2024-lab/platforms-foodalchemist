@@ -101,7 +101,7 @@ class FormatEditionsPostTool extends FoodAlchemistTool implements ToolContract, 
             'geruest' => $geruest,
             'note' => $geruest === null ? null : ($geruest['typ'] === 'sektionen'
                 ? 'Edition aktiv mit Sektions-Headern — Gerichte per foodalchemist.concept_blocks/concept_slots.PUT ergänzen.'
-                : 'Entwurf mit kanonischem Gerüst — leere Positionen per foodalchemist.concept_slots.PUT mit sales_recipe_id füllen, dann aktiv setzen (Mensch).'),
+                : 'Entwurf mit kanonischem Gerüst — leere Positionen per foodalchemist.concept_slots.PUT mit recipe_id füllen, dann aktiv setzen (Mensch).'),
         ], fn ($v) => $v !== null));
     }
 

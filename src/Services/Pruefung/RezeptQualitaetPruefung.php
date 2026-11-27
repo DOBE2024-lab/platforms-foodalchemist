@@ -52,9 +52,9 @@ final class RezeptQualitaetPruefung
      */
     private const NUTZUNGS_REFERENZEN = [
         ['foodalchemist_recipe_ingredients', 'referenced_recipe_id'],
-        ['foodalchemist_concept_slots', 'sales_recipe_id'],
-        ['foodalchemist_foodbook_blocks', 'sales_recipe_id'],
-        ['foodalchemist_menu_plan_entries', 'sales_recipe_id'],
+        ['foodalchemist_concept_slots', 'recipe_id'],
+        ['foodalchemist_foodbook_blocks', 'recipe_id'],
+        ['foodalchemist_menu_plan_entries', 'recipe_id'],
     ];
 
     /**
@@ -64,9 +64,9 @@ final class RezeptQualitaetPruefung
      * erbt es über sein Eltern-Gericht (s. kundenExponiert()).
      */
     private const KUNDEN_REFERENZEN = [
-        ['foodalchemist_concept_slots', 'sales_recipe_id'],
-        ['foodalchemist_foodbook_blocks', 'sales_recipe_id'],
-        ['foodalchemist_menu_plan_entries', 'sales_recipe_id'],
+        ['foodalchemist_concept_slots', 'recipe_id'],
+        ['foodalchemist_foodbook_blocks', 'recipe_id'],
+        ['foodalchemist_menu_plan_entries', 'recipe_id'],
     ];
 
     /** Die 14 EU-Allergen-Spalten am Rezept (GL-01) — `unbekannt` ist der Default nach dem Insert. */

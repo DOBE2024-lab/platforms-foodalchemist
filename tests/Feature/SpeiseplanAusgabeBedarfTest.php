@@ -57,7 +57,7 @@ beforeEach(function () {
     $this->plan = $this->svc->create($this->rootTeam, ['name' => 'Kantine Nord', 'start_date' => $this->mo, 'default_pax' => 100]);
     $this->linie = $this->plan->lines()->first();
     $this->svc->updateLinie($this->rootTeam, $this->linie->id, ['plu' => '2102']);
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->linie->id, 'sales_recipe_id' => $this->suppe->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->linie->id, 'recipe_id' => $this->suppe->id]);
 });
 
 it('Paket 4: Bedarf = Plan × Essen durch die Einkaufsliste (100 Essen → 10 Ansätze → 10 kg Linsen)', function () {
@@ -158,7 +158,7 @@ it('Diät-Kennzeichnung: unbekannte Diät-Angaben werden NICHT zu „Fleisch"', 
     expect($dessert->fresh()->spec_is_vegetarian)->toBeNull();
 
     $linie2 = $this->svc->addLinie($this->rootTeam, $this->plan->id, ['name' => 'Dessert']);
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $linie2->id, 'sales_recipe_id' => $dessert->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $linie2->id, 'recipe_id' => $dessert->id]);
     $plan = $this->svc->detail($this->rootTeam, $this->plan->id);
     $schild = $this->svc->ausgabeFormat($this->rootTeam, $plan, 'schild', 'mittag', $this->mo, $this->mo, $linie2->id, null, true);
     expect($schild['bloecke'][0]['zeilen'][0]['eintraege'][0]['diaet'])->toBe([]);
@@ -173,7 +173,7 @@ it('Diät-Kennzeichnung: unbekannte Diät-Angaben werden NICHT zu „Fleisch"', 
     $eintopf->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $speck->id, 'raw_text' => 'Speck', 'quantity' => 200, 'unit_vocab_id' => FoodAlchemistVocabEinheit::where('slug', 'g')->value('id')]);
     app(RecipeRecomputeService::class)->recomputePipeline($eintopf->id);
     $linie3 = $this->svc->addLinie($this->rootTeam, $this->plan->id, ['name' => 'Eintopf']);
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $linie3->id, 'sales_recipe_id' => $eintopf->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $linie3->id, 'recipe_id' => $eintopf->id]);
     $plan = $this->svc->detail($this->rootTeam, $this->plan->id);
     $schild = $this->svc->ausgabeFormat($this->rootTeam, $plan, 'schild', 'mittag', $this->mo, $this->mo, $linie3->id, null, true);
     expect($schild['bloecke'][0]['zeilen'][0]['eintraege'][0]['diaet'])->toBe(['fleisch']);
@@ -195,8 +195,8 @@ function druckRezept(int $teamId, string $key, string $name, array $enthalten = 
 it('Druck: Einträge ohne Linie stehen auf Tischaufsteller und Allergenliste; Legende nur für den gezeigten Tag', function () {
     $brot = druckRezept($this->rootTeam->id, 'druck-brot', 'Brotkorb', ['gluten'], ['is_sales_recipe' => true, 'sales_wording_standard' => 'Brotkorb']);
     $fisch = druckRezept($this->rootTeam->id, 'druck-fisch', 'Fischfilet', ['fish'], ['is_sales_recipe' => true, 'sales_wording_standard' => 'Fischfilet']);
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'sales_recipe_id' => $brot->id]);   // ohne Linie
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-06', 'line_id' => $this->linie->id, 'sales_recipe_id' => $fisch->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'recipe_id' => $brot->id]);   // ohne Linie
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-06', 'line_id' => $this->linie->id, 'recipe_id' => $fisch->id]);
     $plan = $this->svc->detail($this->rootTeam, $this->plan->id);
 
     $tag = $this->svc->ausgabeFormat($this->rootTeam, $plan, 'tag', 'mittag', $this->mo, $this->mo);
@@ -229,7 +229,7 @@ it('Druck: Buffetschilder lösen Pakete auf, ergänzen Unterrezepte und schreibe
     $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Buffet Klassik']);
     foreach ([$braten, $gratin] as $g) {
         $ps = $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Buffet']);
-        $concepts->fillSlot($this->rootTeam, $ps->id, ['sales_recipe_id' => $g->id]);
+        $concepts->fillSlot($this->rootTeam, $ps->id, ['recipe_id' => $g->id]);
     }
     $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-06', 'line_id' => $this->linie->id, 'concept_id' => $paket->id]);
     $plan = $this->svc->detail($this->rootTeam, $this->plan->id);
@@ -257,7 +257,7 @@ it('Druck: Buffetschilder lösen Pakete auf, ergänzen Unterrezepte und schreibe
 
 it('Druck: CSV sortiert nach Linien-Reihenfolge des Plans, nicht alphabetisch', function () {
     $zweite = $this->svc->addLinie($this->rootTeam, $this->plan->id, ['name' => 'Aktionstheke']);
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $zweite->id, 'sales_recipe_id' => $this->suppe->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $zweite->id, 'recipe_id' => $this->suppe->id]);
     $zeilen = $this->svc->csvZeilen($this->rootTeam, $this->svc->detail($this->rootTeam, $this->plan->id), 'mittag', Carbon::parse($this->mo));
 
     expect($zeilen[1][3])->toBe($this->linie->name)->and($zeilen[2][3])->toBe('Aktionstheke');

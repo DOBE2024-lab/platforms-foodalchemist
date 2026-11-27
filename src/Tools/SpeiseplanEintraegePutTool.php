@@ -25,7 +25,7 @@ class SpeiseplanEintraegePutTool extends FoodAlchemistTool implements ToolContra
     public function getDescription(): string
     {
         return 'Ändert einen Speiseplan-Eintrag (nur Entwurf): verschieben mit entry_date (YYYY-MM-DD), line_id '
-            . '(0 = ohne Linie), mahlzeit; ersetzen mit GENAU EINEM von concept_id | sales_recipe_id (Paket = Concept mit kind=paket); '
+            . '(0 = ohne Linie), mahlzeit; ersetzen mit GENAU EINEM von concept_id | recipe_id (Paket = Concept mit kind=paket); '
             . 'optional pax (0 = Standard); presentation_id = Darreichung des Gerichts (0 = Standard-Darreichung, '
             . 'beim Ersetzen ohne Angabe ebenfalls Standard); wording = Name im Plan (leer = Wording des Gerichts). '
             . 'Eintrags-IDs via speiseplan_eintraege.GET.';
@@ -41,7 +41,8 @@ class SpeiseplanEintraegePutTool extends FoodAlchemistTool implements ToolContra
                 'line_id' => ['type' => 'integer', 'description' => 'Neue Linie (0 = ohne Linie).'],
                 'mahlzeit' => ['type' => 'string', 'enum' => ['fruehstueck', 'mittag', 'abend', 'snack']],
                 'concept_id' => ['type' => 'integer'],
-                'sales_recipe_id' => ['type' => 'integer'],
+                'recipe_id' => ['type' => 'integer'],
+                'sales_recipe_id' => \Platform\FoodAlchemist\Support\RezeptIdAlias::schema(),
                 'pax' => ['type' => 'integer', 'description' => 'Essen (0 = Standard der Linie/des Plans).'],
                 'presentation_id' => ['type' => 'integer', 'description' => 'Darreichung des Gerichts (0 = Standard). Ids via recipe_darreichungen bzw. verkaufsrezepte.GET.'],
                 'wording' => ['type' => 'string', 'description' => 'Name im Plan für Aushang/Buffetschild ("" = Wording des Gerichts).'],
@@ -52,6 +53,7 @@ class SpeiseplanEintraegePutTool extends FoodAlchemistTool implements ToolContra
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
@@ -68,9 +70,9 @@ class SpeiseplanEintraegePutTool extends FoodAlchemistTool implements ToolContra
             return ToolResult::error("Speiseplan hat Status \"{$e->mealPlan->statusWert()->label()}\" — via MCP ist nur ein Entwurf editierbar.", 'ACCESS_DENIED');
         }
 
-        $inhalt = array_intersect_key(array_filter($arguments), array_flip(['concept_id', 'sales_recipe_id']));
+        $inhalt = array_intersect_key(array_filter($arguments), array_flip(['concept_id', 'recipe_id']));
         if (count($inhalt) > 1) {
-            return ToolResult::error('Zum Ersetzen GENAU EINES von concept_id, sales_recipe_id angeben.', 'VALIDATION_ERROR');
+            return ToolResult::error('Zum Ersetzen GENAU EINES von concept_id, recipe_id angeben.', 'VALIDATION_ERROR');
         }
         $verschieben = array_key_exists('entry_date', $arguments) || array_key_exists('line_id', $arguments) || array_key_exists('mahlzeit', $arguments);
         $form = array_key_exists('presentation_id', $arguments)
@@ -112,7 +114,7 @@ class SpeiseplanEintraegePutTool extends FoodAlchemistTool implements ToolContra
         return ToolResult::success(['eintrag' => [
             'id' => (int) $neu->id, 'entry_date' => $neu->entry_date?->format('Y-m-d'), 'mahlzeit' => $neu->meal,
             'line_id' => $neu->line_id, 'concept_id' => $neu->concept_id,
-            'sales_recipe_id' => $neu->sales_recipe_id, 'presentation_id' => $neu->presentation_id, 'wording' => $neu->wording, 'pax' => $neu->pax,
+            ...\Platform\FoodAlchemist\Support\RezeptIdAlias::beide($neu->recipe_id), 'presentation_id' => $neu->presentation_id, 'wording' => $neu->wording, 'pax' => $neu->pax,
         ], 'geaendert' => $geaendert]);
     }
 
@@ -125,7 +127,7 @@ class SpeiseplanEintraegePutTool extends FoodAlchemistTool implements ToolContra
             'requires_auth' => true, 'requires_team' => true, 'cost_class' => 'local_db',
             'side_effects' => ['updates'],
             'related_tools' => ['foodalchemist.speiseplan_eintraege.GET', 'foodalchemist.speiseplan_eintraege.POST'],
-            'examples' => ['Verschiebe Eintrag 88 auf Dienstag 2026-10-06, Linie 4.', 'Ersetze bei Eintrag 90 das Gericht durch sales_recipe_id 512.', 'Setze bei Eintrag 91 die Darreichung presentation_id 33 (Kinderportion).'],
+            'examples' => ['Verschiebe Eintrag 88 auf Dienstag 2026-10-06, Linie 4.', 'Ersetze bei Eintrag 90 das Gericht durch recipe_id 512.', 'Setze bei Eintrag 91 die Darreichung presentation_id 33 (Kinderportion).'],
         ];
     }
 }

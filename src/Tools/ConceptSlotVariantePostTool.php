@@ -67,7 +67,7 @@ class ConceptSlotVariantePostTool extends FoodAlchemistTool implements ToolContr
 
         return ToolResult::success([
             'slot_id' => $slot->id,
-            'sales_recipe_id' => $slot->sales_recipe_id,
+            ...\Platform\FoodAlchemist\Support\RezeptIdAlias::beide($slot->recipe_id),
             'variiert' => $slot->variant_source_recipe_id !== null,
             'variant_source_recipe_id' => $slot->variant_source_recipe_id,
         ]);

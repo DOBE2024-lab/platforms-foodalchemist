@@ -23,8 +23,8 @@ beforeEach(function () {
     $this->run = fn (string $name, array $a) => app(ToolRegistry::class)->get($name)->execute($a, $kontext);
     $this->alt = $this->makeRecipe($this->rootTeam, 'Rinderroulade', ['is_sales_recipe' => true]);
     $this->neu = $this->makeRecipe($this->rootTeam, 'Kalbsbäckchen', ['is_sales_recipe' => true]);
-    $this->slot = $this->makeConceptSlot($this->makeConcept($this->rootTeam, 'Herbstmenü'), ['sales_recipe_id' => $this->alt->id]);
-    $this->aktivesFb = $this->makeFoodbookBlock($this->makeChapter($this->makeFoodbook($this->rootTeam, 'Foodbook 2026')), ['sales_recipe_id' => $this->alt->id]);
+    $this->slot = $this->makeConceptSlot($this->makeConcept($this->rootTeam, 'Herbstmenü'), ['recipe_id' => $this->alt->id]);
+    $this->aktivesFb = $this->makeFoodbookBlock($this->makeChapter($this->makeFoodbook($this->rootTeam, 'Foodbook 2026')), ['recipe_id' => $this->alt->id]);
 });
 
 afterEach(fn () => Carbon::setTestNow());
@@ -35,7 +35,7 @@ it('preview braucht kein confirm und schreibt nichts', function () {
     expect($r->success)->toBeTrue()
         ->and($r->data['bereiche']['konzepte']['anzahl'])->toBe(1)
         ->and($r->data['haken_noetig'])->toBeTrue()
-        ->and((int) $this->slot->fresh()->sales_recipe_id)->toBe($this->alt->id);
+        ->and((int) $this->slot->fresh()->recipe_id)->toBe($this->alt->id);
 });
 
 it('bereiche ohne confirm wird abgewiesen; mit confirm getauscht, danach löscht verkaufsrezepte.DELETE', function () {

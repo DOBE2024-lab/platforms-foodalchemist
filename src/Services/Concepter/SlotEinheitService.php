@@ -132,7 +132,7 @@ class SlotEinheitService
         if ($einheitId === null) {
             return;
         }
-        $probe = (clone $slot)->forceFill(['sales_recipe_id' => $recipeId])->setRelation('concept', $slot->concept);
+        $probe = (clone $slot)->forceFill(['recipe_id' => $recipeId])->setRelation('concept', $slot->concept);
         $probe->unsetRelation('dish');
         $this->pruefe($team, $probe, $einheitId);
     }
@@ -149,7 +149,7 @@ class SlotEinheitService
         $aus = [];
         $einheiten = app(\Platform\FoodAlchemist\Services\GpStamm\VocabularyService::class)->listEinheiten($team);   // 2.1e: einmal je Konzept statt je Position
         foreach ($concept->slots as $slot) {
-            if ($slot->sales_recipe_id === null || $slot->dish === null) {
+            if ($slot->recipe_id === null || $slot->dish === null) {
                 continue;
             }
             $slot->setRelation('concept', $concept);
@@ -174,7 +174,7 @@ class SlotEinheitService
     {
         $ids = [];
         foreach ($slots as $slot) {
-            if ($slot->unit_vocab_id === null || $slot->sales_recipe_id === null || $slot->dish === null) {
+            if ($slot->unit_vocab_id === null || $slot->recipe_id === null || $slot->dish === null) {
                 continue;
             }
             if (! self::wirkt($slot->unit, $slot->dish, $this->darreichungFuerSlot($slot))) {

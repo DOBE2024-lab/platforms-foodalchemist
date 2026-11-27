@@ -84,7 +84,7 @@ class PricingCascadeService
             \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm($team, function () use ($team, $recipeIds, &$stats) {
                 $conceptIds = DB::table('foodalchemist_concept_slots')
                     ->whereNull('deleted_at')
-                    ->whereIn('sales_recipe_id', $recipeIds)
+                    ->whereIn('recipe_id', $recipeIds)
                     ->distinct()->pluck('concept_id')->map(fn ($id) => (int) $id)->values()->all();
 
                 // Eingebettete Paket-/Concept-Kaskade von unten nach oben auflösen.

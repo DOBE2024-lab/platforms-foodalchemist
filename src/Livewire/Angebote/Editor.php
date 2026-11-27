@@ -651,7 +651,7 @@ class Editor extends Component
             return;
         }
         try {
-            $comp->addBlock($this->team(), $this->selectedKapitelId, ['type' => 'recipe_ref', 'sales_recipe_id' => $recipeId]);
+            $comp->addBlock($this->team(), $this->selectedKapitelId, ['type' => 'recipe_ref', 'recipe_id' => $recipeId]);
         } catch (\Throwable $e) {
             $this->errorToast($e->getMessage());
 

@@ -239,7 +239,7 @@ it('Concepter-Reiter „Anrichten“: nur lesend — Darreichung, Gefäß, Typ, 
     $concepts = app(ConceptService::class);
     $konzept = $concepts->create($this->rootTeam, ['name' => 'Salat-Buffet']);
     $slot = $concepts->addSlot($this->rootTeam, $konzept->id, ['role' => 'Vorspeise']);
-    $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->dar->recipe_id]);
+    $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->dar->recipe_id]);
 
     $html = Livewire::test(Editor::class)->call('oeffnen', 'concepts', $konzept->id, 'anrichten')->html();
 

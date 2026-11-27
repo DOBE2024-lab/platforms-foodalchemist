@@ -44,12 +44,12 @@ beforeEach(function () {
     // Paket (neues Modell) mit dem Schwein-Gericht.
     $this->paket = $this->concepts->createPaket($this->rootTeam, ['name' => 'BBQ-Station']);
     $ps = $this->concepts->addSlot($this->rootTeam, $this->paket->id, ['role' => 'Hauptgang']);
-    $this->concepts->fillSlot($this->rootTeam, $ps->id, ['sales_recipe_id' => $this->pork->id]);
+    $this->concepts->fillSlot($this->rootTeam, $ps->id, ['recipe_id' => $this->pork->id]);
 
     // Concept: fester Salat + eingebettetes Paket.
     $this->concept = $this->concepts->create($this->rootTeam, ['name' => 'Sommerfest']);
     $s1 = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['sales_recipe_id' => $this->salat->id]);
+    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['recipe_id' => $this->salat->id]);
     $s2 = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Hauptgang']);
     $this->concepts->fillSlot($this->rootTeam, $s2->id, ['embedded_concept_id' => $this->paket->id]);
 });

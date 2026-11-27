@@ -99,7 +99,7 @@ it('erhält Format und Konzepte als getrennte Navigationsebenen im Handbuch-Snap
     $format = $formatSvc->create($this->rootTeam, ['name' => 'Menü Test and Fly']);
     foreach (['Italien', 'Dessert'] as $name) {
         $concept = $this->makeConcept($this->rootTeam, $name);
-        $this->makeConceptSlot($concept, ['sales_recipe_id' => $this->gericht->id, 'position' => 1]);
+        $this->makeConceptSlot($concept, ['recipe_id' => $this->gericht->id, 'position' => 1]);
         $formatSvc->slotConceptEinfuegen($this->rootTeam, $format->id, $concept->id);
     }
     $fb = $this->makeFoodbook($this->rootTeam, 'Testbuch');
@@ -124,7 +124,7 @@ it('liest vollständige Basisrezepte auch über mehrere weitere Ebenen ohne fest
 it('erhält verschachtelte Pakete, echte Verteilung und getrennte Gerichtskarten je Position ohne Preisfelder', function () {
     $paket = $this->makeConcept($this->rootTeam, 'Deutschland');
     foreach ([.33, 1, .33] as $i => $menge) {
-        $this->makeConceptSlot($paket, ['sales_recipe_id' => $this->gericht->id, 'quantity' => $menge, 'position' => $i, 'wording' => 'Gang '.$i]);
+        $this->makeConceptSlot($paket, ['recipe_id' => $this->gericht->id, 'quantity' => $menge, 'position' => $i, 'wording' => 'Gang '.$i]);
     }
     $innen = $this->makeConcept($this->rootTeam, 'Länderauswahl');
     $this->makeConceptSlot($innen, ['type' => 'paket', 'embedded_concept_id' => $paket->id]);
@@ -149,7 +149,7 @@ it('verwendet die gewählte Darreichung für Mengenanzeige und Rezeptbedarf eine
     $dar = app(DarreichungService::class)->anlegen($this->rootTeam, $this->gericht->id, $this->dar->serving_form_id);
     $dar = app(DarreichungService::class)->setzeAnteil($this->rootTeam, $dar->id, 50);   // Plan 98 B: Variante als Anteil vom Standard (statt freier Grammatur): 100 von 200 g
     $concept = $this->makeConcept($this->rootTeam, 'Kleines Glas');
-    $slot = $this->makeConceptSlot($concept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 50, 'unit_vocab_id' => $this->unitG($this->rootTeam)->id, 'presentation_id' => $dar->id]);
+    $slot = $this->makeConceptSlot($concept, ['recipe_id' => $this->gericht->id, 'quantity' => 50, 'unit_vocab_id' => $this->unitG($this->rootTeam)->id, 'presentation_id' => $dar->id]);
     $menge = app(\Platform\FoodAlchemist\Services\Ausgabe\HandbuchPositionsMenge::class)->fuer($slot);
     expect($menge['portionen_pro_gast'])->toBe(.5);
     $karte = app(HandbuchService::class)->gerichtKarte($this->rootTeam, $this->gericht->fresh(), 'Kleines Glas', true, $dar);
@@ -163,7 +163,7 @@ it('verwendet die gewählte Darreichung für Mengenanzeige und Rezeptbedarf eine
 it('übernimmt aus einer fehlerhaften Verknüpfung keine Gerichtskarte eines nicht sichtbaren Teams', function () {
     $fremd = $this->makeRecipe($this->childA, 'NICHT SICHTBARES GERICHT', ['is_sales_recipe' => true]);
     $concept = $this->makeConcept($this->rootTeam, 'Sichtbares Konzept');
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => $fremd->id, 'quantity' => .33]);
+    $this->makeConceptSlot($concept, ['recipe_id' => $fremd->id, 'quantity' => .33]);
     $format = app(FormatService::class)->create($this->rootTeam, ['name' => 'Sichtbares Format']);
     app(FormatService::class)->slotConceptEinfuegen($this->rootTeam, $format->id, $concept->id);
     $fb = $this->makeFoodbook($this->rootTeam, 'Buch');

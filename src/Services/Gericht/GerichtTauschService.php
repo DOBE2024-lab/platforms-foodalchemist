@@ -174,7 +174,7 @@ final class GerichtTauschService
                     if (($m['art'] ?? '') === 'slot') {
                         $this->slot($team, $v['id'], $nach, $m, $form);
                     } else {
-                        app(OfferCompositionService::class)->updateBlock($team, $v['id'], ['sales_recipe_id' => (int) $nach->id, 'presentation_id' => $form, 'wording' => null]);
+                        app(OfferCompositionService::class)->updateBlock($team, $v['id'], ['recipe_id' => (int) $nach->id, 'presentation_id' => $form, 'wording' => null]);
                     }
                     $angebote[] = (int) $m['offer_id'];
                     break;
@@ -182,13 +182,13 @@ final class GerichtTauschService
                     $komponenten = true;   // einmal für alle eigenen Eltern (Zyklus-Prüfung, Neuberechnung)
                     break;
                 case 'speiseplan':
-                    app(SpeiseplanService::class)->ersetzeEintrag($team, $v['id'], ['sales_recipe_id' => (int) $nach->id, 'presentation_id' => $form]);
+                    app(SpeiseplanService::class)->ersetzeEintrag($team, $v['id'], ['recipe_id' => (int) $nach->id, 'presentation_id' => $form]);
                     break;
                 case 'speisekarte':
-                    app(SpeisekarteService::class)->updatePosition($team, $v['id'], ['sales_recipe_id' => (int) $nach->id, 'presentation_id' => $form, 'wording' => null]);
+                    app(SpeisekarteService::class)->updatePosition($team, $v['id'], ['recipe_id' => (int) $nach->id, 'presentation_id' => $form, 'wording' => null]);
                     break;
                 case 'foodbooks':
-                    app(FoodbookService::class)->updateBlock($team, $v['id'], ['sales_recipe_id' => (int) $nach->id, 'wording' => null]);
+                    app(FoodbookService::class)->updateBlock($team, $v['id'], ['recipe_id' => (int) $nach->id, 'wording' => null]);
                     $this->foodbookDarreichung($team, $v['id'], $form);
                     break;
                 case 'ersatz':
@@ -208,7 +208,7 @@ final class GerichtTauschService
     private function slot(Team $team, int $slotId, FoodAlchemistRecipe $nach, array $m, ?int $form): void
     {
         $concepts = app(ConceptService::class);
-        $concepts->fillSlot($team, $slotId, ['sales_recipe_id' => (int) $nach->id, 'quantity' => $m['quantity'] ?? null, 'unit_vocab_id' => $m['unit_vocab_id'] ?? null]);
+        $concepts->fillSlot($team, $slotId, ['recipe_id' => (int) $nach->id, 'quantity' => $m['quantity'] ?? null, 'unit_vocab_id' => $m['unit_vocab_id'] ?? null]);
         $concepts->setSlotDarreichung($team, $slotId, $form);
         if (($m['wording'] ?? null) !== null) {
             $concepts->setSlotWording($team, $slotId, null);
@@ -225,7 +225,7 @@ final class GerichtTauschService
         if (! $block->isOwnedBy($team)) {
             throw new \RuntimeException('Geerbtes Foodbook: Ändern kann es nur das Besitzer-Team.');
         }
-        if ($form !== null && ! FoodAlchemistRecipeDarreichung::whereKey($form)->where('recipe_id', $block->sales_recipe_id)->exists()) {
+        if ($form !== null && ! FoodAlchemistRecipeDarreichung::whereKey($form)->where('recipe_id', $block->recipe_id)->exists()) {
             throw new \RuntimeException('Darreichung gehört nicht zum Gericht dieses Blocks.');
         }
         $block->update(['presentation_id' => $form]);

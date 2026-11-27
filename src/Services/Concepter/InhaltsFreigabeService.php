@@ -387,20 +387,20 @@ class InhaltsFreigabeService
         };
         match ($typ) {
             'format' => $hol('foodalchemist_format_slots', 'format_id', ['concept_id' => 'concept']),
-            'concept' => $hol('foodalchemist_concept_slots', 'concept_id', ['sales_recipe_id' => 'recipe', 'embedded_concept_id' => 'concept']),
+            'concept' => $hol('foodalchemist_concept_slots', 'concept_id', ['recipe_id' => 'recipe', 'embedded_concept_id' => 'concept']),
             'recipe' => $hol('foodalchemist_recipe_ingredients', 'recipe_id', ['referenced_recipe_id' => 'recipe']),
             'foodbook' => [
-                $hol('foodalchemist_foodbook_chapters', 'foodbook_id', ['format_id' => 'format', 'concept_id' => 'concept', 'sales_recipe_id' => 'recipe']),
+                $hol('foodalchemist_foodbook_chapters', 'foodbook_id', ['format_id' => 'format', 'concept_id' => 'concept', 'recipe_id' => 'recipe']),
                 // Blöcke hängen am Kapitel, nicht am Foodbook
-                $hol('foodalchemist_foodbook_blocks', 'chapter_id', ['concept_id' => 'concept', 'sales_recipe_id' => 'recipe'],
+                $hol('foodalchemist_foodbook_blocks', 'chapter_id', ['concept_id' => 'concept', 'recipe_id' => 'recipe'],
                     $this->kinderIds('foodalchemist_foodbook_chapters', 'foodbook_id', $ids)),
             ],
-            'speiseplan' => $hol('foodalchemist_menu_plan_entries', 'menu_plan_id', ['concept_id' => 'concept', 'sales_recipe_id' => 'recipe']),
+            'speiseplan' => $hol('foodalchemist_menu_plan_entries', 'menu_plan_id', ['concept_id' => 'concept', 'recipe_id' => 'recipe']),
             'speisekarte' => [
                 // Positionen hängen an der Sektion
-                $hol('foodalchemist_menu_card_items', 'section_id', ['concept_id' => 'concept', 'sales_recipe_id' => 'recipe'],
+                $hol('foodalchemist_menu_card_items', 'section_id', ['concept_id' => 'concept', 'recipe_id' => 'recipe'],
                     $this->kinderIds('foodalchemist_menu_card_sections', 'menu_card_id', $ids)),
-                $hol('foodalchemist_menu_card_sections', 'menu_card_id', ['format_id' => 'format', 'concept_id' => 'concept', 'sales_recipe_id' => 'recipe']),
+                $hol('foodalchemist_menu_card_sections', 'menu_card_id', ['format_id' => 'format', 'concept_id' => 'concept', 'recipe_id' => 'recipe']),
             ],
             default => null,
         };

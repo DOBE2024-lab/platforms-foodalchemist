@@ -37,7 +37,7 @@ trait FuelltConceptPositionen
         $slot = $svc->addSlot($this->team(), $this->id, []);
         $in = $typ === 'paket'
             ? ['embedded_concept_id' => $id]   // Kaskade: $id ist ein kind=paket-Concept → einbetten via embedded_concept_id.
-            : ['sales_recipe_id' => $id, 'quantity' => 1, 'unit_vocab_id' => $typ === 'basisrezept' ? null : $this->portionEinheitId(),   // 17.11.: Basisrezept = Gramm (Standard), Portion rechnete dort nicht
+            : ['recipe_id' => $id, 'quantity' => 1, 'unit_vocab_id' => $typ === 'basisrezept' ? null : $this->portionEinheitId(),   // 17.11.: Basisrezept = Gramm (Standard), Portion rechnete dort nicht
                 'type' => $typ === 'basisrezept' ? 'basisrezept' : 'gericht'];
         if (! $this->positionFuellen($slot->id, $in)) {
             $svc->removeSlot($this->team(), $slot->id);   // keine leere Hülle zurücklassen

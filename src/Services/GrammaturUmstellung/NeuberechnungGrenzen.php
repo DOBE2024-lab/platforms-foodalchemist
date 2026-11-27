@@ -85,7 +85,7 @@ final class NeuberechnungGrenzen
     private function konzepte(array $rezepte): array
     {
         $ids = DB::table('foodalchemist_concept_slots')->whereNull('deleted_at')
-            ->whereIn('sales_recipe_id', $rezepte)
+            ->whereIn('recipe_id', $rezepte)
             ->distinct()->pluck('concept_id')->map(fn ($i) => (int) $i)->all();
         $gesehen = array_fill_keys($ids, true);
         for ($rand = $ids; $rand !== [];) {

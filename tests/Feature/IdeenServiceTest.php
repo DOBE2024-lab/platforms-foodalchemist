@@ -38,7 +38,7 @@ it('legt freie Skizze als Entwurf an und zählt Positionen hoch', function () {
 
     expect($a->status)->toBe('entwurf')
         ->and($a->target_form)->toBe('einzel')
-        ->and($a->sales_recipe_id)->toBeNull()
+        ->and($a->recipe_id)->toBeNull()
         ->and($a->source_meta['quelle'])->toBe('frei')
         ->and($a->position)->toBe(1)
         ->and($b->position)->toBe(2)
@@ -69,10 +69,10 @@ it('leerer Titel wird abgelehnt (add + update)', function () {
 it('übernimmt ein Bestands-VK-Gericht als Skizze ohne es zu duplizieren', function () {
     $idee = $this->svc->uebernehmeBestand($this->rootTeam, [
         'chapter_id' => $this->kapitel->id,
-        'sales_recipe_id' => $this->dish->id,
+        'recipe_id' => $this->dish->id,
     ]);
 
-    expect($idee->sales_recipe_id)->toBe($this->dish->id)
+    expect($idee->recipe_id)->toBe($this->dish->id)
         ->and($idee->title)->toBe('HG: Tomaten-Teller') // Default = Gericht-Name
         ->and($idee->created_via)->toBe('bestand')
         ->and($idee->source_meta['quelle'])->toBe('bestand')
@@ -88,7 +88,7 @@ it('lehnt Bestands-Übernahme eines Nicht-VK-Gerichts ab', function () {
         'is_sales_recipe' => false,
     ]);
 
-    expect(fn () => $this->svc->uebernehmeBestand($this->rootTeam, ['chapter_id' => $this->kapitel->id, 'sales_recipe_id' => $prod->id]))
+    expect(fn () => $this->svc->uebernehmeBestand($this->rootTeam, ['chapter_id' => $this->kapitel->id, 'recipe_id' => $prod->id]))
         ->toThrow(RuntimeException::class, 'kein gültiges, sichtbares VK-Gericht');
 });
 
@@ -219,7 +219,7 @@ it('E0 kiDivergenzSession legt Session-Skizzen an (planning_session_id, quelle=k
         ->and($a->chapter_id)->toBeNull()
         ->and($a->concept_id)->toBeNull()
         ->and($a->target_form)->toBe('einzel')
-        ->and($a->sales_recipe_id)->toBeNull()
+        ->and($a->recipe_id)->toBeNull()
         ->and($a->source_meta['quelle'])->toBe('ki_divergenz_session')
         ->and($a->source_meta['komponenten'])->toBe([[
             'name' => 'Kürbiscreme', 'funktion' => 'Basis', 'herstellung' => 'Fein pürieren.',

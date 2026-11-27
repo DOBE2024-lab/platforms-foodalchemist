@@ -21,7 +21,7 @@ beforeEach(function () {
             'kind' => 'concept', 'consumer_name' => 'Meeresbrise', 'claim' => 'Frisch vom Meer',
             'description' => 'Leichtes Fischmenü.', 'price_per_person_cache' => 36.00,
         ]);
-        $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Gebratenes Lachsfilet']);
+        $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Gebratenes Lachsfilet']);
 
         return $concept;
     };

@@ -37,9 +37,9 @@ beforeEach(function () {
     $this->book = $fb->create($this->rootTeam, ['label' => 'Sommerfest', 'personen' => 25]);
     $this->kap = $fb->addKapitel($this->rootTeam, $this->book->id, ['title' => 'Dessert']);
     // Wahl-Gruppe Kuchen|Torte + ein festes Ziel Suppe (kein Live-Bezug).
-    $a = $fb->addBlock($this->rootTeam, $this->kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->kuchen->id]);
-    $b = $fb->addBlock($this->rootTeam, $this->kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->torte->id]);
-    $fb->addBlock($this->rootTeam, $this->kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->suppe->id]);
+    $a = $fb->addBlock($this->rootTeam, $this->kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->kuchen->id]);
+    $b = $fb->addBlock($this->rootTeam, $this->kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->torte->id]);
+    $fb->addBlock($this->rootTeam, $this->kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->suppe->id]);
     $this->gid = $fb->nextVariantGroupId($this->rootTeam, $this->kap->id);
     $fb->setVariantGroup($this->rootTeam, [$a->id, $b->id], $this->gid);
 });

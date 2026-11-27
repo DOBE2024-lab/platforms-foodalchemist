@@ -24,7 +24,7 @@ beforeEach(function () {
         $concept = $this->makeConcept($team, 'Menü', ['kind' => 'concept', 'consumer_name' => 'Genuss']);
         $concept->update(['image_path' => 'foodalchemist/concept/titel.jpg']);
         $dish = $this->makeRecipe($team, 'Lachs', ['is_sales_recipe' => true, 'sales_net' => 12.0]);
-        $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
+        $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
         $fb = $this->makeFoodbook($team, 'Katalog', ['personen' => 6]);
         $kap = $this->makeChapter($fb, ['title' => 'Vorspeisen', 'consumer_title' => 'Vorspeisen', 'position' => 1]);
         $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $concept->id, 'position' => 1]);
@@ -67,7 +67,7 @@ it('Gericht-Foto: Identifier im Snapshot, gerendert nur mit Design-Toggle', func
     $concept = $this->makeConcept($team, 'Menü', ['kind' => 'concept', 'consumer_name' => 'Genuss']);
     $dish = $this->makeRecipe($team, 'Lachs', ['is_sales_recipe' => true, 'sales_net' => 12.0]);
     $dish->update(['image_path' => 'foodalchemist/recipe/lachs.jpg']);
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
+    $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
     $fb = $this->makeFoodbook($team, 'Katalog', ['personen' => 6]);
     $kap = $this->makeChapter($fb, ['title' => 'Vorspeisen', 'consumer_title' => 'Vorspeisen', 'position' => 1]);
     $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $concept->id, 'position' => 1]);
@@ -115,7 +115,7 @@ it('Konzept-interne Header (AUMSE/STARTER) rendern fett als pt-subheader', funct
     $concept = $this->makeConcept($team, 'Menü', ['kind' => 'concept', 'consumer_name' => 'Chefs Corner']);
     $this->makeConceptSlot($concept, ['type' => 'header', 'title' => 'AUMSE – Avantgarde Bites', 'position' => 1, 'wording' => '']);
     $dish = $this->makeRecipe($team, 'Curry-Hummus', ['is_sales_recipe' => true, 'sales_net' => 5.5]);
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Curry-Hummus', 'position' => 2]);
+    $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Curry-Hummus', 'position' => 2]);
 
     $fb = $this->makeFoodbook($team, 'Katalog', ['personen' => 6]);
     $kap = $this->makeChapter($fb, ['title' => 'Vorspeisen', 'consumer_title' => 'Vorspeisen', 'position' => 1]);

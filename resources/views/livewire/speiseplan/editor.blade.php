@@ -1051,8 +1051,8 @@
                                 @if(! empty($dk['untertitel']))<p class="fa-t-muted">{{ $dk['untertitel'] }}</p>@endif
                                 @php
                                     // Im Vordergrund öffnen (Modal über dem Speiseplan), nicht in einem neuen Tab.
-                                    $inhaltOeffnen = $detailEintrag->sales_recipe_id !== null
-                                        ? ['Gericht öffnen', "Livewire.dispatch('vk-modal.oeffnen', { id: " . (int) $detailEintrag->sales_recipe_id . ' })']
+                                    $inhaltOeffnen = $detailEintrag->recipe_id !== null
+                                        ? ['Gericht öffnen', "Livewire.dispatch('vk-modal.oeffnen', { id: " . (int) $detailEintrag->recipe_id . ' })']
                                         : ($detailEintrag->concept_id !== null
                                             ? ['Konzept öffnen', "Livewire.dispatch('concepter-editor.oeffnen', { type: 'concepts', id: " . (int) $detailEintrag->concept_id . ' })']
                                             : null);
@@ -1086,7 +1086,7 @@
                             @if($wordingHinweis)<p class="fa-t-muted" role="status">{{ $wordingHinweis }}</p>@endif
                         </div>
 
-                        @if($detailEintrag->sales_recipe_id !== null)
+                        @if($detailEintrag->recipe_id !== null)
                             {{-- Darreichung je Eintrag: VK, EK und Portionsgewicht folgen der gewählten Form. --}}
                             @php $gramm = fn ($f) => $f->quantity_per_unit_g !== null ? ' · ' . number_format((float) $f->quantity_per_unit_g * (float) ($f->unit_count ?: 1), 0, ',', '.') . ' g' : ''; @endphp
                             <div class="flex flex-col gap-1.5" data-sp-darreichung>
@@ -1107,7 +1107,7 @@
                                 @endif
                                 @if($detailFormen->count() < 2)
                                     {{-- Spec 65: Lese-Weg im gesperrten Bereich als Link-Knopf (ein <button> wäre im disabled-fieldset tot). --}}
-                                    <a href="#" role="button" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ (int) $detailEintrag->sales_recipe_id }} })"
+                                    <a href="#" role="button" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ (int) $detailEintrag->recipe_id }} })"
                                        class="self-start inline-flex items-center gap-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-accent)] hover:underline" data-sp-darreichung-anlegen>
                                         Weitere Darreichung am Gericht anlegen
                                     </a>

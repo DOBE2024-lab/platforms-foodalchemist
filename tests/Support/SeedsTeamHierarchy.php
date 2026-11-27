@@ -340,6 +340,21 @@ trait SeedsTeamHierarchy
     }
 
     /**
+     * 98 · 3.5 Schritt 6a: Portionsgewicht an die Standard-Darreichung (legt sie an, falls die Fixture noch keine hat).
+     * Ohne Neuberechnung — EK/VK der Fixture bleiben, wie sie waren. Ersetzt den Rezept-Spiegel `sales_quantity_per_unit_g`
+     * für Leser, die schon von der Darreichung lesen.
+     */
+    protected function portionsgewichtAnDarreichung(\Platform\FoodAlchemist\Models\FoodAlchemistRecipe $gericht, float $gramm): \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung
+    {
+        $d = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::withoutGlobalScopes()->where('recipe_id', $gericht->id)->where('is_standard', true)->first()
+            ?? $this->makeStandardDarreichung($gericht);
+        $d->forceFill(['quantity_per_unit_g' => $gramm, 'menge_vom_standard' => false])->saveQuietly();
+        $gericht->unsetRelation('standardPresentation');
+
+        return $d;
+    }
+
+    /**
      * Plan 98 B, Schritt 6: Grammatur in Altbestand-Form als Fixture — fest eingetragen, eigene Menge, danach der Normalweg
      * der Neuberechnung (wie früher DarreichungService::aktualisieren mit quantity_per_unit_g). Über Service, MCP und Oberfläche
      * ist eine freie Grammatur ab der Sperre nicht mehr setzbar; als Kulisse in Tests bleibt sie so erreichbar — genau diese

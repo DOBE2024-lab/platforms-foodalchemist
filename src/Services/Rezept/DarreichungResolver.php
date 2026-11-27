@@ -177,11 +177,12 @@ class DarreichungResolver
         if ($recipe->ek_total_eur === null) {
             return null;
         }
-        $anzahl = array_key_exists('sales_unit_count', $recipe->getAttributes())
-            ? $recipe->sales_unit_count
-            : $this->portionenNachladen($recipe);
+        if (! array_key_exists('sales_unit_count', $recipe->getAttributes())) {
+            // nachgeladen, ohne das Rezept „dirty“ zu machen (es wird nur gelesen)
+            $recipe->setRawAttributes(['sales_unit_count' => $this->portionenNachladen($recipe)] + $recipe->getAttributes(), true);
+        }
 
-        return (float) $recipe->ek_total_eur / max(1, (int) ($anzahl ?? 1));
+        return (float) $recipe->ek_total_eur / $this->portionenJeAnsatz($recipe);   // 98 · 3.5 6a: Teiler an einer Stelle
     }
 
     /**

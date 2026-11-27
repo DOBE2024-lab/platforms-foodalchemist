@@ -41,6 +41,8 @@ beforeEach(function () {
         'allergens_confidence' => 'high',
     ]);
 
+    $this->portionsgewichtAnDarreichung($this->salat, 250);   // 98 · 3.5 6a: Portionsgewicht liegt an der Darreichung
+    $this->portionsgewichtAnDarreichung($this->pork, 200);   // 98 · 3.5 6a: Portionsgewicht liegt an der Darreichung
     // Paket (neues Modell) mit dem Schwein-Gericht.
     $this->paket = $this->concepts->createPaket($this->rootTeam, ['name' => 'BBQ-Station']);
     $ps = $this->concepts->addSlot($this->rootTeam, $this->paket->id, ['role' => 'Hauptgang']);

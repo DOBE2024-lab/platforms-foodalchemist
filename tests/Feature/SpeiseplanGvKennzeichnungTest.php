@@ -118,6 +118,7 @@ it('Stufe D: Nährwert-Ø/Person/Tag + Abwechslungs-Mix', function () {
         'nutri_kcal_per_100g' => 200, 'nutri_protein_g_per_100g' => 10, 'nutri_salt_g_per_100g' => 1,
         'nutri_confidence' => 'high', 'sales_quantity_per_unit_g' => 250, 'dish_main_group_id' => $hg->id,
     ]);
+    $this->portionsgewichtAnDarreichung($g, 250);   // 98 · 3.5 6a: Portionsgewicht liegt an der Darreichung
     $sp = $this->plan->create($this->rootTeam, ['name' => 'GV-D', 'start_date' => '2026-07-06']);
     $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'recipe_id' => $g->id]);
     $montag = Carbon::parse('2026-07-06');

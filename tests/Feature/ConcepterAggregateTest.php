@@ -44,6 +44,8 @@ beforeEach(function () {
         'spec_is_vegan' => false, 'spec_is_vegetarian' => false, 'spec_contains_pork' => true,
         'allergens_confidence' => 'low',
     ]);
+    $this->portionsgewichtAnDarreichung($this->a, 250);   // 98 · 3.5 6a: Portionsgewicht liegt an der Darreichung
+    $this->portionsgewichtAnDarreichung($this->b, 200);   // 98 · 3.5 6a: Portionsgewicht liegt an der Darreichung
     $this->c = $mk([
         'recipe_key' => 'c', 'name' => 'Mystery Dish', 'sales_net' => 5.50, 'ek_total_eur' => 1.50,
         'work_time_min' => 20, 'sales_quantity_per_unit_g' => null,        // KEINE Portionsgramm
@@ -156,6 +158,7 @@ it('Gramm-Einheit rechnet anteilig am Portionsgewicht', function () {
         'recipe_key' => 'beilage', 'name' => 'Reis', 'sales_net' => 2.00,
         'ek_total_eur' => 4.00, 'sales_unit_count' => 1, 'sales_quantity_per_unit_g' => 250,
     ]);
+    $this->portionsgewichtAnDarreichung($beilage, 250);   // 98 · 3.5 6a: Portionsgewicht liegt an der Darreichung
 
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Gramm-Test']);
     $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Beilage']);

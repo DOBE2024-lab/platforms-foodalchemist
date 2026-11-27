@@ -60,22 +60,11 @@ class KnowledgeContextService
     private array $geltungsParameter = [];
     private ?array $geltungsIds = null;
     private array $achsenPflichtFiles = [];
+    private ?KnowledgeDokumentLeser $leser = null;
+    private ?KnowledgeRouting $routingTeil = null;
 
-    /**
-     * Invariante 1: diese 7 gehen bei `cross_cutting:always`-Features IMMER mit (Reihenfolge = Ist).
-     *
-     * ⚠ LEGACY-DEFAULT seit Spec 50 Welle 2 (2026-09-06): alle 7 Originale sind auf demo
-     * DEAKTIVIERT (in Ein-Thema-Splits zerlegt), und kein live geroutetes Feature nutzt den
-     * Default mehr — `concept.wording` + `foodbook.kundentext` überschreiben ihn per config
-     * `ai.cross_cutting_slugs` mit Split-Slugs; die Generatoren laden cross_cutting per
-     * discovery. Die Konstante bleibt, weil Tests + Wissens-Browser daran hängen. Ein Feature,
-     * das künftig ohne Override auf `always` geroutet wird, bekäme hier still NICHTS —
-     * `wissen-steuerdaten-w0 --verify` (Cross-Cutting-Wächter) macht das sichtbar.
-     */
-    public const ALWAYS_LOAD_CROSS_CUTTING = [
-        'substitutionen', 'saisonkalender', 'synonyme', 'sauce_mutterstrukturen',
-        'mengen_defaults', 'techniken', 'bruehen_fonds',
-    ];
+    /** Invariante 1 (Legacy-Default, Spec 50 Welle 2) — {@see KnowledgeRouting::ALWAYS_LOAD_CROSS_CUTTING}. */
+    public const ALWAYS_LOAD_CROSS_CUTTING = KnowledgeRouting::ALWAYS_LOAD_CROSS_CUTTING;
 
     public const DOMAIN_TOP_K = 4;
 
@@ -157,7 +146,7 @@ class KnowledgeContextService
      */
     public function contextFor(?Team $team, string $feature, string $description, ?string $stil = null, array $hauptzutatSlugs = [], array $params = []): array
     {
-        $allRouting = $this->routingZeilen($feature);
+        $allRouting = $this->routing()->wirksameRoutings($feature);
         $artRouting = $allRouting->filter(fn ($r) => ! empty($r->art));
         $this->artenRoutingAktiv = $artRouting->isNotEmpty();
         // Spec 52: `ausgabeform` aus Sektor x Serviceform, EINMAL zentral — damit Achsen-Block,
@@ -556,54 +545,16 @@ class KnowledgeContextService
         ];
     }
 
-    /**
-     * ACHSEN-AUFLÖSUNG — deterministisches Nachschlagen statt Ranking.
-     *
-     * Für achsen-gebundenes Wissen ist Retrieval das falsche Werkzeug: `occasion=dinner`
-     * → `event_playbook_gala` ist ein Join. Das Slug-Token-Ranking traf hier daneben, und
-     * `event_playbook`/`segment` waren für Gerichte gar nicht geroutet — 20 Docs
-     * Catering-Fachwissen (Anlass-Playbooks, Segment-Profile) waren unerreichbar.
-     *
-     * Gate ist die Anwesenheit des Parameters, nicht eine Routing-Zeile: ein Basisrezept
-     * hat kein `occasion` und löst hier nichts aus. Trifft die Map einen Wert nicht
-     * (z. B. `sektor=restaurant`, für das kein Dossier existiert), bleibt der Kanal
-     * bewusst leer statt auf ein fremdes Profil auszuweichen.
-     *
-     * @param  array<string, mixed>  $params
-     * @param  list<string>  $filesUsed
-     */
-    /**
-     * Sichtbarkeits-Filter für die ROHEN Doc-Queries — HINTER EINEM SCHALTER.
-     *
-     * Dominiques Modell (2026-09-03): „das Wissen ist global, damit die Generatoren laufen;
-     * ein neuer Nutzer bekommt es leer und kann für sich Wissen hinterlegen, das nur für
-     * sein Team und Kinder gilt." Das ist wörtlich `TeamScope::applyVisible` — NULL ODER
-     * eigene Ancestry.
-     *
-     * WARUM DER SCHALTER: der Filter ist erst richtig, wenn die DATEN es sind. Auf demo
-     * liegen 818 kuratierte Dossiers unter `team_id = 6` statt NULL — gemessen am
-     * 2026-09-03 wären mit Filter für Team 6 alles unverändert (598 → 598), für JEDES
-     * andere Team und für jeden Console-Lauf ohne Team aber nur 6 von 598 übrig. Der Korpus
-     * fiele auf 1 %, ohne dass ein Test rot wird (die Suite seedet mit team_id NULL).
-     * Genau dieser Weg wurde in der Nacht gebaut, gemessen und wieder verworfen.
-     *
-     * Schalter AUS (Default) = byte-identisch zu heute: der Closure ist die Identität.
-     * Schalter AN = Dominiques Modell. Der Flip ist eine ENV-Zeile, der Rollback dieselbe
-     * Zeile zurück — kein Deploy. Reihenfolge: erst Daten (Bestand auf NULL heben ODER
-     * `teams.parent_team_id` setzen), dann Flip.
-     *
-     * Bei $team === null bleibt genau der globale Seed übrig — nicht alles, nicht nichts.
-     */
-    /** Sichtbare Dossiers als Abfrage-Basis (§13 H) — EINE Stelle für „was darf dieses Team sehen", statt sie abzuschreiben (Spec 52). */
+    /** Sichtbare Dossiers als Abfrage-Basis (§13 H) — {@see KnowledgeDokumentLeser::sichtbareDokumente()}. */
     public function sichtbareDokumente(?Team $team): \Illuminate\Database\Query\Builder
     {
-        return DB::table('foodalchemist_knowledge_documents')->tap($this->nurLesbar($team));
+        return $this->leser()->sichtbareDokumente($team);
     }
 
-    /** MCP-Leseweg (Entscheid 13.11.2026): wie oben plus Plattform-Regelwerke/-Abläufe für jedes Team ({@see WissensSichtbarkeit::mcpLesbar()}). Nie für die Oberfläche. */
+    /** MCP-Leseweg (Entscheid 13.11.2026) — {@see KnowledgeDokumentLeser::mcpLesbareDokumente()}. Nie für die Oberfläche. */
     public function mcpLesbareDokumente(?Team $team): \Illuminate\Database\Query\Builder
     {
-        return DB::table('foodalchemist_knowledge_documents')->tap(WissensSichtbarkeit::aktiv() ? static fn ($q) => WissensSichtbarkeit::mcpLesbar($q, 'team_id', $team) : $this->nurSichtbar($team));
+        return $this->leser()->mcpLesbareDokumente($team);
     }
 
     /**
@@ -634,27 +585,10 @@ class KnowledgeContextService
         return ['text' => $text !== '' ? $text : null, 'files_used' => $slugs];
     }
 
-    /**
-     * Spec 82 §13 H — Lese-Sichtbarkeit (MCP/Browser/Vorgangs-Anleitung), getrennt vom PROMPT-Pfad `nurSichtbar()`.
-     * Eigene Kette + globales Wissen nur für Master-Team und dessen Unter-Teams, siehe {@see WissensSichtbarkeit}.
-     * Notbremse `foodalchemist.knowledge_master_regel` = false: alte Regel (`nurSichtbar`).
-     */
-    private function nurLesbar(?Team $team, string $spalte = 'team_id'): \Closure
-    {
-        if (! WissensSichtbarkeit::aktiv()) {
-            return $this->nurSichtbar($team, $spalte);
-        }
-
-        return static fn ($q) => WissensSichtbarkeit::lesbar($q, $spalte, $team);
-    }
-
+    /** Team-Filter des Prompt-Pfads hinter dem Schalter `knowledge_team_scope` — {@see KnowledgeDokumentLeser::nurSichtbar()}. */
     private function nurSichtbar(?Team $team, string $spalte = 'team_id'): \Closure
     {
-        if (! (bool) config('foodalchemist.knowledge_team_scope', false)) {
-            return static fn ($q) => $q;                         // Schalter aus: keine Änderung
-        }
-
-        return static fn ($q) => TeamScope::applyVisible($q, $spalte, $team);
+        return KnowledgeDokumentLeser::nurSichtbar($team, $spalte);
     }
 
     /**
@@ -745,6 +679,22 @@ class KnowledgeContextService
         return $gesucht;
     }
 
+    /**
+     * ACHSEN-AUFLÖSUNG — deterministisches Nachschlagen statt Ranking.
+     *
+     * Für achsen-gebundenes Wissen ist Retrieval das falsche Werkzeug: `occasion=dinner`
+     * → `event_playbook_gala` ist ein Join. Das Slug-Token-Ranking traf hier daneben, und
+     * `event_playbook`/`segment` waren für Gerichte gar nicht geroutet — 20 Docs
+     * Catering-Fachwissen (Anlass-Playbooks, Segment-Profile) waren unerreichbar.
+     *
+     * Gate ist die Anwesenheit des Parameters, nicht eine Routing-Zeile: ein Basisrezept
+     * hat kein `occasion` und löst hier nichts aus. Trifft die Map einen Wert nicht
+     * (z. B. `sektor=restaurant`, für das kein Dossier existiert), bleibt der Kanal
+     * bewusst leer statt auf ein fremdes Profil auszuweichen.
+     *
+     * @param  array<string, mixed>  $params
+     * @param  list<string>  $filesUsed
+     */
     private function achsenBlock(?Team $team, array $params, array &$filesUsed): ?KnowledgeContextBlock
     {
         $gesucht = $this->achsenKandidaten($team, $params);
@@ -829,7 +779,7 @@ class KnowledgeContextService
     {
         // Ueber denselben Helfer wie contextFor, sonst meldete die W0-Invariante fuer
         // `recipe.generator` eine Pflichtmenge von 0, obwohl der Alt-Name Zeilen traegt.
-        $zeilen = $this->routingZeilen($feature)->where('mode', 'always');
+        $zeilen = $this->routing()->wirksameRoutings($feature)->where('mode', 'always');
 
         $summe = 0;
         $wegwerfAudit = [];
@@ -876,194 +826,52 @@ class KnowledgeContextService
         return ['required_chars' => $required, 'budget' => $budget, 'ok' => $required <= $budget];
     }
 
+    // ── Routing, Alias, Budget — 98 · 3.3: in KnowledgeRouting, hier Fassade (Konstanten als Alias, Werte unverändert) ──
+
     /** W0-5: das aufgelöste Zeichenbudget eines Features (für Prüf-Werkzeuge). */
     public function budgetFuer(string $feature): int
     {
-        return $this->knowledgeBudget($feature, in_array($feature, self::REZEPT_BUDGET_KEYS, true));
+        return $this->routing()->budgetFuer($feature);
     }
 
-    /**
-     * Spec 52/A2+A4 — welcher ROUTING-Schlüssel gehört zu einem Prompt-Key?
-     *
-     * Heute sind das zwei Schlüsselräume im selben Aufruf: der Gateway löst den Kanon über den
-     * Prompt-Key auf (`recipe.generator`), das Routing wird aber mit einem hartkodierten
-     * Alt-Feature gerufen. Wer das nicht weiss, hält die Generatoren für ungesteuert — und ein
-     * `knowledge_routings.PUT` auf `vk.generator` schreibt stumm ins Leere.
-     *
-     * Die Tabelle ist AUS DEN AUFRUFSTELLEN abgelesen, nicht geraten; jede Zeile nennt ihre.
-     * Sie ist bewusst hier zentral, damit Bericht (`wissen-versorgung`) und Auskunft
-     * (`regelwerk.GET`) dieselbe Antwort geben. **Mit Spec 52/D1 verschwindet sie** — dann ist
-     * der Schlüsselraum einer und diese Methode gibt den Prompt-Key unverändert zurück.
-     *
-     * @var array<string, string>
-     */
-    public const ROUTING_ALIAS = [
-        // RecipeGenerationContextService:88 — EIN Pfad; `$vkModus` entscheidet nur den Kanon-Key,
-        // nicht den Routing-Key. Basisrezept und Gericht teilen sich damit eine Routing-Politik.
-        'recipe.generator' => 'ai_generate_recipe',
-        'vk.generator' => 'ai_generate_recipe',
-        // RecipeModal:961 / BulkEnrichService::proposeDichteklasse — contextFor() läuft unter
-        // 'recipe.eigenschaften', propose() unter 'recipe.dichteklasse'.
-        'recipe.dichteklasse' => 'recipe.eigenschaften',
-    ];
+    /** Spec 52/A2+A4 — {@see KnowledgeRouting::ROUTING_ALIAS}. */
+    public const ROUTING_ALIAS = KnowledgeRouting::ROUTING_ALIAS;
 
     /** Der Routing-Schlüssel, unter dem dieser Prompt-Key sein Wissen zieht. */
     public static function routingFeatureFuer(string $promptKey): string
     {
-        return self::ROUTING_ALIAS[$promptKey] ?? $promptKey;
+        return KnowledgeRouting::routingFeatureFuer($promptKey);
     }
 
-    /**
-     * Spec 52/Paket 2 — Aufrufe, die die REZEPT-Deckel benutzen.
-     *
-     * ★ Vorher stand hier ein String-Vergleich: `$feature === 'ai_generate_recipe'`. Der
-     * gatete **acht** Verhaltensweisen, darunter (bis Spec 53) jeden Pro-Dossier-Deckel
-     * (`RECIPE_MAX_CHARS_PER_DOC`, seither entfernt — er war nie verdrahtet, s. Docblock am
-     * `routingZeilen()`-Aufruf in `contextFor()`). Den Alt-Namen einfach durch den Prompt-Key zu
-     * ersetzen hätte deshalb JEDEN Rezept-Prompt anders gekappt — still, ohne dass ein Test rot
-     * wird. Genau die Fehlerklasse, die diese Spec abbaut. Heute bestimmt `REZEPT_BUDGET_KEYS` nur
-     * noch die Discovery-Prioritätsreihenfolge (unten) und das Gesamt-Zeichenbudget.
-     *
-     * Als Satz geschrieben, ist die Umstellung verhaltensneutral: `recipe.generator` und
-     * `vk.generator` bekommen dieselben Deckel wie der Alt-Name, und der Alt-Name funktioniert
-     * weiter, solange Aufrufer oder Steuerdaten ihn noch tragen.
-     *
-     * @var list<string>
-     */
-    public const REZEPT_BUDGET_KEYS = ['ai_generate_recipe', 'recipe.generator', 'vk.generator'];
+    /** Spec 52/Paket 2 — {@see KnowledgeRouting::REZEPT_BUDGET_KEYS}. */
+    public const REZEPT_BUDGET_KEYS = KnowledgeRouting::REZEPT_BUDGET_KEYS;
 
-    /**
-     * Routing-Zeilen eines Features — mit Rückfall auf den Alt-Namen.
-     *
-     * Damit wird `knowledge_routings.PUT` auf `vk.generator` erstmals wirksam (vorher schrieb
-     * es stumm ins Leere, weil der Generator unter `ai_generate_recipe` nachsah), ohne dass die
-     * bestehenden Zeilen migriert sein müssen: eigene Zeilen gewinnen, sonst gilt der Alt-Name.
-     * Dasselbe „Neues gewinnt, Altes bleibt Fallback" wie bei Kanon ⇄ Bindung und Achse ⇄ Config.
-     */
-    /**
-     * Die WIRKSAMEN Routing-Zeilen eines Features — für Berichte und Wächter.
-     *
-     * ★ Warum das öffentlich ist: `WissensProfilService` und `WissensVersorgungService` haben
-     * die Zeilen zuerst selbst abgefragt (`where('feature', $routingKey)`) und damit die
-     * ALIAS-Zeilen gezeigt, während der Prompt-Bau bereits die zusammengeführten benutzte.
-     * Gefunden beim Verifizieren auf demo: eine gesetzte VK-Zeile wirkte, der Bericht zeigte
-     * weiter den geerbten Wert. Ein Diagnose-Werkzeug, das über die Laufzeit lügt, ist
-     * schlimmer als keines — und es ist genau die Fehlerklasse, die diese Spec abbaut.
-     *
-     * Deshalb: eine Formel, drei Abnehmer (`docs/ARCHITEKTUR.md` — „Eine Formel pro fachlicher
-     * Wahrheit").
-     */
+    /** Die WIRKSAMEN Routing-Zeilen eines Features (Alias-Rückfall je Kategorie) — {@see KnowledgeRouting::wirksameRoutings()}. */
     public function wirksameRoutings(string $feature): \Illuminate\Support\Collection
     {
-        return $this->routingZeilen($feature);
+        return $this->routing()->wirksameRoutings($feature);
     }
 
-    private function routingZeilen(string $feature): \Illuminate\Support\Collection
-    {
-        $eigene = DB::table('foodalchemist_knowledge_routings')->where('feature', $feature)->get();
-        $alt = self::ROUTING_ALIAS[$feature] ?? null;
-        if ($alt === null) {
-            return $eigene;
-        }
+    /** Spec 52/A2 — {@see KnowledgeRouting::CONTEXT_ONLY_FEATURES}. */
+    public const CONTEXT_ONLY_FEATURES = KnowledgeRouting::CONTEXT_ONLY_FEATURES;
 
-        // ★ Der Rückfall wirkt PRO KATEGORIE, nicht pro Feature.
-        //
-        // Meine erste Fassung gab die eigenen Zeilen zurück, sobald es welche gab — also
-        // alles-oder-nichts. Wer EINE VK-Zeile setzt, hätte damit still die anderen elf
-        // verloren: `vk.generator` hätte plötzlich nur noch `weltkueche` gehabt, ohne dass
-        // irgendwo etwas anzeigt, dass `domain`, `kueche` und `cross_cutting` weg sind.
-        //
-        // Das bricht auch das Muster, das überall sonst gilt: der Kanon überschreibt die
-        // Bindungen **pro Prompt-Key**, eine Achsen-Zeile die Config **pro Achsenwert** — immer
-        // pro Element, nie pro Gruppe. „Bewusst leer" wird ausdrücklich mit `mode = none`
-        // gesagt, nicht durch das Fehlen einer Zeile.
-        $selector = static fn ($r) => ! empty($r->art) ? 'art:'.$r->art : 'category:'.$r->category;
-        $eigeneKategorien = $eigene->map($selector)->all();
-
-        return DB::table('foodalchemist_knowledge_routings')->where('feature', $alt)->get()
-            ->reject(fn ($r) => in_array($selector($r), $eigeneKategorien, true))
-            ->concat($eigene)
-            ->values();
-    }
+    /** {@see KnowledgeRouting::OHNE_AUFRUFER_GEMESSEN} */
+    public const OHNE_AUFRUFER_GEMESSEN = KnowledgeRouting::OHNE_AUFRUFER_GEMESSEN;
 
     /**
-     * Spec 52/A2 — Routing-Namen, die ein Aufrufer selbst führt, OHNE dass es dazu eine
-     * Prompt-Registry-Zeile gibt. Dritte Variante des Schlüssel-Bruchs, nach dem Alias
-     * (`recipe.generator` → `ai_generate_recipe`) und dem Feld-Mismatch (`recipe.dichteklasse`).
-     *
-     * Ohne diese Liste hielte der Versorgungs-Bericht solche Namen für toten Ballast — sie sind
-     * aber live. Umgekehrt gilt: **welche Routing-Features WIRKLICH keinen Aufrufer haben, lässt
-     * sich statisch nicht abschliessend feststellen**, weil mehrere Stellen mit einer Variablen
-     * rufen (`contextFor($team, $promptKey, …)` in `ConceptGeneratorService`,
-     * `contextFor($this->team(), $prompt, …)` in `StepEditor`). Der Bericht sagt deshalb
-     * „ohne Prompt-Key", nicht „ohne Aufrufer" — und nennt die vier, für die ein `grep` über
-     * `src/` am 2026-09-07 wirklich leer war.
-     *
-     * @var array<string, string>  Feature → Fundstelle
-     */
-    public const CONTEXT_ONLY_FEATURES = [
-        'foodbook.plan' => 'IdeenService — contextFor(…, \'foodbook.plan\'), kein Registry-Key',
-    ];
-
-    /**
-     * Routing-Features, für die ein `grep` über `src/` am 2026-09-07 KEINEN `contextFor()`-Aufrufer
-     * fand — also konfigurierte Politik, die nichts steuert. 11 der 73 Zeilen.
-     *
-     * Besonders bitter bei `ai_extract_recipe × cross_cutting = none`: das ist eine BEWUSSTE
-     * Entscheidung („dieser Schritt braucht kein Wissen"), hinterlegt unter einem Namen, den
-     * niemand ruft. Der eigentliche Key heisst `recipe.extract` und hat keine Zeile.
-     *
-     * Als Datum geführt, nicht als Wahrheit: fügt jemand einen Aufrufer hinzu, gehört der Name
-     * hier heraus.
-     *
-     * @var list<string>
-     */
-    public const OHNE_AUFRUFER_GEMESSEN = [
-        'ai_extract_recipe', 'ai_infer_ankers', 'ai_plan_dishes', 'ai_suggest_pairings',
-    ];
-
-    /**
-     * Spec 52/B3 — die Optionen für `propose()` aus einem `contextFor()`-Ergebnis bauen.
-     *
-     * Warum ein Helfer und nicht 18 Aufrufstellen von Hand: `knowledge_dropped_chars` gaben
-     * genau ZWEI von achtzehn Aufrufern weiter, und darum stand in sechzehn Features
-     * `prompt_parts.dropped = 0`, obwohl Zeichen fehlten (Befund I3). Das ist keine
-     * Nachlässigkeit einzelner Stellen, sondern eine Konvention ohne Durchsetzung — dieselbe
-     * Klasse wie `_kanon_prompt_key` (2 von 14). Ein Helfer, der ALLE Messfelder mitnimmt,
-     * macht die nächste neue Aufrufstelle automatisch richtig; ein Wächter-Test hält es.
-     *
-     * Extras (`target_table`, `tier`, …) hängt der Aufrufer per `+` an.
+     * Spec 52/B3 — die Optionen für `propose()` aus einem `contextFor()`-Ergebnis bauen ({@see KnowledgeRouting::proposeOptionen()}).
      *
      * @param  array<string, mixed>  $wissen  Ergebnis von {@see contextFor()}
      * @return array<string, mixed>
      */
     public static function proposeOptionen(array $wissen): array
     {
-        $block = (string) ($wissen['block'] ?? '');
-
-        // BEWUSST ohne `knowledge_channels`: dieses Feld ist der Dedup-/Anzeige-Eingang, an dem
-        // schon einmal der Bound-Kanal gestorben ist (W0-3b — ein Anzeige-Spiegel schrieb auf
-        // das Feld, das die Auswahl-Logik liest). Wer Kanäle liefert, liefert sie weiterhin
-        // selbst und bewusst. Dieser Helfer schliesst nur die Messlücke.
-        return [
-            'knowledge' => $block !== '' ? $block : null,
-            'knowledge_used' => $wissen['files_used'] ?? [],
-            // Ohne diese Zeile ist die Kappung im Call-Log unsichtbar.
-            'knowledge_dropped_chars' => (int) ($wissen['dropped_chars'] ?? 0),
-        ];
+        return KnowledgeRouting::proposeOptionen($wissen);
     }
 
-    /**
-     * W0-5: Featureweites Zeichenbudget. Reihenfolge: Feature-Override aus der Config >
-     * Rezept-Sonderdeckel (historisch, bleibt der strengste) > Default.
-     *
-     * Bewusst auf `$feature` gekeyt, nicht auf den Prompt-Key: `vk.generator` ist KEIN
-     * Routing-Feature — Gerichte laufen über contextFor('ai_generate_recipe'). Ein
-     * Prompt-Key-Scope braucht erst den `_prompt_key`-Durchstich (Welle 1).
-     */
-    private function knowledgeBudget(string $feature, bool $recipeBudget): int
+    private function routing(): KnowledgeRouting
     {
-        return KnowledgeBudget::forKey($feature);
+        return $this->routingTeil ??= new KnowledgeRouting();
     }
 
     /**
@@ -1337,50 +1145,8 @@ class KnowledgeContextService
             ->orderBy('slug')->get($spalten);
     }
 
-    /**
-     * Feature/Prompt-Key → Slug-Muster des zugehörigen Regelwerks. `format.grundgeruest` ist
-     * bewusst eigen eingetragen, damit es NICHT auf den Basisrezept-Fallback rutscht — es gibt
-     * (noch) kein Format-Regelwerk, und ein falsches wäre schlimmer als keines.
-     *
-     * ★ **Spec 52/Paket 2 — genau dieses Prinzip war für Gerichte verletzt.** `vk.generator`
-     * hatte keinen Eintrag, und der Blind-Default (`?? ['ai_generate_recipe']`) liefert
-     * `%basisrezept%`. Ohne Kanon bekam der Gericht-Pfad damit das **Basisrezepte**-Regelwerk,
-     * obwohl `regelwerk.regelwerk_verkaufsgerichte--*` existiert — dieselbe Fehlerklasse wie
-     * der schon dokumentierte Fall „vk bekam Basisrezepte statt Verkaufsgerichte", nur an
-     * anderer Stelle. Auf demo fiel es nicht auf, weil der Kanon greift; auf einer frischen DB
-     * (Migrationsstand: `regelwerk always`) hätte es zugeschlagen.
-     *
-     * ★ **Diese Karte trug zwei Dinge unter einem Namen — eines ist mit Spec 52 · F4 weg.**
-     *
-     *  1. *Injektion*: welches Dossier der Generator per `regelwerk:always` in den Prompt
-     *     hebt. **Gelöscht.** Verbindliches Wissen kommt aus dem Kanon.
-     *  2. *Nachschlagen*: welcher Regelwerks-BEREICH fachlich zu einem Feature gehört —
-     *     für `regelwerk.GET` und das Vorgangs-Register. **Bleibt**, und das ist legitim:
-     *     einem Agenten zu sagen „für Gerichte gilt das VK-Regelwerk" ist eine Auskunft,
-     *     kein Prompt-Bau.
-     *
-     * Der Plan wollte die Karte ganz löschen. Das hielt der Messung nicht stand — sie hat
-     * einen zweiten, gesunden Abnehmer. Weg ist stattdessen das `->first()`
-     * ({@see regelwerkDossiersFuer()}): ein Muster wie `%basisrezept%` trifft rund zwanzig
-     * §-Dossiers, und eines davon alphabetisch zu greifen war der eigentliche Defekt.
-     */
-    public const REGELWERK_SLUG_LIKE = [
-        'concept.brief_geruest' => '%concept%',
-        'foodbook.grundgeruest' => '%foodbook%',
-        'format.grundgeruest' => '%format%',
-        'ai_generate_recipe' => '%basisrezept%',
-        // Paket 2: der eine Schlüsselraum — Prompt-Keys explizit, Basis und VK getrennt.
-        'recipe.generator' => '%basisrezept%',
-        'recipe.ueberarbeiten' => '%basisrezept%',
-        'recipe.review' => '%basisrezept%',
-        'recipe.eigenschaften' => '%basisrezept%',
-        'vk.generator' => '%verkaufsgerichte%',
-        'vk.ueberarbeiten' => '%verkaufsgerichte%',
-        'vk.review' => '%verkaufsgerichte%',
-        // Der GP-Vorgang fiel auf `%basisrezept%` zurueck, obwohl `regelwerk-gp-*` existiert.
-        'gp.suggest' => '%regelwerk-gp%',
-        'gp.conformance_revise' => '%regelwerk-gp%',
-    ];
+    /** Feature/Prompt-Key → Slug-Muster des zugehörigen Regelwerks (nur Auskunft, seit Spec 52 · F4) — {@see KnowledgeRouting::REGELWERK_SLUG_LIKE}. */
+    public const REGELWERK_SLUG_LIKE = KnowledgeRouting::REGELWERK_SLUG_LIKE;
 
 
     /** Die 7 Always-Load-Dokumente in Ist-Reihenfolge (fehlende werden still übersprungen). */
@@ -1397,34 +1163,13 @@ class KnowledgeContextService
     }
 
     /**
-     * B3 — welche Cross-Cutting-Dossiers ein Feature WIRKLICH braucht.
-     *
-     * `ALWAYS_LOAD_CROSS_CUTTING` sind sieben PRODUKTIONS-Dossiers (Substitutionen,
-     * Saisonkalender, Synonyme, Saucen-Mutterstrukturen, Mengen-Defaults, Techniken,
-     * Brühen/Fonds) = 7 × 1.800 = 12.600 Zeichen. Für einen Generator ist das richtig.
-     *
-     * Für einen KUNDENTEXT ist es das nicht: `foodbook.kundentext` schreibt 2–4 Sätze
-     * Fließtext (max_tokens 1.500) und bekam dafür Mengen-Defaults und Brühen-Rezepturen
-     * mitgeliefert. Nützlich sind dort höchstens `saisonkalender` (Saison-Aussagen belegen)
-     * und `synonyme` (Dinge richtig benennen) — der Rest ist Ballast, den das Modell
-     * mitbezahlt und der die Aufmerksamkeit vom Auftrag wegzieht.
-     *
-     * Default bleibt die Konstante (Tests + Wissens-Browser hängen daran); Überschreibung
-     * je Feature über config('foodalchemist.ai.cross_cutting_slugs') — seit Welle 2 mit
-     * Split-Slugs (`saisonkalender--hauptsaison-nach-monaten-de`,
-     * `synonyme--cross-sprachliche-synonyme-gleicher-lebensmittel`), die Originale sind inaktiv.
-     * Public, weil der W0-Wächter genau diese Auflösung gegen den Korpus prüft.
+     * B3 — welche Cross-Cutting-Dossiers ein Feature WIRKLICH braucht ({@see KnowledgeRouting::crossCuttingSlugs()}).
      *
      * @return list<string>
      */
     public function crossCuttingSlugs(string $feature): array
     {
-        $map = config('foodalchemist.ai.cross_cutting_slugs', []);
-        if (is_array($map) && isset($map[$feature]) && is_array($map[$feature]) && $map[$feature] !== []) {
-            return array_values(array_map('strval', $map[$feature]));
-        }
-
-        return self::ALWAYS_LOAD_CROSS_CUTTING;
+        return $this->routing()->crossCuttingSlugs($feature);
     }
 
     /**
@@ -1965,206 +1710,33 @@ class KnowledgeContextService
             ->filter(fn ($doc) => preg_match($muster, $doc->slug) === 1)->values();
     }
 
-    // ── MCP-Discovery (Phase K): Wissens-Suche für externe LLM-Clients ──────
+    // ── MCP-Discovery (Phase K): Wissens-Suche für externe LLM-Clients — 98 · 3.3: in KnowledgeDokumentLeser, hier Fassade ──
 
-    /**
-     * Volltext-leichte Suche über den Wissens-Bestand: Token-Treffer in
-     * slug/titel + Alias-Treffer (gewichtet).
-     *
-     * Team-Sicht: §13 H (eigene Kette, global nur Master-Familie) + seit 13.11.2026 Plattform-Regelwerke/-Abläufe ({@see mcpLesbareDokumente()}).
-     * (Früher: kein Team-Filter, MANDANTEN-INVARIANTE.)
-     * Präzisierung gegenüber der früheren Fassung („der Bestand ist global"): die
-     * Zeilen sind NICHT `team_id NULL`, sondern tragen zu 99 % den Kurator (Team 6).
-     * Global ist der Bestand durch PRODUKTENTSCHEID, nicht durch die Spalte — wer
-     * das verwechselt, baut einen Filter ein und kappt 99 % des Korpus.
-     *
-     * @return list<array{slug: string, titel: string, kategorie: string, version: int, char_count: int, score: float}>
-     */
+    /** @return list<array{slug: string, titel: string, kategorie: string, version: int, char_count: int, score: float}> */
     public function searchDocuments(?Team $team, string $q, ?string $kategorie = null, int $limit = 10, bool $includeInactive = false): array
     {
-        $base = $this->mcpLesbareDokumente($team)
-            ->whereNull('deleted_at')
-            ->when(! $includeInactive, fn ($query) => $query->where('active', 1))
-            ->when($kategorie !== null, fn ($query) => $query->where('category', $kategorie));
-        $hits = app(KnowledgeSearchService::class)->search($base, $q, max(1, min(50, $limit)),
-            (bool) config('foodalchemist.semantic_search.enabled', false), $team);
-
-        return array_map(static fn ($hit) => array_replace($hit, [
-            'active' => (bool) $hit['active'], 'version' => (int) $hit['version'], 'char_count' => (int) $hit['char_count'],
-        ]), $hits);
+        return $this->leser()->searchDocuments($team, $q, $kategorie, $limit, $includeInactive);
     }
 
-    /**
-     * #496: Vollständige, seiten-basierte Enumeration des Wissens-Bestands
-     * (ohne Suchbegriff, ohne 50er-Cap) — für MCP-Clients, die den ganzen
-     * Katalog abrufen wollen. Optional pro Kategorie gefiltert; Frontmatter
-     * (thema/sub_thema/relevanz/recherche_datum/tags) wird bei Bedarf aus dem
-     * content_md geparst.
-     *
-     * @return array{total: int, offset: int, limit: int, next_offset: ?int, categories: array<string,int>, documents: list<array>}
-     */
+    /** @return array{total: int, offset: int, limit: int, next_offset: ?int, categories: array<string,int>, documents: list<array>} */
     public function listDocuments(?Team $team, ?string $kategorie, int $offset, int $limit, bool $mitFrontmatter = true, bool $includeInactive = false): array
     {
-        $limit = max(1, min(200, $limit));
-        $offset = max(0, $offset);
-
-        $base = $this->mcpLesbareDokumente($team)
-            ->whereNull('deleted_at')
-            ->when(! $includeInactive, fn ($q) => $q->where('active', 1))
-            ->when($kategorie !== null, fn ($q) => $q->where('category', $kategorie));
-
-        $total = (clone $base)->count();
-        $categories = $this->mcpLesbareDokumente($team)
-            ->whereNull('deleted_at')
-            ->when(! $includeInactive, fn ($q) => $q->where('active', 1))
-            ->select('category', DB::raw('COUNT(*) AS c'))->groupBy('category')
-            ->pluck('c', 'category')->map(fn ($c) => (int) $c)->all();
-
-        $spalten = ['slug', 'title', 'category', 'active', 'version', 'char_count', 'updated_at', 'geltung'];
-        // Spec 52/H1: die Art gehoert in die Inventar-Sicht — beim Korpus-Umbau ist „welche
-        // Dossiers sind noch nicht eingeordnet" genau die Frage, die man an LIST stellt.
-        // Schema-Wache, damit die Liste vor der Migration nicht stirbt.
-        if (Schema::hasColumn('foodalchemist_knowledge_documents', 'art')) {
-            $spalten[] = 'art';
-        }
-        if ($mitFrontmatter) {
-            $spalten[] = 'content_md';
-        }
-        $docs = (clone $base)->orderBy('category')->orderBy('slug')
-            ->offset($offset)->limit($limit)->get($spalten);
-
-        $documents = $docs->map(function ($doc) use ($mitFrontmatter) {
-            $row = [
-                'slug' => $doc->slug,
-                'title' => $doc->title,
-                'category' => $doc->category,
-                'art' => $doc->art ?? null,
-                'geltung' => json_decode($doc->geltung ?? '[]', true),
-                'active' => (bool) $doc->active,
-                'version' => (int) $doc->version,
-                'char_count' => (int) $doc->char_count,
-                'updated_at' => $doc->updated_at,
-            ];
-            if ($mitFrontmatter) {
-                $fm = $this->parseFrontmatter((string) $doc->content_md);
-                $row['frontmatter'] = [
-                    'thema' => $fm['thema'] ?? null,
-                    'sub_thema' => $fm['sub_thema'] ?? null,
-                    'relevanz' => $fm['relevanz'] ?? null,
-                    'recherche_datum' => $fm['recherche_datum'] ?? null,
-                    'tags' => $this->normalizeTags($fm['tags'] ?? []),
-                ];
-            }
-
-            return $row;
-        })->all();
-
-        $next = ($offset + count($documents) < $total) ? $offset + count($documents) : null;
-
-        return [
-            'total' => $total,
-            'offset' => $offset,
-            'limit' => $limit,
-            'next_offset' => $next,
-            'categories' => $categories,
-            'documents' => $documents,
-        ];
+        return $this->leser()->listDocuments($team, $kategorie, $offset, $limit, $mitFrontmatter, $includeInactive);
     }
 
-    /**
-     * Öffentliche Naht für den Trendradar (Clustering + UI): derselbe Parser
-     * wie intern, aber mit auf Listen normalisierten `tags`/`quellen`. So
-     * bleibt EINE Parser-Wahrheit — der Trendradar kopiert keine eigene
-     * (schwächere) Frontmatter-Logik.
-     *
-     * @return array<string, string|list<string>>
-     */
+    /** @return array<string, string|list<string>> */
     public function frontmatterOf(string $md): array
     {
-        $fm = $this->parseFrontmatter($md);
-        foreach (['tags', 'quellen'] as $listenfeld) {
-            if (array_key_exists($listenfeld, $fm)) {
-                $fm[$listenfeld] = $this->normalizeTags($fm[$listenfeld]);
-            }
-        }
-
-        return $fm;
+        return $this->leser()->frontmatterOf($md);
     }
 
-    /**
-     * Minimaler, dependency-freier YAML-Frontmatter-Parser (Skalar-Keys +
-     * Block-Sequenzen `- item`). Reicht für die geSyncten Research-/Domain-
-     * Header; kein voller YAML-Support (bewusst schlank, keine Symfony-Yaml-
-     * Abhängigkeit).
-     *
-     * @return array<string, string|list<string>>
-     */
-    private function parseFrontmatter(string $md): array
-    {
-        if (! preg_match('/\A\x{FEFF}?\s*---\R(.*?)\R---\s*(\R|$)/su', $md, $m)) {
-            return [];
-        }
-        $fm = [];
-        $listKey = null;
-        foreach (preg_split('/\R/', $m[1]) as $line) {
-            if ($listKey !== null && preg_match('/^\s*-\s+(.*\S)\s*$/', $line, $lm)) {
-                $fm[$listKey][] = $this->frontmatterScalar($lm[1]);
-
-                continue;
-            }
-            if (preg_match('/^([A-Za-z0-9_]+):\s*(.*)$/', $line, $km)) {
-                $wert = trim($km[2]);
-                if ($wert === '') {
-                    $listKey = $km[1];
-                    $fm[$listKey] = [];
-                } else {
-                    $fm[$km[1]] = $this->frontmatterScalar($wert);
-                    $listKey = null;
-                }
-            }
-        }
-
-        return $fm;
-    }
-
-    /**
-     * tags-Frontmatter auf eine Liste bringen — deckt Block-Sequenz (schon
-     * Array), Flow-Sequenz `[a, b, c]` und Einzel-Skalar ab.
-     *
-     * @param  string|list<string>  $tags
-     * @return list<string>
-     */
-    private function normalizeTags($tags): array
-    {
-        if (is_array($tags)) {
-            return array_values(array_filter(array_map(fn ($t) => $this->frontmatterScalar((string) $t), $tags), fn ($t) => $t !== ''));
-        }
-        $s = trim((string) $tags);
-        if ($s === '') {
-            return [];
-        }
-        if (str_starts_with($s, '[') && str_ends_with($s, ']')) {
-            $s = substr($s, 1, -1);
-        }
-
-        return array_values(array_filter(array_map(fn ($t) => $this->frontmatterScalar($t), explode(',', $s)), fn ($t) => $t !== ''));
-    }
-
-    private function frontmatterScalar(string $s): string
-    {
-        $s = trim($s);
-        if (strlen($s) >= 2 && ($s[0] === '"' || $s[0] === "'") && $s[-1] === $s[0]) {
-            $s = substr($s, 1, -1);
-        }
-
-        return trim($s);
-    }
-
-    /** Einzelnes Wissens-Dokument per Slug (aktiv, nicht gelöscht) — MCP-Leseweg ({@see mcpLesbareDokumente()}). */
     public function getDocument(?Team $team, string $slug): ?object
     {
-        return $this->mcpLesbareDokumente($team)
-            ->where('slug', $slug)->where('active', 1)->whereNull('deleted_at')
-            ->first(['id', 'slug', 'title', 'category', 'anchor_id', 'art', 'geltung', 'datenwerte', 'version', 'char_count', 'content_md']);
+        return $this->leser()->getDocument($team, $slug);
+    }
+
+    private function leser(): KnowledgeDokumentLeser
+    {
+        return $this->leser ??= new KnowledgeDokumentLeser();
     }
 }

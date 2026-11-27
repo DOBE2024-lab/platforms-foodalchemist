@@ -149,7 +149,7 @@ class MenuEngineeringService
         $rezepte = app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistRecipe::query(), $team)   // Spec 85 PR-E: Team-Brille
             ->where('is_sales_recipe', true)
             ->with(['standardPresentation:id,recipe_id,sales_net,ek_portion,is_standard'])
-            ->get(['foodalchemist_recipes.id', 'name', 'ek_total_eur', 'sales_unit_count']);
+            ->get(['foodalchemist_recipes.id', 'name', 'ek_total_eur']);
 
         $out = [];
         foreach ($rezepte as $r) {

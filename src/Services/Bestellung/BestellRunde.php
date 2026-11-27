@@ -16,8 +16,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOrderRound;
  * an den Schienen vermerken, leere neu geplante Entwürfe aufräumen und die Prüfung, welche Produktions-Quellen
  * ersetzt werden dürfen. Übernahme, Versand und Löschen (generateDraftsFromSources, sendReadyDrafts/
  * sendSelectedDrafts/cancelSelectedDrafts, deleteRound, withdrawProductionDemand, productionDemandsForTeam,
- * markProductionSourcesHandedOver) bleiben in der Fassade: sie rechnen neu oder brauchen ProductionOrderService,
- * das mit OrderService in einem Kreis liegt (98 · 3.4). Nutzt BestellAmpeln und BestellBedarf, nicht die Fassade.
+ * markProductionSourcesHandedOver) bleiben in der Fassade: sie brauchen ProductionOrderService oder setStatus, die mit
+ * OrderService in einem Kreis liegen (98 · 3.4). Nutzt BestellAmpeln und BestellBedarf, nicht die Fassade.
  */
 final class BestellRunde
 {

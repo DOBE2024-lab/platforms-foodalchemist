@@ -72,7 +72,7 @@ class FoodAlchemistOrder extends Model
     }
 
     /**
-     * Artikelwechsel zu einem anderen Lieferanten (OrderService::applyLaSwitch): Die verschobene Zeile verlässt diesen Entwurf.
+     * Artikelwechsel zu einem anderen Lieferanten (BestellUmquellen::applyLaSwitch): Die verschobene Zeile verlässt diesen Entwurf.
      * Entscheid Dominique 22.11.: Entsteht der Ziel-Entwurf erst durch den Wechsel, übernimmt er Referenz und Notiz; wird dieser
      * Entwurf dadurch leer, verschwindet er sofort (Soft-Delete wie OrderService::deleteEmptyDrafts).
      */

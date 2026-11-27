@@ -21,6 +21,9 @@ const BESTELL_RANG = [
     'BestellPflege' => 1,      // nutzt Schiene
     'BestellBedarf' => 2,      // nutzt Ampeln
     'BestellRunde' => 3,       // nutzt Ampeln, Bedarf
+    'BestellZeilen' => 1,      // nutzt Schiene (98 · 3.3 OrderService-Schnitt)
+    'BestellUmquellen' => 2,   // nutzt Schiene, Zeilen
+    'BestellVorschau' => 3,    // nutzt Bedarf
 ];
 
 /**

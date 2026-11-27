@@ -16,9 +16,7 @@ use Platform\FoodAlchemist\Services\Produktion\EigenproduktionService;
 /**
  * Bausteine der Bedarfs-Vorschau (98 · 3.3 S5, aus OrderService verschoben): Quell-Mengen und -Ziele, Labels und
  * Quell-Keys, Positions-Gruppen, Overrides, offene Punkte, Lagerstand je GP und Lager-Reservierung der Runden. Die
- * Vorschau selbst (previewFromSources, previewSupplierItem/Gp/Ziel, nachbearbeitePreview, leadObjekt, overrideLead)
- * bleibt in der Fassade: PriceService, LeadLaService, PlanungsblattService, LagerartikelService und
- * ProductionOrderService liegen mit OrderService in einem Kreis (98 · 3.4). Nutzt BestellAmpeln, nicht die Fassade.
+ * Vorschau selbst liegt in BestellVorschau (98 · 3.3 OrderService-Schnitt). Nutzt BestellAmpeln, nicht die Fassade.
  */
 final class BestellBedarf
 {

@@ -87,13 +87,13 @@ class ProductionOrderService
     /** Voller Quell-Key `produktion:{id}:{ref}` für die Bedarfs-Übergabe. */
     public static function sourceRefFor(int $productionOrderId, string $ref): string
     {
-        return self::sourceRefPrefix($productionOrderId).$ref;
+        return BestellHerkunft::produktionsRef($productionOrderId, $ref);
     }
 
-    /** Stabiler Hash der Ziel-Liste (Stale-Marker P4). */
+    /** Stabiler Hash der Ziel-Liste (Stale-Marker P4); 98 · 3.3: liegt in BestellHerkunft, damit Bestell-Teile ihn ohne diesen Dienst kennen. */
     public static function targetsHash(?array $targets): string
     {
-        return sha1(json_encode(array_values($targets ?? []), JSON_UNESCAPED_UNICODE) ?: '');
+        return BestellHerkunft::zielHash($targets);
     }
 
     // ── Auftrag holen/anlegen ──────────────────────────────────────────────

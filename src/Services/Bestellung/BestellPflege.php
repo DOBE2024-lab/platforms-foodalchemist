@@ -10,10 +10,8 @@ use Platform\FoodAlchemist\Services\FaRechte;
 
 /**
  * Kopf-Pflege einer Bestellung (98 · 3.3 S5, aus OrderService verschoben): neuer Entwurf, leere Entwürfe aufräumen,
- * Kopf, Lieferantenbestätigung, Rechnungskopf, Zahlung und Freigabe. Was neu rechnet (recomputeLine/recomputeOrder
- * und damit updateLine, removeLine, addManualLine, createBackorderFromReceipt, setStatus), bleibt in der Fassade:
- * PriceService und LeadLaService liegen mit OrderService in einem Kreis (98 · 3.4) und zögen dieses Teil sonst mit
- * hinein. Nutzt BestellSchiene, nicht die Fassade.
+ * Kopf, Lieferantenbestätigung, Rechnungskopf, Zahlung und Freigabe. Was Zeilen neu rechnet, liegt in BestellZeilen
+ * (98 · 3.3 OrderService-Schnitt). Nutzt BestellSchiene, nicht die Fassade.
  */
 final class BestellPflege
 {

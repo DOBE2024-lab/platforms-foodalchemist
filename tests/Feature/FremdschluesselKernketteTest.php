@@ -5,9 +5,14 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Platform\FoodAlchemist\Support\Datenmodell\Fremdschluessel;
+use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
-uses(TestCase::class);
+uses(TestCase::class, SeedsTeamHierarchy::class);
+
+// Schema anlegen wie die übrigen Schema-Tests — sonst hängt der Test daran, dass vorher im selben Prozess schon migriert wurde
+// (allein oder als erster im Prozess fand er keine Tabelle; Befund Paul).
+beforeEach(fn () => $this->seedTeamHierarchy());
 
 /**
  * Plan 98 · 3.5 Schritt 5 · Fremdschlüssel der Kernkette (Migrationen 2027_01_14_10000x) und ihr Riegel ({@see Fremdschluessel}).

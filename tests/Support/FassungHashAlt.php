@@ -17,6 +17,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
  * dass die umgebauten Dienste bit-gleich hashen. Ein anderer Hash hieße: jede bestehende Fassung „weicht ab“ und das
  * nächste Veröffentlichen erzeugt für alle Abonnenten eine neue Fassung ohne inhaltliche Änderung.
  * Ändert sich der Hash später ABSICHTLICH (neues Feld, das nur gesetzt zählt), gehört die Änderung hierher mit Begründung.
+ * 98 · 3.5 Schritt 4: Spalte `sales_recipe_id` → `recipe_id` umbenannt (nur der Name; der Hash nimmt den Wert positionsweise,
+ * der Name steht in KONZEPT_SLOT_NIE und geht nicht ein). Hier deshalb nur der Spaltenname nachgezogen, die Formel ist unverändert.
  */
 final class FassungHashAlt
 {
@@ -44,7 +46,7 @@ final class FassungHashAlt
         'aenderungsnotiz', 'fassung_allergen_geaendert',
     ];
 
-    private const KONZEPT_SLOT_NIE = ['id', 'uuid', 'team_id', 'concept_id', 'package_id', 'embedded_concept_id', 'sales_recipe_id', 'presentation_id',
+    private const KONZEPT_SLOT_NIE = ['id', 'uuid', 'team_id', 'concept_id', 'package_id', 'embedded_concept_id', 'recipe_id', 'presentation_id',
         'price_value', 'price_basis', 'created_at', 'updated_at', 'deleted_at'];
 
     private const FORMAT_NIE = [
@@ -113,7 +115,7 @@ final class FassungHashAlt
             return [$felder,
                 null,
                 $s->embedded_concept_id !== null ? (int) ($ziele['concept'][(int) $s->embedded_concept_id]->id ?? 0) : null,
-                $s->sales_recipe_id !== null ? (int) ($ziele['recipe'][(int) $s->sales_recipe_id]->id ?? 0) : null,
+                $s->recipe_id !== null ? (int) ($ziele['recipe'][(int) $s->recipe_id]->id ?? 0) : null,
                 $quelle === null ? null : [$quelle->only(['serving_form_id', 'quantity_per_unit_g', 'unit_vocab_id', 'unit_count']) + $quelle->inhaltErgaenzung(), (bool) $quelle->is_standard],
             ];
         })->values()->all();
@@ -134,8 +136,8 @@ final class FassungHashAlt
         if ($s->embedded_concept_id !== null) {
             return isset($ziele['concept'][(int) $s->embedded_concept_id]);
         }
-        if ($s->sales_recipe_id !== null) {
-            return isset($ziele['recipe'][(int) $s->sales_recipe_id]);
+        if ($s->recipe_id !== null) {
+            return isset($ziele['recipe'][(int) $s->recipe_id]);
         }
 
         return true;

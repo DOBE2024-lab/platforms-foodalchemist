@@ -25,7 +25,7 @@ it('Stufe B: dokumente.speisekarte-Blade rendert Karte + Preis + Allergen-Legend
 
     $karte = $this->karten->create($this->rootTeam, ['name' => 'Abendkarte']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g->id]);
 
     $data = $this->karten->dokumentDaten($this->rootTeam, $karte->refresh());
     $html = view('foodalchemist::dokumente.speisekarte', $data + ['istPdf' => false])->render();
@@ -55,8 +55,8 @@ it('Phase D-Renderer: gleiche variant_group_id erscheint als „oder" zwischen P
     $karte = $this->karten->create($this->rootTeam, ['name' => 'Menükarte']);
     $r = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgang']);
     // Beide in derselben Wahl-Gruppe (1), benachbart.
-    $this->karten->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $a->id, 'variant_group_id' => 1]);
-    $this->karten->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $b->id, 'variant_group_id' => 1]);
+    $this->karten->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'recipe_id' => $a->id, 'variant_group_id' => 1]);
+    $this->karten->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'recipe_id' => $b->id, 'variant_group_id' => 1]);
 
     $data = $this->karten->dokumentDaten($this->rootTeam, $karte->refresh());
     $html = view('foodalchemist::dokumente.speisekarte', $data + ['istPdf' => false])->render();
@@ -76,8 +76,8 @@ it('Phase D-Renderer: ohne Wahl-Gruppe KEIN „oder"-Trenner', function () {
     ]);
     $karte = $this->karten->create($this->rootTeam, ['name' => 'Menükarte']);
     $r = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgang']);
-    $this->karten->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $a->id]);
-    $this->karten->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $b->id]);
+    $this->karten->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'recipe_id' => $a->id]);
+    $this->karten->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'recipe_id' => $b->id]);
 
     $data = $this->karten->dokumentDaten($this->rootTeam, $karte->refresh());
     $html = view('foodalchemist::dokumente.speisekarte', $data + ['istPdf' => false])->render();

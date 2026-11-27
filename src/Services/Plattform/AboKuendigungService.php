@@ -420,21 +420,21 @@ class AboKuendigungService
         }
         foreach (self::AUSGABEN as $art => [$tab, $kap, $kapFk, $parentFk, $parent]) {
             $q = DB::table($tab)->join($kap, 'k.id', '=', $kapFk)->join($parent, 'p.id', '=', $parentFk)
-                ->whereIn('x.sales_recipe_id', $ids)->whereIn('x.team_id', $teams)
+                ->whereIn('x.recipe_id', $ids)->whereIn('x.team_id', $teams)
                 ->whereNull('x.deleted_at')->whereNull('p.deleted_at');
             $art === 'angebot'
                 ? $q->whereNotIn('p.status', ['angenommen', 'abgelehnt'])        // D1: historische Angebote behalten die Fassung
                 : $q->where(fn ($w) => $w->whereNull('p.status')->orWhere('p.status', '!=', 'archiviert'));
-            $merke($q->select('x.sales_recipe_id AS rid')->distinct()->get(), $art);
+            $merke($q->select('x.recipe_id AS rid')->distinct()->get(), $art);
         }
         $merke(DB::table('foodalchemist_menu_plan_entries AS x')->join('foodalchemist_menu_plans AS p', 'p.id', '=', 'x.menu_plan_id')
-            ->whereIn('x.sales_recipe_id', $ids)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at')
+            ->whereIn('x.recipe_id', $ids)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at')
             ->where(fn ($w) => $w->whereNull('p.status')->orWhere('p.status', '!=', 'archiviert'))
-            ->select('x.sales_recipe_id AS rid')->distinct()->get(), 'speiseplan');
+            ->select('x.recipe_id AS rid')->distinct()->get(), 'speiseplan');
         $merke(DB::table('foodalchemist_concept_slots AS x')->join('foodalchemist_concepts AS p', 'p.id', '=', 'x.concept_id')
-            ->whereIn('x.sales_recipe_id', $ids)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at')->where('p.ist_fassung', false)
+            ->whereIn('x.recipe_id', $ids)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at')->where('p.ist_fassung', false)
             ->where(fn ($w) => $w->whereNull('p.status')->orWhere('p.status', '!=', 'archiviert'))
-            ->select('x.sales_recipe_id AS rid')->distinct()->get(), 'konzept');
+            ->select('x.recipe_id AS rid')->distinct()->get(), 'konzept');
         // als Zutat in einem EIGENEN Rezept (Arbeitszeile) des Mandanten bzw. seiner Unter-Teams
         $merke(DB::table('foodalchemist_recipe_ingredients AS z')->join('foodalchemist_recipes AS r', 'r.id', '=', 'z.recipe_id')
             ->whereIn('z.referenced_recipe_id', $ids)->whereIn('r.team_id', $teams)->where('r.ist_fassung', false)
@@ -526,9 +526,9 @@ class AboKuendigungService
             }
             $offen = array_fill_keys(self::ARTEN, []);
             if ($neu['concept'] !== []) {
-                $slots = DB::table('foodalchemist_concept_slots')->whereIn('concept_id', $neu['concept'])->whereNull('deleted_at')->get(['embedded_concept_id', 'sales_recipe_id']);
+                $slots = DB::table('foodalchemist_concept_slots')->whereIn('concept_id', $neu['concept'])->whereNull('deleted_at')->get(['embedded_concept_id', 'recipe_id']);
                 $offen['concept'] = array_merge($offen['concept'], $this->nurFassungen('concept', $slots->pluck('embedded_concept_id')->filter()->all()));
-                $offen['recipe'] = array_merge($offen['recipe'], $this->nurFassungen('recipe', $slots->pluck('sales_recipe_id')->filter()->all()));
+                $offen['recipe'] = array_merge($offen['recipe'], $this->nurFassungen('recipe', $slots->pluck('recipe_id')->filter()->all()));
             }
             if ($neu['format'] !== []) {
                 $offen['concept'] = array_merge($offen['concept'], $this->nurFassungen('concept', DB::table('foodalchemist_format_slots')
@@ -742,7 +742,7 @@ class AboKuendigungService
             $neuerSlot->forceFill([
                 'concept_id' => $kopieId, 'team_id' => $mandant->id,
                 'embedded_concept_id' => $s->embedded_concept_id !== null ? ($map['concept'][(int) $s->embedded_concept_id] ?? $s->embedded_concept_id) : null,
-                'sales_recipe_id' => $s->sales_recipe_id !== null ? ($map['recipe'][(int) $s->sales_recipe_id] ?? $s->sales_recipe_id) : null,
+                'recipe_id' => $s->recipe_id !== null ? ($map['recipe'][(int) $s->recipe_id] ?? $s->recipe_id) : null,
                 'presentation_id' => $s->presentation_id !== null ? ($darMap[(int) $s->presentation_id] ?? $s->presentation_id) : null,
             ])->save();
             $slotMap[(int) $s->id] = (int) $neuerSlot->id;
@@ -823,21 +823,21 @@ class AboKuendigungService
         }
         foreach (self::AUSGABEN as $art => [$tab, $kap, $kapFk, $parentFk, $parent]) {
             $q = DB::table($tab)->join($kap, 'k.id', '=', $kapFk)->join($parent, 'p.id', '=', $parentFk)
-                ->where('x.sales_recipe_id', $alt)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at');
+                ->where('x.recipe_id', $alt)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at');
             $art === 'angebot'
                 ? $q->whereNotIn('p.status', ['angenommen', 'abgelehnt'])
                 : $q->where(fn ($w) => $w->whereNull('p.status')->orWhere('p.status', '!=', 'archiviert'));
             $ids = $q->pluck('x.id')->all();
-            $n += DB::table(explode(' AS ', $tab)[0])->whereIn('id', $ids ?: [0])->update(['sales_recipe_id' => $neu]);
+            $n += DB::table(explode(' AS ', $tab)[0])->whereIn('id', $ids ?: [0])->update(['recipe_id' => $neu]);
         }
         foreach (['foodalchemist_menu_plan_entries' => ['foodalchemist_menu_plans', 'menu_plan_id', false], 'foodalchemist_concept_slots' => ['foodalchemist_concepts', 'concept_id', true]] as $tab => [$parent, $fk, $eigene]) {
             $q = DB::table("{$tab} AS x")->join("{$parent} AS p", 'p.id', '=', "x.{$fk}")
-                ->where('x.sales_recipe_id', $alt)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at');
+                ->where('x.recipe_id', $alt)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at');
             if ($eigene) {
                 $q->where('p.ist_fassung', false);   // Pflichtpunkt #367: nie eine Fassung als Eltern-Objekt
             }
             $q->where(fn ($w) => $w->whereNull('p.status')->orWhere('p.status', '!=', 'archiviert'));
-            $n += DB::table($tab)->whereIn('id', $q->pluck('x.id')->all() ?: [0])->update(['sales_recipe_id' => $neu]);
+            $n += DB::table($tab)->whereIn('id', $q->pluck('x.id')->all() ?: [0])->update(['recipe_id' => $neu]);
         }
         $n += app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->haengeUm(DB::table('foodalchemist_recipe_ingredients AS z')   // 1.1e: Graph-Schreibweg
             ->whereIn('z.recipe_id', DB::table('foodalchemist_recipes')->whereIn('team_id', $teams)->where('ist_fassung', false)->whereNull('deleted_at')->select('id'))

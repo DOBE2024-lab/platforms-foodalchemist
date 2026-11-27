@@ -120,7 +120,7 @@ final class SpeiseplanErnaehrung
         if (trim((string) $e->wording) !== '') {
             return trim((string) $e->wording);
         }
-        if ($e->sales_recipe_id !== null) {
+        if ($e->recipe_id !== null) {
             $dish = $e->relationLoaded('dish') ? $e->dish : $e->dish()->first();
             if ($dish !== null) {
                 return app(WordingResolver::class)->fuerGericht($dish)['text'] ?? $e->inhaltName();
@@ -170,8 +170,8 @@ final class SpeiseplanErnaehrung
         }
 
         $gerichte = collect();
-        if ($e->sales_recipe_id !== null) {
-            $dish = FoodAlchemistRecipe::find($e->sales_recipe_id);
+        if ($e->recipe_id !== null) {
+            $dish = FoodAlchemistRecipe::find($e->recipe_id);
             $gerichte = $dish ? collect([$dish]) : collect();
         } elseif ($e->concept_id !== null) {
             $c = FoodAlchemistConcept::with(['slots.dish'])->find($e->concept_id);

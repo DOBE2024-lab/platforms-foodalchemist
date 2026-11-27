@@ -52,7 +52,7 @@ it('Speisekarte: Gericht-Position erscheint im Handbuch', function () {
         'speisekarte_id' => $karteId, 'title' => 'Fisch', 'consumer_title' => 'Aus dem Wasser', 'art' => 'speisen',
     ], $kontext)->data['rubrik']['id'];
     $registry->get('foodalchemist.speisekarte_positionen.POST')->execute([
-        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'sales_recipe_id' => $dish->id,
+        'rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'recipe_id' => $dish->id,
     ], $kontext);
 
     ($this->pruefe)('speisekarte', $karteId, 'Zanderfilet Karte');
@@ -65,7 +65,7 @@ it('Speiseplan: Eintrag erscheint im Handbuch (Tagesabschnitt)', function () {
     $line = FoodAlchemistSpeiseplanLinie::create(['team_id' => $this->team->id, 'menu_plan_id' => $plan->id, 'name' => 'Menü 1', 'sort_order' => 1]);
     FoodAlchemistSpeiseplanEintrag::create([
         'team_id' => $this->team->id, 'menu_plan_id' => $plan->id, 'line_id' => $line->id,
-        'week' => 1, 'weekday' => 1, 'meal' => 'mittag', 'entry_date' => $mo->format('Y-m-d'), 'sales_recipe_id' => $dish->id, 'position' => 1,
+        'week' => 1, 'weekday' => 1, 'meal' => 'mittag', 'entry_date' => $mo->format('Y-m-d'), 'recipe_id' => $dish->id, 'position' => 1,
     ]);
 
     ($this->pruefe)('speiseplan', $plan->id, 'Rindergulasch Plan');
@@ -75,7 +75,7 @@ it('Angebot: Gericht aus dem Concept erscheint im Handbuch', function () {
     $dish = ($this->gericht)('Lachs Angebot');
     $angebot = app(AngebotService::class)->create($this->team, ['name' => 'Gala 2027', 'personen' => 40, 'occasion' => 'Hochzeit']);
     $c = FoodAlchemistConcept::create(['team_id' => $this->team->id, 'name' => 'Vorspeise', 'kind' => 'concept', 'status' => 'active']);
-    $this->makeConceptSlot($c, ['sales_recipe_id' => $dish->id, 'wording' => 'Lachs Angebot', 'position' => 1]);
+    $this->makeConceptSlot($c, ['recipe_id' => $dish->id, 'wording' => 'Lachs Angebot', 'position' => 1]);
     $comp = app(OfferCompositionService::class);
     $kap = $comp->addKapitel($this->team, $angebot->id, ['title' => 'Menü', 'consumer_title' => 'Unser Menü']);
     $comp->addBlock($this->team, $kap->id, ['type' => 'concept_ref', 'concept_id' => $c->id]);

@@ -266,9 +266,9 @@ final class SpeiseplanMengen
             $ref = 'menuplan:' . $plan->id . ':' . $ymd . ':' . $e->id;
             if ($e->concept_id !== null) {
                 $targets[] = ['concept_id' => (int) $e->concept_id, 'persons' => $pax, 'source_ref' => $ref];
-            } elseif ($e->sales_recipe_id !== null) {
+            } elseif ($e->recipe_id !== null) {
                 // Darreichung des Eintrags wandert mit — die Produktion rechnet die Menge daraus (sonst Standard).
-                $targets[] = array_filter(['recipe_id' => (int) $e->sales_recipe_id, 'portions' => $pax,
+                $targets[] = array_filter(['recipe_id' => (int) $e->recipe_id, 'portions' => $pax,
                     'presentation_id' => $e->presentation_id !== null ? (int) $e->presentation_id : null, 'source_ref' => $ref], fn ($v) => $v !== null);
             }
         }

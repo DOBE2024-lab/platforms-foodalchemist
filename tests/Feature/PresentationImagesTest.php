@@ -21,7 +21,7 @@ beforeEach(function () {
             $concept->update(['image_path' => $conceptImagePath]);
         }
         $dish = $this->makeRecipe($team, 'Lachs', ['is_sales_recipe' => true, 'sales_net' => 12.0]);
-        $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
+        $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
 
         $fb = $this->makeFoodbook($team, 'Bild-Katalog', ['personen' => 6]);
         $kap = $this->makeChapter($fb, ['title' => 'Vorspeisen', 'consumer_title' => 'Vorspeisen', 'position' => 1]);
@@ -63,7 +63,7 @@ it('Concept-Galerie füllt die Bild-Liste (Titel + Galeriebild) als 2er-Band', f
     $concept->update(['image_path' => 'foodalchemist/concept/titel.jpg']);
     $concept->images()->create(['team_id' => $team->id, 'path' => 'foodalchemist/concept/gallery/extra.jpg', 'sort_order' => 1]);
     $dish = $this->makeRecipe($team, 'Lachs', ['is_sales_recipe' => true, 'sales_net' => 12.0]);
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
+    $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Lachs', 'position' => 1]);
     $fb = $this->makeFoodbook($team, 'Galerie-Katalog', ['personen' => 6]);
     $kap = $this->makeChapter($fb, ['title' => 'Vorspeisen', 'consumer_title' => 'Vorspeisen', 'position' => 1]);
     $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $concept->id, 'position' => 1]);

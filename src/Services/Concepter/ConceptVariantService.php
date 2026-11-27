@@ -47,13 +47,13 @@ class ConceptVariantService
         if ($slot->variant_source_recipe_id !== null) {
             return $slot; // schon variiert
         }
-        if ($slot->sales_recipe_id === null) {
+        if ($slot->recipe_id === null) {
             throw new RuntimeException('Slot trägt kein fest gesetztes Gericht — nur Gericht-Slots können variiert werden.');
         }
 
         $original = FoodAlchemistRecipe::visibleToTeam($team)
             ->with(['ingredients', 'presentations'])
-            ->findOrFail((int) $slot->sales_recipe_id);
+            ->findOrFail((int) $slot->recipe_id);
 
         return DB::transaction(function () use ($team, $slot, $original) {
             /** @var FoodAlchemistRecipe $kopie */
@@ -84,7 +84,7 @@ class ConceptVariantService
             $this->recompute->recomputeAndPropagate($kopie->id);
 
             $slot->update([
-                'sales_recipe_id' => $kopie->id,
+                'recipe_id' => $kopie->id,
                 'variant_source_recipe_id' => $original->id,
             ]);
 
@@ -100,7 +100,7 @@ class ConceptVariantService
     public function tauscheZutatKonzeptLokal(Team $team, int $slotId, int $ingredientId): FoodAlchemistConceptSlot
     {
         $slot = $this->varianteFuerSlot($team, $slotId);
-        $variante = FoodAlchemistRecipe::with('ingredients')->findOrFail((int) $slot->sales_recipe_id);
+        $variante = FoodAlchemistRecipe::with('ingredients')->findOrFail((int) $slot->recipe_id);
 
         $zutat = $variante->ingredients->firstWhere('id', $ingredientId);
         if ($zutat === null) {
@@ -132,14 +132,14 @@ class ConceptVariantService
         }
 
         return DB::transaction(function () use ($team, $slot) {
-            $varianteId = (int) $slot->sales_recipe_id;
+            $varianteId = (int) $slot->recipe_id;
             $slot->update([
-                'sales_recipe_id' => $slot->variant_source_recipe_id,
+                'recipe_id' => $slot->variant_source_recipe_id,
                 'variant_source_recipe_id' => null,
             ]);
 
             // Variante nur löschen, wenn kein anderer Slot sie noch referenziert (Duplikat-Konzepte).
-            $nochGenutzt = FoodAlchemistConceptSlot::where('sales_recipe_id', $varianteId)->exists();
+            $nochGenutzt = FoodAlchemistConceptSlot::where('recipe_id', $varianteId)->exists();
             if (! $nochGenutzt) {
                 $variante = FoodAlchemistRecipe::whereKey($varianteId)->whereNotNull('variant_source_recipe_id')->first();
                 if ($variante !== null && $variante->isOwnedBy($team)) {

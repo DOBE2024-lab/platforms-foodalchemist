@@ -43,7 +43,7 @@ it('Stufe E: vollständige Karte (Preis + Allergene) → harte Punkte erledigt, 
 
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g->id]);
 
     $stand = $this->ls->checkliste($this->rootTeam, $karte->id);
     expect(skStatus($stand, 'rubriken'))->toBe('erledigt')
@@ -61,7 +61,7 @@ it('Stufe E: unbekannte Allergen-Konfidenz → allergene offen, nicht bereit', f
     $g->forceFill(['allergens_confidence' => 'low'])->save();   // schwache Konfidenz → „unbekannt"
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g->id]);
 
     $stand = $this->ls->checkliste($this->rootTeam, $karte->id);
     expect(skStatus($stand, 'allergene'))->toBe('offen')

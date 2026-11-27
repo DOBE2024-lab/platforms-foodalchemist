@@ -136,8 +136,8 @@ class FassungsVergleich
 
             return array_values(array_unique($ids));
         }
-        $slots = DB::table('foodalchemist_concept_slots')->where('concept_id', $id)->whereNull('deleted_at')->get(['embedded_concept_id', 'sales_recipe_id']);
-        $ids = $slots->pluck('sales_recipe_id')->filter()->map(fn ($v) => (int) $v)->all();
+        $slots = DB::table('foodalchemist_concept_slots')->where('concept_id', $id)->whereNull('deleted_at')->get(['embedded_concept_id', 'recipe_id']);
+        $ids = $slots->pluck('recipe_id')->filter()->map(fn ($v) => (int) $v)->all();
         foreach ($slots->pluck('embedded_concept_id')->filter()->unique() as $cid) {
             array_push($ids, ...$this->rezeptIdsDerKette('concept', (int) $cid, $tiefe + 1));
         }

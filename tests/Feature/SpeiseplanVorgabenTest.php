@@ -38,7 +38,7 @@ beforeEach(function () {
         return $r->refresh();
     };
     $this->eintrag = fn (FoodAlchemistRecipe $g, string $tag, string $mahlzeit = 'mittag') => $this->svc->addEintrag(
-        $this->rootTeam, $this->plan->id, ['entry_date' => $tag, 'mahlzeit' => $mahlzeit, 'sales_recipe_id' => $g->id],
+        $this->rootTeam, $this->plan->id, ['entry_date' => $tag, 'mahlzeit' => $mahlzeit, 'recipe_id' => $g->id],
     );
     $this->chip = fn (string $label, array $kriterien, array $mehr = []) => $this->vsvc->chipAnlegen(
         $this->rootTeam, ['label' => $label, 'kriterien' => $kriterien] + $mehr,

@@ -25,13 +25,13 @@ beforeEach(function () {
         $concept = $this->makeConcept($team, 'Sommer-Menü', [
             'kind' => 'concept', 'consumer_name' => 'Sommergenuss', 'price_per_person_cache' => 42.50,
         ]);
-        $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Rinderfilet Rossini']);
+        $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Rinderfilet Rossini']);
         $einzel = $this->makeRecipe($team, 'Kürbissuppe', ['is_sales_recipe' => true, 'sales_net' => 6.50]);
 
         $fb = $this->fb->create($team, ['label' => 'Angebot Adler']);
         $kap = $this->fb->addKapitel($team, $fb->id, ['title' => 'Vorspeisen']);
         $this->fb->addBlock($team, $kap->id, ['type' => 'concept_ref', 'concept_id' => $concept->id]);
-        $this->fb->addBlock($team, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $einzel->id]);
+        $this->fb->addBlock($team, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $einzel->id]);
 
         return $fb;
     };
@@ -96,7 +96,7 @@ it('#5a: das Dokument zeigt die Allergen-Legende nur mit ?deklaration (Toggle)',
     $dish = $this->makeRecipe($team, 'Pasta', ['is_sales_recipe' => true, 'sales_net' => 9.0, 'allergen_gluten' => 'enthalten']);
     $fb = $this->fb->create($team, ['label' => 'K']);
     $kap = $this->fb->addKapitel($team, $fb->id, ['title' => 'Kap']);
-    $this->fb->addBlock($team, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $dish->id]);
+    $this->fb->addBlock($team, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $dish->id]);
     $this->actingAs($this->makeUser($team, 'Doc User'));
 
     // Default (an): Legende da. ?deklaration=0: weg. Kaskaden-Knopf gibt es nicht mehr.

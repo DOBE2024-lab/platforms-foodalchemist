@@ -52,7 +52,7 @@ final class CockpitZeilen
                 if ($ep->ek_incomplete ?? ! app(ConcepterAggregateService::class)->conceptAggregat($ep)['ek_vollstaendig']) {
                     $zeile['ek_unvollstaendig'] = $r['hat_ek_luecke'] = true;
                 }
-            } elseif ($slot->sales_recipe_id !== null && $slot->dish) {
+            } elseif ($slot->recipe_id !== null && $slot->dish) {
                 $zeile = $basis + ['type' => 'gericht', 'wording' => $slot->wording, 'label' => $slot->dish->name, 'stale' => false]
                     + $this->gericht($concept, $slot, $outlet);
                 $r['hat_ek_luecke'] = $r['hat_ek_luecke'] || $zeile['ek_fehlt'] || $zeile['ek_unbekannt'];

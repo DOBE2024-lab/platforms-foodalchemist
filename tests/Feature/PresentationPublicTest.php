@@ -22,10 +22,10 @@ beforeEach(function () {
         $kap = $this->makeChapter($fb, ['title' => 'INTERN Vorspeisen', 'consumer_title' => 'Vorspeisen', 'position' => 1]);
         $dish = $this->makeRecipe($team, 'HG Lachsfilet', ['is_sales_recipe' => true, 'sales_net' => 12.0]);
         $concept = $this->makeConcept($team, 'Menü A', ['kind' => 'concept', 'consumer_name' => 'Genussreise', 'price_per_person_cache' => 40.0]);
-        $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Lachs auf Spinat', 'position' => 1]);
+        $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Lachs auf Spinat', 'position' => 1]);
         $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $concept->id, 'position' => 1]);
         $suppe = $this->makeRecipe($team, 'Kürbissuppe', ['is_sales_recipe' => true, 'sales_net' => 6.5]);
-        $this->makeFoodbookBlock($kap, ['type' => 'recipe_ref', 'sales_recipe_id' => $suppe->id, 'position' => 2]);
+        $this->makeFoodbookBlock($kap, ['type' => 'recipe_ref', 'recipe_id' => $suppe->id, 'position' => 2]);
 
         return $fb;
     };

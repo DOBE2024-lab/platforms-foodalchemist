@@ -21,8 +21,8 @@ class ConceptSlotsPutTool extends FoodAlchemistTool implements ToolContract, Too
 
     public function getDescription(): string
     {
-        return 'Bearbeitet einen Konzept-Slot (felder: role, title, is_pflicht, note, sales_recipe_id, package_id). '
-            . 'felder.sales_recipe_id FÜLLT eine leere Position mit einem Gericht (XOR package_id; type=basisrezept optional) — '
+        return 'Bearbeitet einen Konzept-Slot (felder: role, title, is_pflicht, note, recipe_id, package_id). '
+            . 'felder.recipe_id FÜLLT eine leere Position mit einem Gericht (XOR package_id; type=basisrezept optional) — '
             . 'so werden die Positionen eines Gerüsts aus concepts.POST geruest=… belegt. '
             . 'felder.package_id = Concepter-Paket (concepts mit kind=paket, IDs via pakete.LIST) — hängt das Paket als Station ein. '
             . 'felder.wording setzt den Slot-Text, felder.quantity/unit_vocab_id die Menge. unit_vocab_id nur, wenn die Einheit rechnet '
@@ -45,6 +45,7 @@ class ConceptSlotsPutTool extends FoodAlchemistTool implements ToolContract, Too
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
@@ -58,10 +59,10 @@ class ConceptSlotsPutTool extends FoodAlchemistTool implements ToolContract, Too
             return $guard;
         }
 
-        // Spec 50 C-1: Befüllen über PUT — vorher wurden sales_recipe_id/package_id hier STILL verworfen
+        // Spec 50 C-1: Befüllen über PUT — vorher wurden recipe_id/package_id hier STILL verworfen
         // (updateSlot kennt nur role/title/is_pflicht/note); die Beschreibung versprach es aber.
-        if (isset($felder['sales_recipe_id'], $felder['package_id'])) {
-            return ToolResult::error('sales_recipe_id und package_id sind XOR — nur eines angeben.', 'VALIDATION_ERROR');
+        if (isset($felder['recipe_id'], $felder['package_id'])) {
+            return ToolResult::error('recipe_id und package_id sind XOR — nur eines angeben.', 'VALIDATION_ERROR');
         }
         if (! empty($felder['package_id'])) {
             // package_id = Concepter-Paket (kind=paket-Concept) → embedded_concept_id (Kaskade-Pfad).
@@ -79,8 +80,8 @@ class ConceptSlotsPutTool extends FoodAlchemistTool implements ToolContract, Too
             // 98 · 3.6 PR5: alles oder nichts — die Sicht prüft der Dienst erst in fillSlot, eine Ablehnung darf Rolle/Titel nicht halb schreiben
             \Illuminate\Support\Facades\DB::transaction(function () use ($svc, $team, $slotId, $felder) {
                 $svc->updateSlot($team, $slotId, $felder);
-                if (! empty($felder['sales_recipe_id']) || ! empty($felder['embedded_concept_id'])) {
-                    $svc->fillSlot($team, $slotId, array_intersect_key($felder, array_flip(['sales_recipe_id', 'embedded_concept_id', 'type', 'quantity', 'unit_vocab_id'])));
+                if (! empty($felder['recipe_id']) || ! empty($felder['embedded_concept_id'])) {
+                    $svc->fillSlot($team, $slotId, array_intersect_key($felder, array_flip(['recipe_id', 'embedded_concept_id', 'type', 'quantity', 'unit_vocab_id'])));
                 }
                 if (array_key_exists('wording', $felder)) {
                     $svc->setSlotWording($team, $slotId, ($felder['wording'] ?? '') !== '' ? (string) $felder['wording'] : null);

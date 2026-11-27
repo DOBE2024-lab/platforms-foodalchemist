@@ -39,7 +39,7 @@ beforeEach(function () {
         FoodAlchemistSpeiseplanEintrag::create([
             'team_id' => $team->id, 'menu_plan_id' => $plan->id, 'line_id' => $line->id,
             'week' => 1, 'weekday' => 1, 'meal' => 'mittag', 'entry_date' => $mo->format('Y-m-d'),
-            'sales_recipe_id' => $dish->id, 'position' => 1,
+            'recipe_id' => $dish->id, 'position' => 1,
         ]);
 
         return $plan;

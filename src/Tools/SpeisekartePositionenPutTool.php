@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 class SpeisekartePositionenPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {
     private const FELDER = ['level', 'visible', 'label', 'consumer_text', 'interne_bemerkung', 'variant_group_id',
-        'sales_recipe_id', 'concept_id', 'wording', 'price_mode', 'price_value'];
+        'recipe_id', 'concept_id', 'wording', 'price_mode', 'price_value'];
 
     public function getName(): string
     {
@@ -22,7 +22,7 @@ class SpeisekartePositionenPutTool extends FoodAlchemistTool implements ToolCont
     public function getDescription(): string
     {
         return 'Bearbeitet eine Position einer team-eigenen Speisekarte (felder: label, consumer_text, wording, '
-            . 'price_mode, price_value, visible, level, sales_recipe_id, concept_id). Preis-Wahrheit bleibt im Service.';
+            . 'price_mode, price_value, visible, level, recipe_id, concept_id). Preis-Wahrheit bleibt im Service.';
     }
 
     public function getSchema(): array
@@ -39,6 +39,7 @@ class SpeisekartePositionenPutTool extends FoodAlchemistTool implements ToolCont
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');

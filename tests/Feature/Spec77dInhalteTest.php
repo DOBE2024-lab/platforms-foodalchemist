@@ -35,7 +35,7 @@ beforeEach(function () {
     $this->makeIngredient($this->gericht, 'Brauner Fond')->update(['referenced_recipe_id' => $this->basis->id]);
     $this->andere = $this->makeRecipe($r, 'Geheimrezept', ['is_sales_recipe' => true]);
     $this->konzept = $this->makeConcept($r, 'Mittagstisch');
-    $this->makeConceptSlot($this->konzept, ['sales_recipe_id' => $this->gericht->id]);
+    $this->makeConceptSlot($this->konzept, ['recipe_id' => $this->gericht->id]);
     $this->format = FoodAlchemistFormat::create(['team_id' => $r->id, 'name' => 'Kantine', 'status' => 'aktiv']);
     FoodAlchemistFormatSlot::create(['team_id' => $r->id, 'format_id' => $this->format->id, 'type' => 'concept', 'concept_id' => $this->konzept->id, 'position' => 0]);
     $this->kindKoch = $this->makeUser($this->childA, 'Kind Koch', 'member');
@@ -72,10 +72,10 @@ it('Sammlung mit Format gibt die Hülle frei (Konzept, Gericht, Basisrezept) —
     $roh = TeamScope::applyVisible(DB::table('foodalchemist_recipes'), 'foodalchemist_recipes.team_id', $this->childA)->pluck('id')->all();
     expect(array_map('intval', $roh))->not->toContain($this->andere->id)->toContain($this->gericht->id);
     // Referenzieren nicht freigegebener Inhalte geht nicht
-    expect(fn () => TeamScope::referenz(FoodAlchemistRecipe::class, $this->andere->id, $this->childA, 'sales_recipe_id'))->toThrow(\RuntimeException::class);
+    expect(fn () => TeamScope::referenz(FoodAlchemistRecipe::class, $this->andere->id, $this->childA, 'recipe_id'))->toThrow(\RuntimeException::class);
 
     // Konzept bekommt ein weiteres Gericht → Hülle zieht nach
-    $this->makeConceptSlot($this->konzept, ['sales_recipe_id' => $this->andere->id, 'position' => 2]);
+    $this->makeConceptSlot($this->konzept, ['recipe_id' => $this->andere->id, 'position' => 2]);
     expect(($this->sieht)(FoodAlchemistRecipe::class))->toContain($this->andere->id);
 
     // Freigabe entziehen → wieder weg
@@ -87,7 +87,7 @@ it('Sammlung mit Format gibt die Hülle frei (Konzept, Gericht, Basisrezept) —
 it('Ausgaben: nur eigene Foodbooks freigeben, nur an eigene Standorte; Foodbook zieht seine Gerichte mit', function () {
     $this->inhalte->setzeErbtAlles($this->rootTeam, $this->childA->id, false, $this->inhaber);
     $fb = $this->makeFoodbook($this->rootTeam, 'Sommer');
-    $this->makeFoodbookBlock($this->makeChapter($fb), ['sales_recipe_id' => $this->andere->id]);
+    $this->makeFoodbookBlock($this->makeChapter($fb), ['recipe_id' => $this->andere->id]);
     $fremd = $this->makeFoodbook($this->childB, 'Fremd');
     expect(fn () => $this->inhalte->freigeben($this->rootTeam, 'foodbook', $fremd->id, $this->childA->id, $this->inhaber))->toThrow(\RuntimeException::class, 'eigene Ausgaben');
     expect(fn () => $this->inhalte->freigeben($this->childA, 'foodbook', $fb->id, $this->childB->id, $this->inhaber))->toThrow(\RuntimeException::class);

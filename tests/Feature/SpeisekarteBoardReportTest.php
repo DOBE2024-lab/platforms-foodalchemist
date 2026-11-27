@@ -40,8 +40,8 @@ it('boardDaten: VK/EK/WE je Gericht-Position + Σ-Rollup je Rubrik (inkl. Unter-
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $ober = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
     $unter = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Fleisch'], $ober->id);
-    $p1 = $this->karten->addPosition($this->rootTeam, $ober->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g1->id]);
-    $this->karten->addPosition($this->rootTeam, $unter->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g2->id]);
+    $p1 = $this->karten->addPosition($this->rootTeam, $ober->id, ['type' => 'gericht_ref', 'recipe_id' => $g1->id]);
+    $this->karten->addPosition($this->rootTeam, $unter->id, ['type' => 'gericht_ref', 'recipe_id' => $g2->id]);
 
     $board = $this->karten->boardDaten($this->rootTeam, $karte->fresh());
 
@@ -62,7 +62,7 @@ it('speisekarteDaten: technischer Report — typ speisekarte, Rubriken × Positi
     $g = $this->makeRecipe($this->rootTeam, 'Filet', ['is_sales_recipe' => true, 'sales_net' => 24.0, 'ek_total_eur' => 8.0]);
     $karte = $this->karten->create($this->rootTeam, ['name' => 'Sommerkarte']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g->id]);
 
     $svc = app(ReportExportService::class);
     $optionen = $svc->optionen(['profil' => 'produktion'], 'speisekarte');

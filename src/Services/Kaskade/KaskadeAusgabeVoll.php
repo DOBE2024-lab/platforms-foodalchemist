@@ -597,7 +597,7 @@ class KaskadeAusgabeVoll
                 throw new RuntimeException('Die KI hat kein Rezept geliefert. Bitte neu erzeugen.');
             }
             app(SpeisekarteService::class)->addPosition($team, $rubrikId, [
-                'type' => 'gericht_ref', 'sales_recipe_id' => (int) $recipe->id,
+                'type' => 'gericht_ref', 'recipe_id' => (int) $recipe->id,
             ]);
             if ($planningSessionId !== null) {
                 $sess = app(PlanningSessionService::class)->get($team, $planningSessionId);

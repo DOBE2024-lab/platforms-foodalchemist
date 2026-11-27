@@ -135,7 +135,7 @@ class ConceptsPostTool extends FoodAlchemistTool implements ToolContract, ToolMe
             'geruest' => $geruest,
             'note' => 'Entwurf: aktiv setzen macht ein Mensch im Concepter. Servierform steuert die Slot-Darreichungs-Auflösung.'
                 . ($kind === 'paket' ? ' Paket: Gerichte via paket_gerichte.SET, einhängen via concept_slots.POST(concept_id, package_id=' . $c->id . ').' : '')
-                . ($geruest !== null ? ' Gerüst steht: leere Positionen (type=gericht) per foodalchemist.concept_slots.PUT mit sales_recipe_id füllen, Header-Titel per concept_blocks.PUT.' : ''),
+                . ($geruest !== null ? ' Gerüst steht: leere Positionen (type=gericht) per foodalchemist.concept_slots.PUT mit recipe_id füllen, Header-Titel per concept_blocks.PUT.' : ''),
         ], fn ($v) => $v !== null));
     }
 

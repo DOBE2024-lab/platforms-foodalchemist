@@ -23,7 +23,7 @@ class SpeiseplanEintraegeGetTool extends FoodAlchemistTool implements ToolContra
     public function getDescription(): string
     {
         return 'Listet die Einträge eines Speiseplans (id, entry_date, mahlzeit, line_id, Inhalt concept_id|'
-            . 'sales_recipe_id, presentation_id + darreichung (geltende Form, null = Standard), wording (Name im Plan), Anzeigename, '
+            . 'recipe_id, presentation_id + darreichung (geltende Form, null = Standard), wording (Name im Plan), Anzeigename, '
             . 'vk/ek je Person (ek null = Portion unbekannt), '
             . 'pax, pax_effektiv). Optional von/bis (YYYY-MM-DD) und mahlzeit.';
     }
@@ -59,7 +59,7 @@ class SpeiseplanEintraegeGetTool extends FoodAlchemistTool implements ToolContra
             return ToolResult::error('Datum unlesbar: ' . $e->getMessage(), 'VALIDATION_ERROR');
         }
 
-        return ToolResult::success(['plan_id' => (int) $plan->id, 'anzahl' => count($liste), 'eintraege' => $liste]);
+        return ToolResult::success(\Platform\FoodAlchemist\Support\RezeptIdAlias::ausgabe(['plan_id' => (int) $plan->id, 'anzahl' => count($liste), 'eintraege' => $liste]));
     }
 
     public function getMetadata(): array

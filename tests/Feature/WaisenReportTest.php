@@ -46,7 +46,7 @@ it('deckt die Kernkette ab (Spalten aus dem Schema, Wächter läuft nicht ins Le
         ->and($spalten)->toContain('foodalchemist_recipe_ingredients.referenced_recipe_id')
         ->toContain('foodalchemist_recipe_ingredients.gp_id')
         ->toContain('foodalchemist_concept_slots.embedded_concept_id')
-        ->toContain('foodalchemist_concept_slots.sales_recipe_id')
+        ->toContain('foodalchemist_concept_slots.recipe_id')
         ->toContain('foodalchemist_recipes.fassung_von_id')
         ->toContain('foodalchemist_recipe_presentations.vessel_gp_id')
         ->and($spalten->filter(fn ($s) => str_starts_with($s, 'foodalchemist_package')))->toBeEmpty();   // Alt-Pakete: eigener Abbau

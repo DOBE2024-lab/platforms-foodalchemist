@@ -92,7 +92,7 @@ it('Konzept: Slot-Darreichung greift auch bei Menge in Portionen (vorher nur bei
     $concepts = app(ConceptService::class);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Mittagsmenü']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Beilage']);
-    $slot = $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->gericht->id]);
+    $slot = $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->gericht->id]);
     $slot->update(['quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $concepts->setSlotDarreichung($this->rootTeam, $slot->id, $this->kinder->id);
 
@@ -103,7 +103,7 @@ it('Konzept: Slot-Darreichung greift auch bei Menge in Portionen (vorher nur bei
 it('Speiseplan: Eintrag gibt seine Darreichung an die Produktion', function () {
     $svc = app(SpeiseplanService::class);
     $plan = $svc->create($this->rootTeam, ['name' => 'Kantine', 'start_date' => '2026-10-05', 'default_pax' => 100]);
-    $eintrag = $svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => '2026-10-05', 'sales_recipe_id' => $this->gericht->id, 'presentation_id' => $this->kinder->id]);
+    $eintrag = $svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => '2026-10-05', 'recipe_id' => $this->gericht->id, 'presentation_id' => $this->kinder->id]);
 
     // 98 · 2.6c: der Alt-Paket-Eintrag (package_id) mit eigener Menge/Form je Gericht ist entfallen
 

@@ -23,7 +23,7 @@ beforeEach(function () {
     $kap = $comp->addKapitel($this->rootTeam, $this->angebot->id, ['title' => 'Dinner']);
     $dish = $this->makeRecipe($this->rootTeam, 'Rinderfilet', ['is_sales_recipe' => true, 'status' => 'approved', 'ek_total_eur' => 9.0, 'sales_unit_count' => 1]);
     $this->makeStandardDarreichung($dish, 30.0);
-    $comp->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $dish->id]);
+    $comp->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $dish->id]);
 
     $this->veroeffentlichen = function (bool $haken): string {
         $d = app(PresentationDesignService::class)->create($this->rootTeam, [

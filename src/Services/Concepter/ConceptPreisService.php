@@ -46,7 +46,7 @@ class ConceptPreisService
         $treffer = DB::table('foodalchemist_concepts AS c')->whereIn('c.id', $ids)->where(fn ($w) => $w->where('c.ist_fassung', true)
             ->orWhereExists(fn ($q) => $q->from('foodalchemist_concept_slots AS s')->whereColumn('s.concept_id', 'c.id')->whereNull('s.deleted_at')
                 ->where(fn ($x) => $x
-                    ->whereExists(fn ($y) => $y->from('foodalchemist_recipes AS r')->whereColumn('r.id', 's.sales_recipe_id')->where('r.ist_fassung', true))
+                    ->whereExists(fn ($y) => $y->from('foodalchemist_recipes AS r')->whereColumn('r.id', 's.recipe_id')->where('r.ist_fassung', true))
                     ->orWhereExists(fn ($y) => $y->from('foodalchemist_concepts AS e')->whereColumn('e.id', 's.embedded_concept_id')->where('e.ist_fassung', true)))))
             ->pluck('c.id')->map(fn ($v) => (int) $v)->flip();
         foreach ($ids as $id) {
@@ -95,7 +95,7 @@ class ConceptPreisService
 
         return DB::table('foodalchemist_concept_slots AS s')->where('s.concept_id', $concept->id)->whereNull('s.deleted_at')
             ->where(fn ($w) => $w
-                ->whereExists(fn ($q) => $q->from('foodalchemist_recipes AS r')->whereColumn('r.id', 's.sales_recipe_id')->where('r.ist_fassung', true))
+                ->whereExists(fn ($q) => $q->from('foodalchemist_recipes AS r')->whereColumn('r.id', 's.recipe_id')->where('r.ist_fassung', true))
                 ->orWhereExists(fn ($q) => $q->from('foodalchemist_concepts AS c')->whereColumn('c.id', 's.embedded_concept_id')->where('c.ist_fassung', true)))
             ->exists();
     }
@@ -253,7 +253,7 @@ class ConceptPreisService
 
             return $this->ergebnis($basis + ['type' => 'paket', 'label' => $ep->name], $vk, $ek, $grund);
         }
-        if ($slot->sales_recipe_id !== null && $slot->dish) {
+        if ($slot->recipe_id !== null && $slot->dish) {
             return $this->gericht($slot, $concept, $team, $outlet, $basis);
         }
 

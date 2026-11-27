@@ -23,7 +23,7 @@ beforeEach(function () {
         $c = $this->concepts->create($this->rootTeam, ['name' => $name]);
         $c->update(['status' => 'active', 'consumer_name' => $name . ' (Kunde)']);
         $recipe = $this->makeRecipe($this->rootTeam, $name . '-Bowl', ['is_sales_recipe' => true, 'status' => 'approved', 'sales_net' => 12.0]);
-        $this->makeConceptSlot($c, ['position' => 1, 'sales_recipe_id' => $recipe->id, 'wording' => $name . '-Bowl-Wording']);
+        $this->makeConceptSlot($c, ['position' => 1, 'recipe_id' => $recipe->id, 'wording' => $name . '-Bowl-Wording']);
 
         return $c;
     };

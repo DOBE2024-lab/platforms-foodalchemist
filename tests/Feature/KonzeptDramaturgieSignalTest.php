@@ -85,7 +85,7 @@ beforeEach(function () {
         $team ??= $this->rootTeam;
         $k = $this->makeConcept($team, $name);
         foreach ($gerichte as $i => $g) {
-            $this->makeConceptSlot($k, ['position' => $i + 1, 'sales_recipe_id' => $g->id]);
+            $this->makeConceptSlot($k, ['position' => $i + 1, 'recipe_id' => $g->id]);
         }
 
         return $k;

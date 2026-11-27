@@ -175,7 +175,7 @@ it('Phase D: Layout-Block einfügen + Wahl-Gruppe setzen + dokumentDaten trägt 
     expect($typen)->toBe(['header', 'spacer']);
 
     // Wahl-Gruppe auf ein Gericht setzen
-    $p = $svc->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $p = $svc->addPosition($this->rootTeam, $r->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
     $comp->call('positionBearbeiten', $p->id)
         ->set('editVariantGroupId', 3)
         ->call('positionSpeichern');

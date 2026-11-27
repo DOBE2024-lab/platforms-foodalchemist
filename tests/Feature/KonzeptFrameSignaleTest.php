@@ -37,7 +37,7 @@ beforeEach(function () {
             'is_sales_recipe' => true, 'sales_wording_standard' => $n, 'sales_net' => $vk,
             'dish_class_id' => $this->klasseFleisch->id, 'allergen_peanuts' => $erdnuss,
         ]);
-        $this->makeConceptSlot($this->konzept, ['position' => $i + 1, 'sales_recipe_id' => $g->id]);
+        $this->makeConceptSlot($this->konzept, ['position' => $i + 1, 'recipe_id' => $g->id]);
     }
 });
 
@@ -149,7 +149,7 @@ it('löst das Konzept in beide Richtungen auf und emittiert ein Signal', functio
 
 it('scopet die frame-gestützten Checks auf das Team', function () {
     $fremd = $this->makeConcept($this->childA, 'Kind-A-Buffet');
-    $this->makeConceptSlot($fremd, ['sales_recipe_id' => $this->makeRecipe($this->childA, 'HG: Kind-Gericht', [
+    $this->makeConceptSlot($fremd, ['recipe_id' => $this->makeRecipe($this->childA, 'HG: Kind-Gericht', [
         'is_sales_recipe' => true, 'sales_wording_standard' => 'Kind-Gericht', 'sales_net' => 40.00,
     ])->id]);
     $this->frames->setHead($this->childA, $this->frames->frameFor($this->childA, 'concept', $fremd->id), ['price_max_pp' => 10]);

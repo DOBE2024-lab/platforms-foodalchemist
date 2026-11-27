@@ -29,11 +29,11 @@ beforeEach(function () {
     $this->makeStandardDarreichung($this->ohneEk, 8.0);
 
     $this->paket = $this->makeConcept($this->t, 'Beilagen-Duo', ['kind' => 'paket']);
-    $this->makeConceptSlot($this->paket, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 0.5]);
+    $this->makeConceptSlot($this->paket, ['recipe_id' => $this->gericht->id, 'quantity' => 0.5]);
     $this->konzept = $this->makeConcept($this->t, 'Herbstmenü');
-    $this->makeConceptSlot($this->konzept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
+    $this->makeConceptSlot($this->konzept, ['recipe_id' => $this->gericht->id, 'quantity' => 1]);
     $this->mitPaket = $this->makeConcept($this->t, 'Menü mit Paket');
-    $this->makeConceptSlot($this->mitPaket, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
+    $this->makeConceptSlot($this->mitPaket, ['recipe_id' => $this->gericht->id, 'quantity' => 1]);
     $this->makeConceptSlot($this->mitPaket, ['type' => 'paket', 'embedded_concept_id' => $this->paket->id, 'position' => 2]);
 
     // 98 · 3.6 PR4: dieselbe Gericht-Zeile als Konzept-Slot (preisCockpit), normiert wie blockZeile()
@@ -67,12 +67,12 @@ beforeEach(function () {
 
 it('gleiche Preisfälle: Foodbook und Angebot liefern dieselbe Zeile und dieselbe Kapitel-Summe', function (string $fall) {
     [$block, $fbTyp, $agTyp] = match ($fall) {
-        'Gericht je Person' => [['sales_recipe_id' => $this->gericht->id], 'recipe_ref', 'recipe_ref'],
-        'Gericht Menge 0,5' => [['sales_recipe_id' => $this->gericht->id, 'quantity' => 0.5], 'recipe_ref', 'recipe_ref'],
-        'Gericht Menge 2' => [['sales_recipe_id' => $this->gericht->id, 'quantity' => 2], 'recipe_ref', 'recipe_ref'],
-        'Gericht pauschal' => [['sales_recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal'], 'recipe_ref', 'recipe_ref'],
-        'Gericht ohne VK' => [['sales_recipe_id' => $this->ohneVk->id], 'recipe_ref', 'recipe_ref'],
-        'Gericht ohne EK' => [['sales_recipe_id' => $this->ohneEk->id], 'recipe_ref', 'recipe_ref'],
+        'Gericht je Person' => [['recipe_id' => $this->gericht->id], 'recipe_ref', 'recipe_ref'],
+        'Gericht Menge 0,5' => [['recipe_id' => $this->gericht->id, 'quantity' => 0.5], 'recipe_ref', 'recipe_ref'],
+        'Gericht Menge 2' => [['recipe_id' => $this->gericht->id, 'quantity' => 2], 'recipe_ref', 'recipe_ref'],
+        'Gericht pauschal' => [['recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal'], 'recipe_ref', 'recipe_ref'],
+        'Gericht ohne VK' => [['recipe_id' => $this->ohneVk->id], 'recipe_ref', 'recipe_ref'],
+        'Gericht ohne EK' => [['recipe_id' => $this->ohneEk->id], 'recipe_ref', 'recipe_ref'],
         'Preis-Kopf je Person' => [['price_basis' => 'person', 'price_value' => 7.5], 'header_frei_preis', 'header_preis'],
         'Preis-Kopf pauschal' => [['price_basis' => 'pauschal', 'price_value' => 150], 'header_frei_preis', 'header_preis'],
         'Konzept' => [['concept_id' => $this->konzept->id], 'concept_ref', 'concept_ref'],
@@ -93,10 +93,10 @@ it('Konzept aus einem anderen Team (geerbt): Foodbook und Angebot rechnen im Kin
 });
 
 it('Werte der Referenzfälle stimmen (nicht nur gleich, auch richtig)', function () {
-    [$fb] = ($this->paritaet)($this->t, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 2], 'recipe_ref', 'recipe_ref');
+    [$fb] = ($this->paritaet)($this->t, ['recipe_id' => $this->gericht->id, 'quantity' => 2], 'recipe_ref', 'recipe_ref');
     expect($fb['vk_pp'])->toBe(20.0)->and($fb['ek_pp'])->toBe(6.0)->and($fb['vk_fehlt'])->toBeFalse()->and($fb['ek_vollstaendig'])->toBeTrue();
 
-    [$fb] = ($this->paritaet)($this->t, ['sales_recipe_id' => $this->ohneVk->id], 'recipe_ref', 'recipe_ref');
+    [$fb] = ($this->paritaet)($this->t, ['recipe_id' => $this->ohneVk->id], 'recipe_ref', 'recipe_ref');
     expect($fb['vk_fehlt'])->toBeTrue();
 
     [$fb] = ($this->paritaet)($this->t, ['concept_id' => $this->mitPaket->id], 'concept_ref', 'concept_ref');
@@ -108,7 +108,7 @@ it('Konzept mit eigener Servierform: Kapitel-Summe in Foodbook und Angebot rechn
     $buffet = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->t->id, 'code' => 'buffet', 'label' => 'Buffet']);
     $this->makeStandardDarreichung($this->gericht, 10.0, ['is_standard' => false, 'serving_form_id' => $buffet->id, 'sales_net' => 4.0]);
     $konzept = $this->makeConcept($this->t, 'Buffet-Menü', ['serving_form_id' => $buffet->id]);
-    $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
+    $this->makeConceptSlot($konzept, ['recipe_id' => $this->gericht->id, 'quantity' => 1]);
     $soll = (float) app(ConceptService::class)->preisCockpit($konzept->fresh(), null, $this->t)['price_per_person'];
 
     [$fbZeile, $agZeile, $fbSumme, $agSumme] = ($this->paritaet)($this->t, ['concept_id' => $konzept->id], 'concept_ref', 'concept_ref');
@@ -144,8 +144,8 @@ it('Konzept-Slot: dasselbe Gericht rechnet je Portion wie Foodbook- und Angebots
         'Menge 2' => [$this->gericht, 2],
         'Gericht ohne VK' => [$this->ohneVk, 1],
     };
-    [$fbZeile, $agZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $gericht->id, 'quantity' => $menge], 'recipe_ref', 'recipe_ref');
-    $slot = ($this->slotZeile)($this->t, ['sales_recipe_id' => $gericht->id, 'quantity' => $menge]);
+    [$fbZeile, $agZeile] = ($this->paritaet)($this->t, ['recipe_id' => $gericht->id, 'quantity' => $menge], 'recipe_ref', 'recipe_ref');
+    $slot = ($this->slotZeile)($this->t, ['recipe_id' => $gericht->id, 'quantity' => $menge]);
 
     expect($slot)->toBe(blockZeile($fbZeile))->and($slot)->toBe(blockZeile($agZeile));
 })->with(['Gericht je Person', 'Menge 0,5', 'Menge 2', 'Gericht ohne VK']);
@@ -153,40 +153,40 @@ it('Konzept-Slot: dasselbe Gericht rechnet je Portion wie Foodbook- und Angebots
 it('Konzept-Slot B1: EK mit Beigaben (ek_portion der Darreichung)', function () {
     $g = $this->makeRecipe($this->t, 'Mit Beigabe', ['is_sales_recipe' => true, 'ek_total_eur' => 30.0, 'sales_unit_count' => 10]);
     $this->makeStandardDarreichung($g, 12.0, ['ek_portion' => 4.5]);
-    [$fbZeile, $agZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $g->id], 'recipe_ref', 'recipe_ref');
+    [$fbZeile, $agZeile] = ($this->paritaet)($this->t, ['recipe_id' => $g->id], 'recipe_ref', 'recipe_ref');
 
-    $slot = ($this->slotZeile)($this->t, ['sales_recipe_id' => $g->id]);
+    $slot = ($this->slotZeile)($this->t, ['recipe_id' => $g->id]);
 
     expect($slot['ek'])->toBe(4.5)->and($slot)->toBe(blockZeile($fbZeile))->and($slot)->toBe(blockZeile($agZeile));   // B1: überall mit Beigaben
 });
 
 it('Konzept-Slot B2: Gericht ohne EK', function () {
-    [$fbZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $this->ohneEk->id], 'recipe_ref', 'recipe_ref');
+    [$fbZeile] = ($this->paritaet)($this->t, ['recipe_id' => $this->ohneEk->id], 'recipe_ref', 'recipe_ref');
 
-    expect(($this->slotZeile)($this->t, ['sales_recipe_id' => $this->ohneEk->id]))->toBe(['vk' => 8.0, 'ek' => 0.0, 'vk_fehlt' => false, 'ek_luecke' => true])   // B2: Lücke markiert
-        ->and(($this->slotZeile)($this->t, ['sales_recipe_id' => $this->ohneEk->id]))->toBe(blockZeile($fbZeile));
+    expect(($this->slotZeile)($this->t, ['recipe_id' => $this->ohneEk->id]))->toBe(['vk' => 8.0, 'ek' => 0.0, 'vk_fehlt' => false, 'ek_luecke' => true])   // B2: Lücke markiert
+        ->and(($this->slotZeile)($this->t, ['recipe_id' => $this->ohneEk->id]))->toBe(blockZeile($fbZeile));
 });
 
 it('Konzept-Slot B3: explizite Darreichung wirkt nur im Konzept (P3, gewollt)', function () {
     $buffet = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->t->id, 'code' => 'buffet', 'label' => 'Buffet']);
     $d = $this->makeStandardDarreichung($this->gericht, 10.0, ['is_standard' => false, 'serving_form_id' => $buffet->id, 'sales_net' => 4.0]);
-    [$fbZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $this->gericht->id, 'presentation_id' => $d->id], 'recipe_ref', 'recipe_ref');
+    [$fbZeile] = ($this->paritaet)($this->t, ['recipe_id' => $this->gericht->id, 'presentation_id' => $d->id], 'recipe_ref', 'recipe_ref');
 
-    expect(($this->slotZeile)($this->t, ['sales_recipe_id' => $this->gericht->id, 'presentation_id' => $d->id])['vk'])->toBe(4.0)
+    expect(($this->slotZeile)($this->t, ['recipe_id' => $this->gericht->id, 'presentation_id' => $d->id])['vk'])->toBe(4.0)
         ->and($fbZeile['vk_pp'])->toBe(10.0);
 });
 
 it('Konzept-Slot B4: Kind-Team mit Master-Gericht — Slot Master-EK, Block Team-Kosten (vorerst so)', function () {
     $this->actingAs($this->makeUser($this->childA));
-    [$fbZeile] = ($this->paritaet)($this->childA, ['sales_recipe_id' => $this->gericht->id], 'recipe_ref', 'recipe_ref');
+    [$fbZeile] = ($this->paritaet)($this->childA, ['recipe_id' => $this->gericht->id], 'recipe_ref', 'recipe_ref');
 
-    expect(($this->slotZeile)($this->childA, ['sales_recipe_id' => $this->gericht->id])['ek'])->toBe(3.0)
+    expect(($this->slotZeile)($this->childA, ['recipe_id' => $this->gericht->id])['ek'])->toBe(3.0)
         ->and(blockZeile($fbZeile))->toBe(['vk' => 10.0, 'ek' => 0.0, 'vk_fehlt' => false, 'ek_luecke' => true]);
 });
 
 it('Konzept-Slot B2 in der Oberfläche: Detail-Panel nennt den fehlenden EK, nicht nur das Portionsgewicht', function () {
     $k = $this->makeConcept($this->t, 'Ohne-EK-Menü');
-    $this->makeConceptSlot($k, ['sales_recipe_id' => $this->ohneEk->id, 'quantity' => 1]);
+    $this->makeConceptSlot($k, ['recipe_id' => $this->ohneEk->id, 'quantity' => 1]);
 
     \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\DetailPanel::class)->call('zeige', 'concepts', $k->id)
         ->assertSee('Einkauf unvollständig: einem Gericht fehlt der EK oder das Portionsgewicht.');

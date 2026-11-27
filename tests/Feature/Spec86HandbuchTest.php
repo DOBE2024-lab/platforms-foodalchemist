@@ -25,7 +25,7 @@ beforeEach(function () {
         $concept = $this->makeConcept($team, 'Menü A', ['kind' => 'concept', 'consumer_name' => 'Genuss']);
         $dish = $this->makeRecipe($team, 'Zanderfilet', ['is_sales_recipe' => true]);
         $this->makeStandardDarreichung($dish, 12.34);
-        $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Zanderfilet auf Linsen', 'position' => 1]);
+        $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Zanderfilet auf Linsen', 'position' => 1]);
         $fb = $this->makeFoodbook($team, 'Sommerfest', ['personen' => 6]);
         $kap = $this->makeChapter($fb, ['title' => 'Hauptgänge', 'consumer_title' => 'Hauptgänge', 'position' => 1]);
         $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $concept->id, 'position' => 1]);

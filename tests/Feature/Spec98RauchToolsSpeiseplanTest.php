@@ -27,10 +27,10 @@ beforeEach(function () {
     $this->suppe = $this->makeRecipe($this->rootTeam, 'Rauch-Suppe', ['is_sales_recipe' => true]);
     $this->braten = $this->makeRecipe($this->rootTeam, 'Rauch-Braten', ['is_sales_recipe' => true]);
     $this->eintrag = $this->svc->addEintrag($this->rootTeam, $this->plan->id, [
-        'entry_date' => '2027-01-04', 'mahlzeit' => 'mittag', 'line_id' => $this->linie->id, 'sales_recipe_id' => $this->suppe->id,
+        'entry_date' => '2027-01-04', 'mahlzeit' => 'mittag', 'line_id' => $this->linie->id, 'recipe_id' => $this->suppe->id,
     ]);
     $this->eintrag2 = $this->svc->addEintrag($this->rootTeam, $this->plan->id, [
-        'entry_date' => '2027-01-05', 'mahlzeit' => 'mittag', 'line_id' => $this->linie->id, 'sales_recipe_id' => $this->braten->id,
+        'entry_date' => '2027-01-05', 'mahlzeit' => 'mittag', 'line_id' => $this->linie->id, 'recipe_id' => $this->braten->id,
     ]);
     $this->rauch = function (string $tool, array $args) {
         $r = app($tool)->execute($args, $this->ctx);
@@ -74,11 +74,11 @@ it('Speiseplan-Tools pflegen Linien und Einträge: anlegen, ändern, verschieben
     $r(Tools\SpeiseplanLinienMoveTool::class, ['linie_id' => $linieId, 'direction' => 'up']);
 
     $neu = $r(Tools\SpeiseplanEintraegePostTool::class, [
-        'menu_plan_id' => $this->plan->id, 'entry_date' => '2027-01-06', 'mahlzeit' => 'mittag', 'line_id' => $linieId, 'sales_recipe_id' => $this->suppe->id,
+        'menu_plan_id' => $this->plan->id, 'entry_date' => '2027-01-06', 'mahlzeit' => 'mittag', 'line_id' => $linieId, 'recipe_id' => $this->suppe->id,
     ]);
     $neuId = (int) $neu->data['eintrag']['id'];
     // Inhalt ersetzen (Gericht tauschen) und separat Zelle/Pax/Wording ändern — beides läuft über SpeiseplanEintraegePutTool.
-    $r(Tools\SpeiseplanEintraegePutTool::class, ['eintrag_id' => $neuId, 'sales_recipe_id' => $this->braten->id]);
+    $r(Tools\SpeiseplanEintraegePutTool::class, ['eintrag_id' => $neuId, 'recipe_id' => $this->braten->id]);
     $r(Tools\SpeiseplanEintraegePutTool::class, ['eintrag_id' => $neuId, 'entry_date' => '2027-01-07', 'line_id' => $linieId, 'pax' => 60, 'wording' => 'Rauch-Braten fein']);
     $r(Tools\SpeiseplanEintraegePaxTool::class, ['eintrag_id' => $this->eintrag->id, 'pax' => 90]);
 });

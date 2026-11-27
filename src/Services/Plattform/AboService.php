@@ -228,8 +228,8 @@ class AboService
             }
             $gesehenK = array_merge($gesehenK, $offenK);
             $slots = DB::table('foodalchemist_concept_slots')->whereIn('concept_id', $offenK)->whereNull('deleted_at')
-                ->get(['embedded_concept_id', 'sales_recipe_id']);
-            $rezeptSeeds = array_merge($rezeptSeeds, $slots->pluck('sales_recipe_id')->filter()->map(fn ($v) => (int) $v)->all());
+                ->get(['embedded_concept_id', 'recipe_id']);
+            $rezeptSeeds = array_merge($rezeptSeeds, $slots->pluck('recipe_id')->filter()->map(fn ($v) => (int) $v)->all());
             $offenK = $slots->pluck('embedded_concept_id')->filter()->map(fn ($v) => (int) $v)->all();
         }
         $konzeptFassungen = $this->nurFassungen('foodalchemist_concepts', $gesehenK);
@@ -325,12 +325,12 @@ class AboService
     private const REFERENZ_QUELLEN = [
         'recipe' => [
             ['foodalchemist_recipe_ingredients', 'referenced_recipe_id', ['foodalchemist_recipes', 'recipe_id']],
-            ['foodalchemist_concept_slots', 'sales_recipe_id', ['foodalchemist_concepts', 'concept_id']],
+            ['foodalchemist_concept_slots', 'recipe_id', ['foodalchemist_concepts', 'concept_id']],
             ['foodalchemist_concept_slots', 'variant_source_recipe_id', ['foodalchemist_concepts', 'concept_id']],
-            ['foodalchemist_offer_blocks', 'sales_recipe_id', ['foodalchemist_offer_chapters', 'chapter_id']],
-            ['foodalchemist_foodbook_blocks', 'sales_recipe_id', ['foodalchemist_foodbook_chapters', 'chapter_id']],
-            ['foodalchemist_menu_plan_entries', 'sales_recipe_id', null],
-            ['foodalchemist_menu_card_items', 'sales_recipe_id', null],
+            ['foodalchemist_offer_blocks', 'recipe_id', ['foodalchemist_offer_chapters', 'chapter_id']],
+            ['foodalchemist_foodbook_blocks', 'recipe_id', ['foodalchemist_foodbook_chapters', 'chapter_id']],
+            ['foodalchemist_menu_plan_entries', 'recipe_id', null],
+            ['foodalchemist_menu_card_items', 'recipe_id', null],
             ['foodalchemist_production_order_lines', 'recipe_id', null],
             ['foodalchemist_order_template_lines', 'recipe_id', null],
             ['foodalchemist_inventory_batches', 'recipe_id', null],

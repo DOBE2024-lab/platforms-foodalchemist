@@ -612,7 +612,7 @@ class Index extends Component
         if ($this->selectedKapitelId === null) {
             return;
         }
-        $svc->addBlock($this->team(), $this->selectedKapitelId, ['type' => 'recipe_ref', 'sales_recipe_id' => $recipeId]);
+        $svc->addBlock($this->team(), $this->selectedKapitelId, ['type' => 'recipe_ref', 'recipe_id' => $recipeId]);
         $this->gerichtSuche = '';
     }
 

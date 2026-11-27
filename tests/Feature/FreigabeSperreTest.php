@@ -144,7 +144,7 @@ it('„Alles mitfreigeben“ nur mit Rolle Kuratieren; geerbte Komponenten block
 
 it('Concept: Aktivieren mit Entwurfs-Gericht im Slot wird abgelehnt (setStatus und Update-Weg)', function () {
     $c = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Buffet', 'status' => 'draft']);
-    $c->slots()->create(['team_id' => $this->rootTeam->id, 'role' => 'Hauptgang', 'title' => 'Hauptgang', 'position' => 0, 'sales_recipe_id' => $this->gericht->id]);
+    $c->slots()->create(['team_id' => $this->rootTeam->id, 'role' => 'Hauptgang', 'title' => 'Hauptgang', 'position' => 0, 'recipe_id' => $this->gericht->id]);
 
     expect(fn () => app(ConceptService::class)->setStatus($this->rootTeam, $c->id, 'active'))->toThrow(FreigabeGesperrtException::class, 'Kalbsrücken');
     expect(fn () => app(ConceptService::class)->update($this->rootTeam, $c->id, ['status' => 'active']))->toThrow(FreigabeGesperrtException::class);

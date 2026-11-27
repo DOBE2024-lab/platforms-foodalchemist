@@ -27,7 +27,7 @@ beforeEach(function () {
     $this->edition = $concepts->create($this->rootTeam, ['name' => 'Lissabon']);
     $this->edition->update(['status' => 'active', 'consumer_name' => 'Lissabon Edition', 'price_per_person_cache' => 29.5]);
     $recipe = $this->makeRecipe($this->rootTeam, 'Bacalhau-Bowl', ['is_sales_recipe' => true, 'status' => 'approved']);
-    $this->makeConceptSlot($this->edition, ['position' => 1, 'sales_recipe_id' => $recipe->id, 'wording' => 'Bacalhau mit Kichererbsen']);
+    $this->makeConceptSlot($this->edition, ['position' => 1, 'recipe_id' => $recipe->id, 'wording' => 'Bacalhau mit Kichererbsen']);
 
     $this->format = $formate->create($this->rootTeam, ['name' => 'TASTE & FLY', 'consumer_name' => 'Taste and Fly']);
     $formate->slotBlockEinfuegen($this->rootTeam, $this->format->id, 'header', ['title' => 'Abflug Süd']);

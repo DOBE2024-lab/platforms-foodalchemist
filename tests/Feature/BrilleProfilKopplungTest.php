@@ -99,7 +99,7 @@ it('Druck: die Speisekarte rechnet gegen das aktive Profil wie die Seite; ein an
     $k = new ToolContext($this->user, $this->rootTeam);
     $karteId = $reg->get('foodalchemist.speisekarten.POST')->execute(['name' => 'Abendkarte'], $k)->data['speisekarte']['id'];
     $rubrikId = $reg->get('foodalchemist.speisekarte_rubrik.POST')->execute(['speisekarte_id' => $karteId, 'title' => 'Fisch', 'art' => 'speisen'], $k)->data['rubrik']['id'];
-    $reg->get('foodalchemist.speisekarte_positionen.POST')->execute(['rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'sales_recipe_id' => $gericht->id], $k);
+    $reg->get('foodalchemist.speisekarte_positionen.POST')->execute(['rubrik_id' => $rubrikId, 'type' => 'gericht_ref', 'recipe_id' => $gericht->id], $k);
     $vk = fn () => (float) $this->get(route('foodalchemist.speisekarte.dokument', $karteId))->assertOk()->viewData('rubriken')[0]['positionen'][0]['vk_netto'];
 
     $ohne = $vk();

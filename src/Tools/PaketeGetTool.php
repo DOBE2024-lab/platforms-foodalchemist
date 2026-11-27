@@ -43,7 +43,7 @@ class PaketeGetTool extends FoodAlchemistTool implements ToolContract, ToolMetad
         }
         $paket = app(\Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::class)->anwenden($paket, $team);
 
-        return ToolResult::success(['paket' => app(ConceptPaketService::class)->payload($paket, true)]);
+        return ToolResult::success(\Platform\FoodAlchemist\Support\RezeptIdAlias::ausgabe(['paket' => app(ConceptPaketService::class)->payload($paket, true)]));
     }
 
     public function getMetadata(): array

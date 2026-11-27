@@ -59,7 +59,7 @@ beforeEach(function () {
 });
 
 it('eigenes Wording geht vor das Wording des Gerichts, leer fällt zurück', function () {
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'sales_recipe_id' => $this->gericht->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'recipe_id' => $this->gericht->id]);
     expect($this->svc->eintragName($e->fresh()))->toBe('Butterwaffeln | Milchreis | Kirschgrütze');
 
     $this->svc->setEintragWording($this->rootTeam, $e->id, '  Belgische Waffeln | Milchreis  ');
@@ -80,7 +80,7 @@ it('Schreibstil am Plan wird gespeichert und geprüft', function () {
 it('KI-Vorschlag trägt Gericht und Schreibstil, schreibt aber nichts', function () {
     ($this->kiStub)('Goldene Waffeln mit Milchreis');
     $this->svc->update($this->rootTeam, $this->plan->id, ['writing_style_id' => $this->stil->id]);
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'sales_recipe_id' => $this->gericht->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'recipe_id' => $this->gericht->id]);
 
     $r = $this->svc->kiWordingVorschlag($this->rootTeam, $e->id);
     expect($r['text'])->toBe('Goldene Waffeln mit Milchreis')
@@ -92,7 +92,7 @@ it('Plan neu betexten: ein KI-Aufruf je Gericht, Text an alle Einträge, Concept
     ($this->kiStub)('Goldene Waffeln');
     $this->svc->update($this->rootTeam, $this->plan->id, ['writing_style_id' => $this->stil->id]);
     foreach (['2026-10-05', '2026-10-07', '2026-10-09'] as $d) {
-        $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $d, 'sales_recipe_id' => $this->gericht->id]);
+        $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $d, 'recipe_id' => $this->gericht->id]);
     }
 
     $res = $this->svc->planWordingRegenerieren($this->rootTeam, $this->plan->id);
@@ -103,14 +103,14 @@ it('Plan neu betexten: ein KI-Aufruf je Gericht, Text an alle Einträge, Concept
 
 it('ohne Schreibstil kein Lauf und kein KI-Aufruf', function () {
     ($this->kiStub)('egal');
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'sales_recipe_id' => $this->gericht->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'recipe_id' => $this->gericht->id]);
 
     expect(fn () => $this->svc->planWordingRegenerieren($this->rootTeam, $this->plan->id))->toThrow(\RuntimeException::class, 'Schreibstil')
         ->and($GLOBALS['sp_ki_calls'])->toBe(0);
 });
 
 it('Kopieren übernimmt das Wording, Ersetzen setzt es zurück', function () {
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'sales_recipe_id' => $this->gericht->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'recipe_id' => $this->gericht->id]);
     $this->svc->setEintragWording($this->rootTeam, $e->id, 'Goldene Waffeln');
 
     $this->svc->kopiereEintrag($this->rootTeam, $e->id, ['2026-10-06']);
@@ -119,13 +119,13 @@ it('Kopieren übernimmt das Wording, Ersetzen setzt es zurück', function () {
     $anderes = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'spinat', 'name' => 'Rahmspinat', 'status' => 'approved', 'is_sales_recipe' => true,
     ]);
-    $this->svc->ersetzeEintrag($this->rootTeam, $e->id, ['sales_recipe_id' => $anderes->id]);
+    $this->svc->ersetzeEintrag($this->rootTeam, $e->id, ['recipe_id' => $anderes->id]);
     expect($e->fresh()->wording)->toBeNull();
 });
 
 it('UI: Stammdaten zeigen Schreibstil + Plan neu betexten, Detail den Namen im Plan', function () {
     ($this->kiStub)('Goldene Waffeln');
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'sales_recipe_id' => $this->gericht->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'recipe_id' => $this->gericht->id]);
 
     Livewire::test(Editor::class)
         ->call('oeffnenBearbeiten', $this->plan->id)
@@ -146,7 +146,7 @@ it('UI: Stammdaten zeigen Schreibstil + Plan neu betexten, Detail den Namen im P
 it('MCP: PUT setzt wording und writing_style_id, GET liefert wording', function () {
     $user = $this->makeUser($this->rootTeam, 'MCP');
     $ctx = new \Platform\Core\Contracts\ToolContext($user, $this->rootTeam);
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'sales_recipe_id' => $this->gericht->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-05', 'recipe_id' => $this->gericht->id]);
 
     $put = app(\Platform\FoodAlchemist\Tools\SpeiseplanEintraegePutTool::class)->execute(['eintrag_id' => $e->id, 'wording' => 'Goldene Waffeln'], $ctx);
     expect($put->success)->toBeTrue('put: ' . ($put->error ?? ''))

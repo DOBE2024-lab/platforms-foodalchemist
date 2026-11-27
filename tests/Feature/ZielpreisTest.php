@@ -58,7 +58,7 @@ it('M13: festes Gericht bleibt Fixkosten, nur Pakete werden getauscht', function
         'is_sales_recipe' => true, 'sales_net' => 5.00,
     ]);
     $sDess = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Dessert']);
-    $this->concepts->fillSlot($this->rootTeam, $sDess->id, ['sales_recipe_id' => $dessert->id]);
+    $this->concepts->fillSlot($this->rootTeam, $sDess->id, ['recipe_id' => $dessert->id]);
 
     // Ziel 41 = 5 fix + 36 Pakete (6 + 30)
     $v = $this->concepts->zielpreisVorschlag($this->rootTeam, $this->concept->id, 41.00);

@@ -70,7 +70,7 @@ it('concept_categories: Guards — unbekannt NOT_FOUND, fremd ACCESS_DENIED, lee
 it('concept_wording.GENERATE: Intro→Beschreibung + Positions-Texte (Spy-Provider)', function () {
     $dish = $this->makeRecipe($this->rootTeam, 'DES: Hot-Dog', ['is_sales_recipe' => true, 'sales_net' => 2.0]);
     $slot = $this->svc->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Snack']);
-    $slot = $this->svc->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $dish->id]);
+    $slot = $this->svc->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $dish->id]);
 
     $spy = new class($slot->id) extends FakeAiProvider
     {
@@ -117,7 +117,7 @@ it('concepts.COHESION: read-only, zu_wenig bei <2 Gerichten; fremd/sichtbar noch
 it('concept_wording.GENERATE (C-2): Generator-Header umgetextet, Mensch-Header bleibt, Kopf-Lücken gefüllt, gesetzter Kundenname unantastbar', function () {
     $this->svc->update($this->rootTeam, $this->concept->id, ['consumer_name' => 'Sommerlust']);   // gesetzt → bleibt
     $dish = $this->svc->fillSlot($this->rootTeam, $this->svc->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Hauptgang'])->id,
-        ['sales_recipe_id' => $this->makeRecipe($this->rootTeam, 'HG: Spareribs', ['is_sales_recipe' => true, 'sales_net' => 12])->id]);
+        ['recipe_id' => $this->makeRecipe($this->rootTeam, 'HG: Spareribs', ['is_sales_recipe' => true, 'sales_net' => 12])->id]);
     $genHeader = $this->svc->addBlock($this->rootTeam, $this->concept->id, 'header', ['title' => 'Hauptgang', 'role' => 'Hauptgang']);
     $menschHeader = $this->svc->addBlock($this->rootTeam, $this->concept->id, 'header', ['title' => 'Vom Grill', 'role' => 'Hauptgang']);
     $freiHeader = $this->svc->addBlock($this->rootTeam, $this->concept->id, 'header', ['title' => 'Hinweis']); // role leer → kein Generator-Header

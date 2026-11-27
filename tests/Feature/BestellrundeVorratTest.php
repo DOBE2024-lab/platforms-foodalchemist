@@ -114,7 +114,7 @@ it('Spec 73: Paket × Personen als Quelle (Vorschau, Vorlage, Bestellrunde)', fu
     // 98 · 2.6c: Paket = kind=paket-Concept, als Quelle Typ concept; der Alt-Typ paket ist entfallen
     $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Kuchenbuffet']);
-    $concepts->fillSlot($this->rootTeam, $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Kuchen'])->id, ['sales_recipe_id' => $this->kuchen->id]);
+    $concepts->fillSlot($this->rootTeam, $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Kuchen'])->id, ['recipe_id' => $this->kuchen->id]);
     $p = app(OrderService::class)->previewFromSources($this->rootTeam, [['type' => 'concept', 'id' => $paket->id, 'qty' => 100, 'unit' => 'persons']]);
     expect((float) s73pos($p, $this->mehl)['qty_packs'])->toBe(10.0);
 

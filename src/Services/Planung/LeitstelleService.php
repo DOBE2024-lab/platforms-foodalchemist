@@ -216,7 +216,7 @@ class LeitstelleService
                         'preis' => $preis['vk_pp'] > 0 ? $preis['vk_pp'] : ($preis['pauschal'] > 0 ? $preis['pauschal'] : null),
                         'preis_einheit' => 'position',
                         'status' => ($preis['vk_pp'] > 0 || $preis['pauschal'] > 0) ? 'bepreist' : ($k->released_at !== null ? 'angelegt' : 'entwurf'),
-                        'ref_id' => $block->sales_recipe_id !== null ? (int) $block->sales_recipe_id : null,
+                        'ref_id' => $block->recipe_id !== null ? (int) $block->recipe_id : null,
                     ];
                 }
             }
@@ -323,7 +323,7 @@ class LeitstelleService
                 } else {
                     $vk = $preis['vk_pp'] > 0 ? $preis['vk_pp'] : $preis['pauschal'];
                     $ek = $preis['ek_pp'];
-                    $recipeId = $block->sales_recipe_id !== null ? (int) $block->sales_recipe_id : null;
+                    $recipeId = $block->recipe_id !== null ? (int) $block->recipe_id : null;
                     $positionen[] = [
                         'art' => 'einzel', 'label' => $block->dish?->name ?? ($block->label ?? 'Gericht'),
                         'vk' => $vk, 'ek' => $ek, 'preis_einheit' => 'position',

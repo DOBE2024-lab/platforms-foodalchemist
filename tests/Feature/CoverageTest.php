@@ -43,9 +43,9 @@ beforeEach(function () {
     $concepts = app(ConceptService::class);
     $this->concept = $concepts->create($this->rootTeam, ['name' => 'Test-Buffet']);
     $s1 = $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Hauptgang']);
-    $concepts->fillSlot($this->rootTeam, $s1->id, ['sales_recipe_id' => $this->gerichtVegan->id]);
+    $concepts->fillSlot($this->rootTeam, $s1->id, ['recipe_id' => $this->gerichtVegan->id]);
     $s2 = $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Hauptgang']);
-    $concepts->fillSlot($this->rootTeam, $s2->id, ['sales_recipe_id' => $this->gerichtFleisch->id]);
+    $concepts->fillSlot($this->rootTeam, $s2->id, ['recipe_id' => $this->gerichtFleisch->id]);
 });
 
 it('ohne Gerüst: hat_geruest=false, keine Befunde', function () {

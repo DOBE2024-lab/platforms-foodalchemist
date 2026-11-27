@@ -30,7 +30,7 @@ class ConceptsEnrichTool extends FoodAlchemistTool implements ToolContract, Tool
             . 'Zielpreis p. P. und Preisdarstellung aus dem Planungs-Gerüst (ohne KI), dann in EINEM KI-Call '
             . 'Beschreibung, Kundenname, Claim, Gang-/Stationsüberschriften (nur die vom Gerüst gesetzten, '
             . 'nicht von Menschen betitelte) und das Wording gefüllter Positionen. Leere Positionen füllt es NICHT '
-            . '(dafür concept_slots.PUT felder.sales_recipe_id). Antwort: run_id, was gefüllt wurde, und welche '
+            . '(dafür concept_slots.PUT felder.recipe_id). Antwort: run_id, was gefüllt wurde, und welche '
             . 'Lücken bleiben. Idempotent — ein zweiter Lauf ohne Lücken kostet keinen Call.';
     }
 

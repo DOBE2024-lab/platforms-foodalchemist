@@ -21,7 +21,7 @@ beforeEach(function () {
     ]);
     $this->makeIngredient($this->dish, 'Testzutat', null, '25');
     $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Hauptgang']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->dish->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->dish->id]);
     $this->concepts->recomputeCache($this->concept->refresh());
 });
 

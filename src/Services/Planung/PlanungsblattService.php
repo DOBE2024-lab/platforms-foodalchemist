@@ -317,7 +317,7 @@ class PlanungsblattService
                     $tops[] = $t;
                 }
             } elseif ($block->type === 'recipe_ref') {
-                $dish = $block->sales_recipe_id !== null ? $this->ladeGerichtStamm((int) $block->sales_recipe_id, $team) : null;
+                $dish = $block->recipe_id !== null ? $this->ladeGerichtStamm((int) $block->recipe_id, $team) : null;
                 if ($dish === null) {
                     $warnungen[] = "Kapitel „{$chapter->title}“: Gericht-Block ohne sichtbares Rezept — übersprungen.";
 
@@ -356,15 +356,15 @@ class PlanungsblattService
         foreach ($this->kapitelBloecke($chapter, $variantChoices) as $block) {
             if ($block->type === 'concept_ref' && $block->concept_id !== null) {
                 $ziele[] = ['concept_id' => (int) $block->concept_id, 'persons' => $personen];
-            } elseif ($block->type === 'recipe_ref' && $block->sales_recipe_id !== null) {
-                $dish = $this->ladeGerichtStamm((int) $block->sales_recipe_id, $team);
+            } elseif ($block->type === 'recipe_ref' && $block->recipe_id !== null) {
+                $dish = $this->ladeGerichtStamm((int) $block->recipe_id, $team);
                 if ($dish === null) {
                     $warnungen[] = "Kapitel „{$chapter->title}“: Gericht-Block ohne sichtbares Rezept — übersprungen.";
 
                     continue;
                 }
                 $ziele[] = array_filter([
-                    'recipe_id' => (int) $block->sales_recipe_id,
+                    'recipe_id' => (int) $block->recipe_id,
                     'portions' => $this->recipeRefPortionen($dish, $block, $personen, $warnungen),
                     // Gewählte Darreichung des Blocks wandert mit ins eingefrorene Ziel (sonst Standard).
                     'presentation_id' => $block->presentation_id !== null ? (int) $block->presentation_id : null,

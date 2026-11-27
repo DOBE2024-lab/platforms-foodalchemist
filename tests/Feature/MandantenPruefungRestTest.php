@@ -152,15 +152,15 @@ it('Speisekarte: Verweise auch bei Text-Positionen geprüft, Darreichung muss zu
     $karte = $svc->create($this->childA, ['name' => 'Karte']);
     $rubrik = $svc->addRubrik($this->childA, $karte->id, ['title' => 'Hauptgänge']);
     $fremd = FoodAlchemistRecipe::create(['team_id' => $this->childB->id, 'recipe_key' => 'f', 'name' => 'Fremd', 'status' => 'approved', 'is_sales_recipe' => true]);
-    expect(fn () => $svc->addPosition($this->childA, $rubrik->id, ['type' => 'text', 'label' => 'x', 'sales_recipe_id' => $fremd->id]))->toThrow(RuntimeException::class);
+    expect(fn () => $svc->addPosition($this->childA, $rubrik->id, ['type' => 'text', 'label' => 'x', 'recipe_id' => $fremd->id]))->toThrow(RuntimeException::class);
 
     $mk = fn ($key) => FoodAlchemistRecipe::create(['team_id' => $this->childA->id, 'recipe_key' => $key, 'name' => $key, 'status' => 'approved', 'is_sales_recipe' => true]);
     [$g1, $g2] = [$mk('g1'), $mk('g2')];
     $sf = FoodAlchemistServierform::create(['team_id' => $this->childA->id, 'code' => 'teller', 'label' => 'Teller']);
     $d2 = app(DarreichungService::class)->anlegen($this->childA, $g2->id, $sf->id, ['unit_count' => 1]);   // Plan 98 B: Grammatur spielt hier keine Rolle
-    expect(fn () => $svc->addPosition($this->childA, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g1->id, 'presentation_id' => $d2->id]))
+    expect(fn () => $svc->addPosition($this->childA, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g1->id, 'presentation_id' => $d2->id]))
         ->toThrow(RuntimeException::class, 'Darreichung gehört nicht');
-    $pos = $svc->addPosition($this->childA, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g2->id, 'presentation_id' => $d2->id]);
+    $pos = $svc->addPosition($this->childA, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g2->id, 'presentation_id' => $d2->id]);
     expect($pos->presentation_id)->toBe($d2->id);
 });
 
@@ -212,7 +212,7 @@ it('Speisekarte gericht_ref: abonnierte Fassung erlaubt, Master ohne Abo und fre
     $karte = $svc->create($mandant, ['name' => 'Mandanten-Karte']);
     $rubrik = $svc->addRubrik($mandant, $karte->id, ['title' => 'Hauptgänge']);
 
-    expect($svc->addPosition($mandant, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $jusF->id])->sales_recipe_id)->toBe($jusF->id)
-        ->and(fn () => $svc->addPosition($mandant, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $geheim->id]))->toThrow(RuntimeException::class, 'sichtbares VK-Gericht')
-        ->and(fn () => $svc->addPosition($mandant, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $fremd->id]))->toThrow(RuntimeException::class, 'sichtbares VK-Gericht');
+    expect($svc->addPosition($mandant, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $jusF->id])->recipe_id)->toBe($jusF->id)
+        ->and(fn () => $svc->addPosition($mandant, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $geheim->id]))->toThrow(RuntimeException::class, 'sichtbares VK-Gericht')
+        ->and(fn () => $svc->addPosition($mandant, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $fremd->id]))->toThrow(RuntimeException::class, 'sichtbares VK-Gericht');
 });

@@ -683,18 +683,18 @@ class RecipeService
 
     /**
      * Ausgabe-Ebenen, die direkt auf ein Rezept zeigen. Sie hängen ALLE an der GERICHT-Spalte
-     * (`sales_recipe_id`, D-PLAN-1) — ein Basisrezept steht in einem Foodbook also nur ÜBER das
+     * (`recipe_id`, D-PLAN-1) — ein Basisrezept steht in einem Foodbook also nur ÜBER das
      * Gericht, das es als Komponente führt. Genau deshalb reicht dem Tausch die Komponenten-Zeile:
      * die Ausgaben folgen von selbst. Gezählt wird hier trotzdem, weil die Spalte technisch jede
      * Rezept-ID annimmt — wer ein Basisrezept direkt in eine Ausgabe pinnt, soll es nicht unter
      * den Füßen verlieren.
      */
     private const AUSGABE_REFERENZEN = [
-        'foodalchemist_foodbook_blocks' => 'sales_recipe_id',
-        'foodalchemist_menu_card_items' => 'sales_recipe_id',
-        'foodalchemist_menu_plan_entries' => 'sales_recipe_id',
-        'foodalchemist_offer_blocks' => 'sales_recipe_id',
-        'foodalchemist_concept_slots' => 'sales_recipe_id',
+        'foodalchemist_foodbook_blocks' => 'recipe_id',
+        'foodalchemist_menu_card_items' => 'recipe_id',
+        'foodalchemist_menu_plan_entries' => 'recipe_id',
+        'foodalchemist_offer_blocks' => 'recipe_id',
+        'foodalchemist_concept_slots' => 'recipe_id',
     ];
 
     /**

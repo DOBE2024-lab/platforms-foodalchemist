@@ -51,10 +51,10 @@ beforeEach(function () {
         $d = $this->grammaturAltbestand($d, 100, 1);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
         // 98 · 2.6c: Pakete = kind=paket-Concepts (auto und manuell bepreist), im Konzept eingebettet
         $paket = FoodAlchemistConcept::create(['team_id' => $t->id, 'name' => 'Dessert-Paket', 'kind' => 'paket', 'status' => 'draft', 'price_mode' => 'auto']);
-        $paket->slots()->create(['team_id' => $t->id, 'role' => 'Dessert', 'type' => 'gericht', 'position' => 0, 'sales_recipe_id' => $gericht->id, 'quantity' => 1]);
+        $paket->slots()->create(['team_id' => $t->id, 'role' => 'Dessert', 'type' => 'gericht', 'position' => 0, 'recipe_id' => $gericht->id, 'quantity' => 1]);
         $manuell = FoodAlchemistConcept::create(['team_id' => $t->id, 'name' => 'Dessert-Paket fix', 'kind' => 'paket', 'status' => 'draft',
             'price_mode' => 'manuell', 'price_per_person_manual' => 9.0]);
-        $manuell->slots()->create(['team_id' => $t->id, 'role' => 'Dessert', 'type' => 'gericht', 'position' => 0, 'sales_recipe_id' => $gericht->id, 'quantity' => 1]);
+        $manuell->slots()->create(['team_id' => $t->id, 'role' => 'Dessert', 'type' => 'gericht', 'position' => 0, 'recipe_id' => $gericht->id, 'quantity' => 1]);
         $konzept = FoodAlchemistConcept::create(['team_id' => $t->id, 'name' => 'Buffet', 'status' => 'draft']);
         $konzept->slots()->create(['team_id' => $t->id, 'role' => 'Dessert', 'title' => 'Dessert', 'type' => 'paket', 'position' => 0, 'embedded_concept_id' => $paket->id]);
         foreach ([$paket, $manuell, $konzept] as $c) {

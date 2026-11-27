@@ -71,7 +71,7 @@ class SpeisekarteReifeAdapter extends ContainerReifeAdapter
 
         $alle = $rubriken->flatMap(fn ($r) => $r->items);
         $refOhneZiel = $alle->filter(fn ($p) => in_array($p->type, FoodAlchemistSpeisekartePosition::REF_TYPES, true)
-            && $p->sales_recipe_id === null && $p->concept_id === null);
+            && $p->recipe_id === null && $p->concept_id === null);
         if ($refOhneZiel->isNotEmpty()) {
             $luecken[] = $this->luecke('ref_ohne_ziel', 'blockiert',
                 $refOhneZiel->count() . ' Positionen zeigen auf kein Gericht und kein Menü.',
@@ -83,7 +83,7 @@ class SpeisekarteReifeAdapter extends ContainerReifeAdapter
                 $headerOhneTitel->count() . ' Header ohne Titel.',
                 'foodalchemist.speisekarte_positionen.PUT', $args) + ['item_ids' => $ids($headerOhneTitel)];
         }
-        $ohneWording = $alle->filter(fn ($p) => $p->type === 'gericht_ref' && $p->sales_recipe_id !== null
+        $ohneWording = $alle->filter(fn ($p) => $p->type === 'gericht_ref' && $p->recipe_id !== null
             && trim((string) $p->wording) === '');
         if ($ohneWording->isNotEmpty()) {
             $luecken[] = $this->luecke('position_wording', 'hinweis',

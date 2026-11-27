@@ -41,7 +41,7 @@ beforeEach(function () {
             DB::table('foodalchemist_menu_card_items')->insert([
                 'uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(),
                 'team_id' => $this->rootTeam->id, 'section_id' => $rubrik->id,
-                'type' => 'gericht_ref', 'sales_recipe_id' => $g->id, 'position' => 1,
+                'type' => 'gericht_ref', 'recipe_id' => $g->id, 'position' => 1,
                 'created_at' => now(), 'updated_at' => now(),
             ]);
         }

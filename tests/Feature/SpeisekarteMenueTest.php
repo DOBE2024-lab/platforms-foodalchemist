@@ -28,9 +28,9 @@ beforeEach(function () {
 
     $this->menu = $this->concepts->create($this->rootTeam, ['name' => '3-Gang-Menü']);
     $s1 = $this->concepts->addSlot($this->rootTeam, $this->menu->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['sales_recipe_id' => $vorspeise->id]);
+    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['recipe_id' => $vorspeise->id]);
     $s2 = $this->concepts->addSlot($this->rootTeam, $this->menu->id, ['role' => 'Hauptgang']);
-    $this->concepts->fillSlot($this->rootTeam, $s2->id, ['sales_recipe_id' => $haupt->id]);
+    $this->concepts->fillSlot($this->rootTeam, $s2->id, ['recipe_id' => $haupt->id]);
 });
 
 it('Stufe D: menue_ref-Position — Preis aus Concept, Gänge im Dokument', function () {

@@ -74,7 +74,7 @@ beforeEach(function () {
     $concepts = app(ConceptService::class);
     $this->concept = $concepts->create($this->rootTeam, ['name' => 'Menü']);
     $slot = $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Hauptgang']);
-    $slot = $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->recipe->id]);
+    $slot = $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->recipe->id]);
     $slot->update(['quantity' => 1, 'unit_vocab_id' => $portion->id]);
     $concepts->recomputeCache($this->concept->refresh());
 });
@@ -86,7 +86,7 @@ it('CQ 2.6: Cockpit — Gericht ohne VK ist eine Lücke (Zeile offen, hat_vk_lue
 
     $ohneVk = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'ohne-vk', 'name' => 'Ohne VK',
         'status' => 'approved', 'is_sales_recipe' => true, 'sales_unit_count' => 1]);
-    $slot = $concepts->fillSlot($this->rootTeam, $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Dessert'])->id, ['sales_recipe_id' => $ohneVk->id]);
+    $slot = $concepts->fillSlot($this->rootTeam, $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Dessert'])->id, ['recipe_id' => $ohneVk->id]);
     $c = $concepts->preisCockpit($this->concept->refresh());
     $zeile = collect($c['zeilen'])->firstWhere('slot_id', $slot->id);
 
@@ -193,7 +193,7 @@ it('löst eingebettete Paket-Concepts in den Auftragsbedarf auf', function () {
     $package = $concepts->createPaket($this->rootTeam, ['name' => 'Kartoffel-Paket']);
     $packageSlot = $concepts->addSlot($this->rootTeam, $package->id, ['role' => 'Hauptgang']);
     $concepts->fillSlot($this->rootTeam, $packageSlot->id, [
-        'sales_recipe_id' => $this->recipe->id,
+        'recipe_id' => $this->recipe->id,
         'quantity' => 1,
     ]);
     $packageSlot->update(['unit_vocab_id' => FoodAlchemistVocabEinheit::where('slug', 'portion')->value('id')]);
@@ -242,7 +242,7 @@ it('rechnet feste Vorbereitung bei doppeltem Gericht einmal je Darreichung für 
     $svc->aktualisieren($this->rootTeam, $dar->id, ['arbeitszeiten' => $zeiten]);
     $concepts = app(ConceptService::class);
     $slot = $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Zusatz']);
-    $slot = $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->recipe->id]);
+    $slot = $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->recipe->id]);
     $slot->update(['quantity' => .5, 'unit_vocab_id' => FoodAlchemistVocabEinheit::where('slug', 'portion')->value('id')]);
     $concepts->recomputeCache($this->concept->refresh());
     $r = app(OrderCostingService::class)->costConcept($this->rootTeam, $this->concept->fresh(), 100);
@@ -264,7 +264,7 @@ it('CQ 2.3f: eingebettetes Paket (kind=paket-Concept) kostet wie dasselbe Gerich
 
     $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Kartoffel-Station']);
     $ps = $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Hauptgang']);
-    $concepts->fillSlot($this->rootTeam, $ps->id, ['sales_recipe_id' => $this->recipe->id])
+    $concepts->fillSlot($this->rootTeam, $ps->id, ['recipe_id' => $this->recipe->id])
         ->update(['quantity' => 1, 'unit_vocab_id' => $this->concept->slots()->first()->unit_vocab_id]);
     $mitPaket = $concepts->create($this->rootTeam, ['name' => 'Menü mit Paket']);
     $s = $concepts->addSlot($this->rootTeam, $mitPaket->id, ['role' => 'Hauptgang']);

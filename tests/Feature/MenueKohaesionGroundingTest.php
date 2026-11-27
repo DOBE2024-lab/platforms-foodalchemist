@@ -183,7 +183,7 @@ function bindKohaesionSpy(callable $capture): void
 it('kiDivergenzConcept spielt das Menü-Aroma-Profil in den Prompt, wenn Slots belegt sind', function () {
     $lachs = ($this->mkGericht)('r-lachs', 'HG: Räucherlachs', 'Räucherlachs', 'raeucherwaren');
     $concept = $this->makeConcept($this->rootTeam, 'Fjord-Menü');
-    $this->makeConceptSlot($concept, ['position' => 1, 'sales_recipe_id' => $lachs->id]);
+    $this->makeConceptSlot($concept, ['position' => 1, 'recipe_id' => $lachs->id]);
 
     $prompts = [];
     bindKohaesionSpy(function (string $c) use (&$prompts) { $prompts[] = $c; });
@@ -198,7 +198,7 @@ it('kiDivergenzConcept spielt das Menü-Aroma-Profil in den Prompt, wenn Slots b
 
 it('kiDivergenzConcept bleibt ohne Kohäsions-Block, wenn das Menü noch leer ist', function () {
     $concept = $this->makeConcept($this->rootTeam, 'Leeres Menü');
-    $this->makeConceptSlot($concept, ['position' => 1, 'sales_recipe_id' => null, 'wording' => null]);
+    $this->makeConceptSlot($concept, ['position' => 1, 'recipe_id' => null, 'wording' => null]);
 
     $prompts = [];
     bindKohaesionSpy(function (string $c) use (&$prompts) { $prompts[] = $c; });

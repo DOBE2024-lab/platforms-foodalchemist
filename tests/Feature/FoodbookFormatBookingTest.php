@@ -24,9 +24,9 @@ beforeEach(function () {
         $dish2 = $this->makeRecipe($team, 'HG Zander', ['is_sales_recipe' => true, 'sales_net' => 28.00]);
 
         $c1 = $this->makeConcept($team, 'Sommer-Menü', ['consumer_name' => 'Sommergenuss', 'price_per_person_cache' => 42.50]);
-        $this->slotC1 = $this->makeConceptSlot($c1, ['sales_recipe_id' => $dish1->id, 'wording' => 'Rinderfilet Rossini']);
+        $this->slotC1 = $this->makeConceptSlot($c1, ['recipe_id' => $dish1->id, 'wording' => 'Rinderfilet Rossini']);
         $c2 = $this->makeConcept($team, 'Winter-Menü', ['consumer_name' => 'Wintergenuss', 'price_per_person_cache' => 39.50]);
-        $this->makeConceptSlot($c2, ['sales_recipe_id' => $dish2->id, 'wording' => 'Zander im Speckmantel']);
+        $this->makeConceptSlot($c2, ['recipe_id' => $dish2->id, 'wording' => 'Zander im Speckmantel']);
 
         $format = $this->fmt->create($team, array_merge([
             'name' => 'CHEFS.CORNER', 'consumer_name' => 'Chefs Corner', 'story' => 'Die Welt auf dem Teller.',

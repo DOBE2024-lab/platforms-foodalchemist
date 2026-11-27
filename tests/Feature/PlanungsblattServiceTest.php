@@ -121,7 +121,7 @@ it('Bestellvorschlag: nach Lead-LA-Lieferant gruppiert, EK-Summe je Lieferant', 
 it('Konzept + Personen: Portions-Äquivalent × Pax → Batches', function () {
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Menü A']);
     $slot = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Dessert']);
-    $slot = $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->kuchen->id]);
+    $slot = $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->kuchen->id]);
     $slot->update(['quantity' => 1, 'unit_vocab_id' => $this->portion->id]); // 1 Portion pro Person
 
     // 20 Personen × 1 Portion ÷ 10 Portionen/Batch = 2 Ansätze Kuchen → Mehl 2000 g.
@@ -166,7 +166,7 @@ it('P1b Kapitel-Ziel: recipe_ref (Default 1 Portion/Person) + concept_ref, heade
     $fb = app(FoodbookService::class);
     $book = $fb->create($this->rootTeam, ['label' => 'FB Sommerfest', 'personen' => 20]);
     $kap = $fb->addKapitel($this->rootTeam, $book->id, ['title' => 'Hauptgang']);
-    $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->kuchen->id]);
+    $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->kuchen->id]);
     $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'header_frei', 'label' => 'Nur Deko']);   // muss übersprungen werden
     $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'text', 'customer_text' => 'Blabla']);      // dito
 
@@ -182,7 +182,7 @@ it('P1b Kapitel-Ziel: recipe_ref (Default 1 Portion/Person) + concept_ref, heade
 it('P1b Kapitel-Ziel: concept_ref-Block läuft über konzeptTops()', function () {
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Menü A']);
     $slot = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Dessert']);
-    $slot = $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->kuchen->id]);
+    $slot = $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->kuchen->id]);
     $slot->update(['quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
 
     $fb = app(FoodbookService::class);
@@ -207,8 +207,8 @@ it('P1b Kapitel-Ziel: Wahl-Gruppe — Default = erster Block, variant_choices w�
     $fb = app(FoodbookService::class);
     $book = $fb->create($this->rootTeam, ['label' => 'FB', 'personen' => 10]);
     $kap = $fb->addKapitel($this->rootTeam, $book->id, ['title' => 'Dessert-Wahl']);
-    $a = $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->kuchen->id]);
-    $b = $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $torte->id]);
+    $a = $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->kuchen->id]);
+    $b = $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $torte->id]);
     $gid = $fb->nextVariantGroupId($this->rootTeam, $kap->id);
     $fb->setVariantGroup($this->rootTeam, [$a->id, $b->id], $gid);
 
@@ -230,7 +230,7 @@ it('P1b kapitelZiele(): löst Kapitel in eingefrorene Einzel-Ziele auf (kein Liv
     $fb = app(FoodbookService::class);
     $book = $fb->create($this->rootTeam, ['label' => 'FB', 'personen' => 20]);
     $kap = $fb->addKapitel($this->rootTeam, $book->id, ['title' => 'Hauptgang']);
-    $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->kuchen->id]);
+    $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->kuchen->id]);
 
     $res = $this->svc->kapitelZiele($this->rootTeam, $kap->id, 20);
     expect($res['ziele'])->toHaveCount(1);
@@ -283,7 +283,7 @@ it('P1b MCP: produktionsblatt.GET akzeptiert chapter_id + persons (Kapitel-Scope
     $fb = app(FoodbookService::class);
     $book = $fb->create($this->rootTeam, ['label' => 'FB', 'personen' => 20]);
     $kap = $fb->addKapitel($this->rootTeam, $book->id, ['title' => 'Hauptgang']);
-    $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->kuchen->id]);
+    $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'recipe_id' => $this->kuchen->id]);
 
     $res = $registry->get('foodalchemist.produktionsblatt.GET')
         ->execute(['chapter_id' => $kap->id, 'persons' => 20], $kontext);

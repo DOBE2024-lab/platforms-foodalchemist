@@ -232,7 +232,7 @@ it('Foodbook-Link zeigt Text-Bausteine des Konzepts unter der Gang-Überschrift 
     $this->makeConceptSlot($concept, ['type' => 'header', 'title' => 'Vorspeise', 'position' => 1]);
     $this->makeConceptSlot($concept, ['type' => 'text', 'title' => null, 'text_content' => 'serviert im Schraubglas', 'position' => 2]);
     $dish = $this->makeRecipe($this->rootTeam, 'Tatar', ['is_sales_recipe' => true]);
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id, 'wording' => 'Tatar vom Rind', 'position' => 3]);
+    $this->makeConceptSlot($concept, ['recipe_id' => $dish->id, 'wording' => 'Tatar vom Rind', 'position' => 3]);
     $fb = $this->makeFoodbook($this->rootTeam, 'Glasbuch', ['personen' => 10]);
     $kap = $this->makeChapter($fb, ['title' => 'Fingerfood', 'consumer_title' => 'Fingerfood', 'position' => 1]);
     $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $concept->id, 'position' => 1]);
@@ -252,9 +252,9 @@ it('Foodbook: Text aus einem PAKET im Konzept („Vorspeise“ → „serviert i
     $this->makeConceptSlot($paket, ['type' => 'header', 'title' => 'Vorspeise', 'position' => 1]);
     $this->makeConceptSlot($paket, ['type' => 'text', 'title' => null, 'text_content' => 'serviert im Schraubglas', 'position' => 2]);
     $dish = $this->makeRecipe($this->rootTeam, 'Perlcouscous', ['is_sales_recipe' => true]);
-    $this->makeConceptSlot($paket, ['sales_recipe_id' => $dish->id, 'wording' => 'Salat von Perlcouscous', 'position' => 3]);
+    $this->makeConceptSlot($paket, ['recipe_id' => $dish->id, 'wording' => 'Salat von Perlcouscous', 'position' => 3]);
     $konzept = $this->makeConcept($this->rootTeam, 'Taste & Fly', ['kind' => 'concept']);
-    $this->makeConceptSlot($konzept, ['type' => 'paket', 'embedded_concept_id' => $paket->id, 'sales_recipe_id' => null, 'wording' => null, 'position' => 1]);
+    $this->makeConceptSlot($konzept, ['type' => 'paket', 'embedded_concept_id' => $paket->id, 'recipe_id' => null, 'wording' => null, 'position' => 1]);
     $fb = $this->makeFoodbook($this->rootTeam, 'Fly', ['personen' => 10]);
     $kap = $this->makeChapter($fb, ['title' => 'Favourites', 'consumer_title' => 'Favourites', 'position' => 1]);
     $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $konzept->id, 'position' => 1]);

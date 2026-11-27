@@ -43,7 +43,7 @@ class AngeboteGetTool extends FoodAlchemistTool implements ToolContract, ToolMet
             return ToolResult::error('Angebot nicht sichtbar/vorhanden.', 'NOT_FOUND');
         }
 
-        return ToolResult::success([
+        return ToolResult::success(\Platform\FoodAlchemist\Support\RezeptIdAlias::ausgabe([
             'angebot' => [
                 'id' => $a->id, 'name' => $a->name,
                 'status' => $a->status instanceof \BackedEnum ? $a->status->value : $a->status,
@@ -62,7 +62,7 @@ class AngeboteGetTool extends FoodAlchemistTool implements ToolContract, ToolMet
                 ])->values()->all(),
             ],
             'kalkulation' => $svc->kalkulation($team, $a),
-        ]);
+        ]));
     }
 
     public function getMetadata(): array

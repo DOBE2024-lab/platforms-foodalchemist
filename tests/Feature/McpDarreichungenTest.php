@@ -74,7 +74,7 @@ it('M1/M2/M4 E2E: MCP-VK-Gericht bekommt Standard-Darreichung, SEARCH/Kalkulatio
     $conceptId = $konzept->data['concept']['id'];
 
     $slot = $this->registry->get('foodalchemist.concept_slots.POST')->execute([
-        'concept_id' => $conceptId, 'role' => 'hauptgang', 'sales_recipe_id' => $recipeId,
+        'concept_id' => $conceptId, 'role' => 'hauptgang', 'recipe_id' => $recipeId,
     ], $this->kontext);
     expect($slot->success)->toBeTrue();
 

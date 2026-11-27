@@ -153,7 +153,7 @@ class ConceptGeneratorService
             }
             foreach ($zeile['gerichte'] as $gericht) {
                 $slot = $this->concepts->addSlot($team, $concept->id, ['role' => $zeile['label']]);
-                $this->concepts->fillSlot($team, $slot->id, ['sales_recipe_id' => $gericht['id']]);
+                $this->concepts->fillSlot($team, $slot->id, ['recipe_id' => $gericht['id']]);
                 $recipeIds[$gericht['id']] = true;
             }
             $protokoll[] = [
@@ -523,7 +523,7 @@ class ConceptGeneratorService
     /**
      * Fan-out-Vorbereitung: je Frame-Slot N LEERE Concept-Slots anlegen (role = Slot-Label,
      * is_pflicht vom Frame-Slot geerbt), NICHT befüllen. Die Slots tragen den DB-Default-Typ
-     * `gericht` (kein sales_recipe_id/embedded_concept_id) → {@see PlanningCascadeService::fanoutConceptInvention}
+     * `gericht` (kein recipe_id/embedded_concept_id) → {@see PlanningCascadeService::fanoutConceptInvention}
      * erkennt sie als leere, erfindbare Positionen. N = target_count (mind. 1). Ein 2er-Slot wird
      * also zu zwei erfindbaren Positionen, spiegelbildlich zur Assembler-Auffüllung.
      *
@@ -1148,7 +1148,7 @@ class ConceptGeneratorService
             }
             foreach ($slotWahl as $wahl) {
                 $slot = $this->concepts->addSlot($team, $concept->id, ['role' => $frameSlot->label]);
-                $this->concepts->fillSlot($team, $slot->id, ['sales_recipe_id' => $wahl['id']]);
+                $this->concepts->fillSlot($team, $slot->id, ['recipe_id' => $wahl['id']]);
             }
             // put() statt merge(): merge renummeriert Integer-Keys — die Gericht-IDs sind die Keys!
             foreach ($slotWahl as $id => $wahl) {

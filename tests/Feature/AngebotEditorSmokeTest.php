@@ -115,7 +115,7 @@ it('Editor erzeugt Kapitel-Wording als angebots-lokalen Snapshot', function () {
     ]);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Sommermenü', 'status' => 'active']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
-    $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $gericht->id]);
+    $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $gericht->id]);
     $stil = \Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle::create([
         'team_id' => $this->rootTeam->id, 'slug' => 'angebot-stil', 'name' => 'Charmant',
         'sprach_duktus' => 'ANGEBOT-DUKTUS: leicht und charmant.',

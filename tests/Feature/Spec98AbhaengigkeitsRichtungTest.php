@@ -111,7 +111,7 @@ describe('Preisweitergabe per Event', function () {
         $this->concept = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Menü', 'ek_per_person_cache' => 99.99,
             'offer_id' => $this->angebot->id]);
         FoodAlchemistConceptSlot::create(['team_id' => $this->rootTeam->id, 'concept_id' => $this->concept->id, 'type' => 'gericht',
-            'sales_recipe_id' => $this->gericht->id, 'position' => 0]);
+            'recipe_id' => $this->gericht->id, 'position' => 0]);
         FoodAlchemistAngebot::whereKey($this->angebot->id)->update(['status' => 'anfrage', 'price_mode' => 'auto', 'price_calculated_at' => null]);
     });
 

@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
 
 /**
  * @ai.description Concept-Slot (M10-01) — eine Rolle im Concept, gefüllt mit GENAU
- * EINEM: `embedded_concept_id` (eingebettetes Paket, kind=paket) ODER `sales_recipe_id` (fest gesetztes
+ * EINEM: `embedded_concept_id` (eingebettetes Paket, kind=paket) ODER `recipe_id` (fest gesetztes
  * Gericht). Der Service erzwingt „genau eines". Position-sortiert.
  */
 class FoodAlchemistConceptSlot extends Model
@@ -48,7 +48,7 @@ class FoodAlchemistConceptSlot extends Model
     /** Befüllung B: fest gesetztes Gericht (VK-Rezept). */
     public function dish(): BelongsTo
     {
-        return $this->belongsTo(FoodAlchemistRecipe::class, 'sales_recipe_id')
+        return $this->belongsTo(FoodAlchemistRecipe::class, 'recipe_id')
             ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis')->withTrashed();   // Spec 82: Verweis löst auch Fassungen auf · Gericht-Verwaltung: weich gelöschte Gerichte bleiben als Verweis lesbar (historische Ansichten)
     }
 

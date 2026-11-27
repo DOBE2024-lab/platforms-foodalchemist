@@ -19,7 +19,7 @@ class OfferBlockPutTool extends FoodAlchemistTool implements ToolContract, ToolM
 {
     /** Allow-List (Teilmenge von OfferCompositionService::BLOCK_FELDER; der Service intersect't final). */
     private const FELDER = ['type', 'level', 'visible', 'label', 'wording', 'customer_text', 'interne_bemerkung',
-        'concept_id', 'sales_recipe_id', 'quantity', 'unit_vocab_id', 'price_value', 'ek_value', 'price_basis', 'height'];
+        'concept_id', 'recipe_id', 'quantity', 'unit_vocab_id', 'price_value', 'ek_value', 'price_basis', 'height'];
 
     public function getName(): string
     {
@@ -29,7 +29,7 @@ class OfferBlockPutTool extends FoodAlchemistTool implements ToolContract, ToolM
     public function getDescription(): string
     {
         return 'Bearbeitet einen Block eines team-eigenen Angebots (felder: label, wording, customer_text, quantity, '
-            . 'price_value, price_basis, visible, level, sales_recipe_id; bei position zusätzlich unit_vocab_id und ek_value). Nur bekannte Felder werden übernommen.';
+            . 'price_value, price_basis, visible, level, recipe_id; bei position zusätzlich unit_vocab_id und ek_value). Nur bekannte Felder werden übernommen.';
     }
 
     public function getSchema(): array
@@ -46,6 +46,7 @@ class OfferBlockPutTool extends FoodAlchemistTool implements ToolContract, ToolM
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');

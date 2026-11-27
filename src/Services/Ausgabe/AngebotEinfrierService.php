@@ -21,7 +21,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
  * Beim Wechsel auf „angebot“ (Freigabe, Entscheidung Dominique 13.10.) hält ein Snapshot je GERICHT im Baum fest, was es war:
  * Fassungs-IDs (bei Abo-Gerichten), EK mit Status (vollständig/unvollständig, nie 0 € als Preis), VK je Darreichung/Form, Aufschlagsklasse,
  * Allergenbild. Seit 19.10. (Dominique) ALLE Gerichte, auch eigene: ein eingefrorenes Angebot hat feste Preise — die Preiswege lesen sie über
- * {@see \Platform\FoodAlchemist\Support\AngebotFestpreise} (vorher galt Kurator-Entscheid D3: nur Abo-Gerichte). `sales_recipe_id` bleibt unberührt. Eine neue Master-Fassung ändert den Snapshot nie; sie wird als „neuere
+ * {@see \Platform\FoodAlchemist\Support\AngebotFestpreise} (vorher galt Kurator-Entscheid D3: nur Abo-Gerichte). `recipe_id` bleibt unberührt. Eine neue Master-Fassung ändert den Snapshot nie; sie wird als „neuere
  * Fassung verfügbar“ mit Allergen-Diff angezeigt ({@see veraltet}), das Übernehmen mit Bestätigung folgt in 4b.
  *
  * Zurück auf „anfrage“/„in_arbeit“ verwirft den Snapshot (nach Bestätigung): das Angebot folgt dann wieder der neuesten Fassung.
@@ -149,8 +149,8 @@ class AngebotEinfrierService
         $kapitel = FoodAlchemistOfferChapter::where('offer_id', $angebot->id)->with(['blocks' => fn ($q) => $q->where('visible', true), 'blocks.concept', 'format.slots.concept'])->get();
         foreach ($kapitel as $k) {
             foreach ($k->blocks as $b) {
-                if ($b->type === 'recipe_ref' && $b->sales_recipe_id !== null) {
-                    $ids[(int) $b->sales_recipe_id] = true;
+                if ($b->type === 'recipe_ref' && $b->recipe_id !== null) {
+                    $ids[(int) $b->recipe_id] = true;
                 } elseif ($b->type === 'concept_ref' && $b->concept !== null) {
                     $concepts->push($b->concept);
                 }
@@ -179,8 +179,8 @@ class AngebotEinfrierService
         }
         $gesehen[$concept->id] = true;
         foreach ($concept->slots()->with(['embeddedConcept'])->get() as $slot) {
-            if ($slot->sales_recipe_id !== null) {
-                $ids[(int) $slot->sales_recipe_id] = true;
+            if ($slot->recipe_id !== null) {
+                $ids[(int) $slot->recipe_id] = true;
             }
             if ($slot->embeddedConcept !== null) {
                 $this->gerichteDesConcepts($slot->embeddedConcept, $ids, $gesehen, $tiefe + 1);
@@ -363,12 +363,12 @@ class AngebotEinfrierService
         // 2) Ist das Gericht selbst die alte Fassung: Verweise des Angebots umstellen
         if ((int) $gericht->id === $alt) {
             $bloecke = FoodAlchemistOfferChapter::where('offer_id', $angebot->id)->get()
-                ->sum(fn ($k) => $k->blocks()->where('sales_recipe_id', $alt)->update(['sales_recipe_id' => $neu]));
+                ->sum(fn ($k) => $k->blocks()->where('recipe_id', $alt)->update(['recipe_id' => $neu]));
             foreach ($angebot->concepts()->get() as $c) {   // angebots-lokale Concepts gehören dem Angebot
-                $lokal += $c->slots()->where('sales_recipe_id', $alt)->update(['sales_recipe_id' => $neu]);
+                $lokal += $c->slots()->where('recipe_id', $alt)->update(['recipe_id' => $neu]);
             }
             foreach ($angebot->referencedConcepts()->get() as $c) {   // geteilte Katalog-Concepts bleiben unberührt
-                if ($c->slots()->where('sales_recipe_id', $alt)->exists()) {
+                if ($c->slots()->where('recipe_id', $alt)->exists()) {
                     $offen[] = 'Konzept „'.$c->name.'“ (geteilt)';
                 }
             }

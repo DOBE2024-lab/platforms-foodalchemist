@@ -21,7 +21,7 @@ beforeEach(function () {
     $this->alt = $this->makeRecipe($this->rootTeam, 'Rinderroulade', ['is_sales_recipe' => true]);
     $this->neu = $this->makeRecipe($this->rootTeam, 'Kalbsbäckchen', ['is_sales_recipe' => true]);
     $this->basis = $this->makeRecipe($this->rootTeam, 'Kalbsfond');   // Basisrezept: kein Ersatz-Ziel für ein Gericht
-    $this->slot = $this->makeConceptSlot($this->makeConcept($this->rootTeam, 'Herbstmenü'), ['sales_recipe_id' => $this->alt->id]);
+    $this->slot = $this->makeConceptSlot($this->makeConcept($this->rootTeam, 'Herbstmenü'), ['recipe_id' => $this->alt->id]);
 });
 
 afterEach(fn () => Carbon::setTestNow());
@@ -46,25 +46,25 @@ it('Vorschau → Ersetzen → Löschen', function () {
         ->call('gerichtTauschVorbereiten', $this->neu->id)
         ->assertSee('„Rinderroulade“ ersetzen durch „Kalbsbäckchen“')
         ->assertSee('Konzepte und Pakete: 1');
-    expect((int) $this->slot->fresh()->sales_recipe_id)->toBe($this->alt->id);   // Vorschau schreibt nichts
+    expect((int) $this->slot->fresh()->recipe_id)->toBe($this->alt->id);   // Vorschau schreibt nichts
 
     $c->call('gerichtErsetzen')
         ->assertSet('fehlerTausch', null)
         ->assertSee('Auf „Kalbsbäckchen“ umgehängt')
         ->assertSee('Gericht löschen');
-    expect((int) $this->slot->fresh()->sales_recipe_id)->toBe($this->neu->id);
+    expect((int) $this->slot->fresh()->recipe_id)->toBe($this->neu->id);
 
     $c->call('rezeptLoeschen')->assertSet('fehlerTausch', null);
     expect(FoodAlchemistRecipe::find($this->alt->id))->toBeNull()
         ->and(FoodAlchemistRecipe::withTrashed()->find($this->alt->id)?->trashed())->toBeTrue()
-        ->and(FoodAlchemistConceptSlot::where('sales_recipe_id', $this->alt->id)->count())->toBe(0);
+        ->and(FoodAlchemistConceptSlot::where('recipe_id', $this->alt->id)->count())->toBe(0);
 });
 
 it('Orte sind anklickbar wie früher „Wo verwendet?“; fremde, nicht sichtbare Orte bleiben Text', function () {
     $menue = $this->makeRecipe($this->rootTeam, 'Festmenü', ['is_sales_recipe' => true]);
     $this->makeIngredient($menue, 'Roulade', null, '1')->update(['referenced_recipe_id' => $this->alt->id]);
     $fremd = $this->makeConcept($this->childA, 'Menü Kind-Team');   // für das Root-Team nicht sichtbar (Kind-Team)
-    $this->makeConceptSlot($fremd, ['sales_recipe_id' => $this->alt->id]);
+    $this->makeConceptSlot($fremd, ['recipe_id' => $this->alt->id]);
 
     Livewire::test(DetailPanel::class)->call('zeige', $this->alt->id)
         ->assertSeeHtml('href="' . e(route('foodalchemist.concepter.index', ['edit' => $this->slot->concept_id])) . '"')

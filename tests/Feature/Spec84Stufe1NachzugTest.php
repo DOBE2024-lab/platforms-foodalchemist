@@ -58,7 +58,7 @@ beforeEach(function () {
             $this->makeIngredient($g, 'Jus')->update(['referenced_recipe_id' => $f1, 'gp_id' => null]);
             $angebot = app(AngebotService::class)->create($t, ['name' => $name]);
             $kap = app(OfferCompositionService::class)->addKapitel($t, $angebot->id, ['title' => 'Menü']);
-            $kap->blocks()->create(['team_id' => $t->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $g->id, 'position' => 1, 'visible' => true]);
+            $kap->blocks()->create(['team_id' => $t->id, 'type' => 'recipe_ref', 'recipe_id' => $g->id, 'position' => 1, 'visible' => true]);
 
             return $angebot;
         });

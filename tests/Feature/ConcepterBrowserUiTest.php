@@ -32,7 +32,7 @@ beforeEach(function () {
     $this->paket = $this->concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall', 'class' => 'Buffet']);
     $this->concepts->update($this->rootTeam, $this->paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
     $ps = $this->concepts->addSlot($this->rootTeam, $this->paket->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $ps->id, ['sales_recipe_id' => $this->green->id]);
+    $this->concepts->fillSlot($this->rootTeam, $ps->id, ['recipe_id' => $this->green->id]);
 
     $this->concept = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet', 'class' => 'Buffet']);
     $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);

@@ -82,7 +82,7 @@ beforeEach(function () {
     $block = function ($a) {
         $k = FoodAlchemistOfferChapter::create(['team_id' => $this->broich->id, 'offer_id' => $a->id, 'title' => 'Hauptgang', 'position' => 0]);
 
-        return FoodAlchemistOfferBlock::create(['team_id' => $this->broich->id, 'chapter_id' => $k->id, 'type' => 'recipe_ref', 'position' => 0, 'visible' => true, 'sales_recipe_id' => $this->jusF->id]);
+        return FoodAlchemistOfferBlock::create(['team_id' => $this->broich->id, 'chapter_id' => $k->id, 'type' => 'recipe_ref', 'position' => 0, 'visible' => true, 'recipe_id' => $this->jusF->id]);
     };
     $this->blockOffen = $block($angebot('in_arbeit'));
     $this->blockHistorie = $block($angebot('angenommen'));
@@ -115,8 +115,8 @@ it('Kündigung (D1/D2): tiefe Kopie ohne Doppel, lebende Verweise umgehängt, Hi
         ->and((int) $jusK->kopie_von_id)->toBe($this->jus->id)                                       // Familie → originalGeaendert()
         ->and($jusK->recipe_key)->not->toContain('@f')
         ->and((int) $jusK->ingredients()->value('referenced_recipe_id'))->toBe($fondK->id)          // Kette auf die Kopie
-        ->and((int) $this->blockOffen->fresh()->sales_recipe_id)->toBe($jusK->id)                    // lebend: umgehängt
-        ->and((int) $this->blockHistorie->fresh()->sales_recipe_id)->toBe($this->jusF->id)          // Historie: bleibt
+        ->and((int) $this->blockOffen->fresh()->recipe_id)->toBe($jusK->id)                    // lebend: umgehängt
+        ->and((int) $this->blockHistorie->fresh()->recipe_id)->toBe($this->jusF->id)          // Historie: bleibt
         ->and((int) $this->eigenZeile->fresh()->referenced_recipe_id)->toBe($jusK->id)
         ->and(DB::table('foodalchemist_abos')->where('id', $this->aboBroich->id)->value('status'))->toBe('gekuendigt')
         // Broich sieht die Kopien (eigene), nicht mehr die Fassungen; die Fassung existiert weiter (Historie auflösbar)
@@ -138,7 +138,7 @@ it('D3: Ist das Rezept über ein zweites aktives Abo verfügbar, wird nichts kop
 
     $r = $this->svc->kuendigen($this->broich, $this->aboBroich->id, $this->broichChef, bestaetigt: true);
     expect($r['kopien'])->toBe([])->and($r['vorschau']['verschwindet_ids'])->toBe([])
-        ->and((int) $this->blockOffen->fresh()->sales_recipe_id)->toBe($this->jusF->id)
+        ->and((int) $this->blockOffen->fresh()->recipe_id)->toBe($this->jusF->id)
         ->and(($this->sieht)($this->broich))->toContain($this->jusF->id);
 });
 
@@ -156,7 +156,7 @@ it('Zurückziehen (§8): Löschen eines abonnierten Rezepts gesperrt; Zurückzie
     expect($r['ausgefuehrt'])->toBeTrue()
         ->and(DB::table('foodalchemist_sammlung_objekte')->where('sammlung_id', $this->sammlung)->where('objekt_id', $this->jus->id)->exists())->toBeFalse()
         ->and(($this->sieht)($this->soul))->not->toContain($this->jusF->id)->toContain($this->zweitF->id)    // Abo selbst bleibt
-        ->and((int) $this->blockOffen->fresh()->sales_recipe_id)->not->toBe($this->jusF->id)
+        ->and((int) $this->blockOffen->fresh()->recipe_id)->not->toBe($this->jusF->id)
         ->and(DB::table('foodalchemist_abos')->where('id', $this->aboBroich->id)->value('status'))->toBe('aktiv');
 });
 
@@ -194,7 +194,7 @@ it('Familien-Regel: Rezept auf alter Fassung (Allergen-Sperre) bekommt eine Kopi
     $neuZeile = $this->makeIngredient($neu, 'Jus', null, '80');
     $neuZeile->update(['referenced_recipe_id' => $jusF2->id]);
     // Angebot auf Fassung 2 umstellen: der alte Bestand (eigenZeile) bleibt auf Fassung 1
-    $this->blockOffen->update(['sales_recipe_id' => $jusF2->id]);
+    $this->blockOffen->update(['recipe_id' => $jusF2->id]);
 
     $vorschau = $this->svc->kuendigen($this->broich, $this->aboBroich->id, $this->broichChef, bestaetigt: false)['vorschau'];
     expect($vorschau['genutzt_ids'])->toEqualCanonicalizing([$this->jusF->id, $jusF2->id])         // alte Fassung zählt als genutzt
@@ -219,8 +219,8 @@ it('Familien-Regel: Rezept auf alter Fassung (Allergen-Sperre) bekommt eine Kopi
         // jeder lebende Verweis landet auf der Kopie SEINER Fassung
         ->and((int) $this->eigenZeile->fresh()->referenced_recipe_id)->toBe($k1->id)
         ->and((int) $neuZeile->fresh()->referenced_recipe_id)->toBe($k2->id)
-        ->and((int) $this->blockOffen->fresh()->sales_recipe_id)->toBe($k2->id)
-        ->and((int) $this->blockHistorie->fresh()->sales_recipe_id)->toBe($this->jusF->id);              // Historie bleibt
+        ->and((int) $this->blockOffen->fresh()->recipe_id)->toBe($k2->id)
+        ->and((int) $this->blockHistorie->fresh()->recipe_id)->toBe($this->jusF->id);              // Historie bleibt
 });
 
 it('Familien-Regel: ungenutzte ältere Fassung wird weder kopiert noch als „verschwindet" gemeldet', function () {

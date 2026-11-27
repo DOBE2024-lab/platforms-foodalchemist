@@ -77,7 +77,7 @@ final class PositionValidierung
             unset($daten['presentation_id']);
         }
         if ($zeile !== null && PositionProfil::darreichungSchreibbar($art) && ! array_key_exists('presentation_id', $daten)
-            && array_key_exists('sales_recipe_id', $daten) && (int) $daten['sales_recipe_id'] !== (int) $zeile->sales_recipe_id) {
+            && array_key_exists('recipe_id', $daten) && (int) $daten['recipe_id'] !== (int) $zeile->recipe_id) {
             $daten['presentation_id'] = null;   // B7: Gerichtswechsel — die Darreichung des alten Gerichts gilt nicht mehr
         }
         if (($daten['variant_group_id'] ?? null) !== null && $daten['variant_group_id'] !== '' && ! in_array($effTyp, PositionProfil::wahlTypen($art), true)) {
@@ -136,15 +136,15 @@ final class PositionValidierung
      * Inhalt eines Konzept-Slots (genau eines von Paket oder Rezept; eine Alt-Paket-Id wird abgelehnt): Sicht inkl. Abo-Fassungen, Kreis, Typ
      * (Gericht/Basisrezept) und für ein Rezept die wirksame Einheit.
      *
-     * @param  array<string, mixed>  $in  embedded_concept_id | package_id | sales_recipe_id (+ type, unit_vocab_id)
+     * @param  array<string, mixed>  $in  embedded_concept_id | package_id | recipe_id (+ type, unit_vocab_id)
      * @return string|null Slot-Typ für ein Rezept, sonst null
      */
     public static function slot(Team $team, FoodAlchemistConceptSlot $slot, array $in): ?string
     {
         $typ = app(ConceptSlotZielService::class)->pruefe($team, $slot, $in);
-        if (empty($in['embedded_concept_id']) && ! empty($in['sales_recipe_id'])) {   // 17.11.: nur eine wirksame Einheit; B5: Menge > 0
+        if (empty($in['embedded_concept_id']) && ! empty($in['recipe_id'])) {   // 17.11.: nur eine wirksame Einheit; B5: Menge > 0
             self::menge($in['quantity'] ?? null);
-            app(SlotEinheitService::class)->pruefeBelegung($team, $slot, (int) $in['sales_recipe_id'], isset($in['unit_vocab_id']) ? (int) $in['unit_vocab_id'] : null);
+            app(SlotEinheitService::class)->pruefeBelegung($team, $slot, (int) $in['recipe_id'], isset($in['unit_vocab_id']) ? (int) $in['unit_vocab_id'] : null);
         }
 
         return $typ;

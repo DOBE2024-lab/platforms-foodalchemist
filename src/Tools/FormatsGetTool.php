@@ -48,7 +48,7 @@ class FormatsGetTool extends FoodAlchemistTool implements ToolContract, ToolMeta
         // `editions` = die referenzierten Concepts (Contract-stabil), `slots` = der volle Aufbau.
         $conceptSlots = $f->slots->where('type', 'concept');
 
-        return ToolResult::success([
+        return ToolResult::success(\Platform\FoodAlchemist\Support\RezeptIdAlias::ausgabe([
             'format' => [
                 'id' => $f->id, 'name' => $f->name, 'consumer_name' => $f->consumer_name,
                 'claim' => $f->claim, 'story' => $f->story, 'origin' => $f->origin,
@@ -73,7 +73,7 @@ class FormatsGetTool extends FoodAlchemistTool implements ToolContract, ToolMeta
                 'id' => $i->id, 'caption' => $i->caption, 'is_hero' => (bool) $i->is_hero,
                 'sort_order' => (int) $i->sort_order, 'url' => $i->url(),
             ])->all(),
-        ]);
+        ]));
     }
 
     public function getMetadata(): array

@@ -60,7 +60,7 @@ it('Durchstich: 3 Pakete per MCP → Konzept mit Stationstexten → concept_ref 
     foreach (['NOSE TO TAIL', 'FIN TO FORK', 'ROOT TO LEAF'] as $i => $station) {
         $text = $svc->addBlock($this->rootTeam, $konzept, 'text', ['title' => "Station {$station}", 'text_content' => "Text zu {$station}"]);
         $p = ($this->run)('foodalchemist.pakete.POST', ['name' => $station, 'consumer_name' => $station])['paket']['id'];
-        ($this->run)('foodalchemist.paket_gerichte.SET', ['paket_id' => $p, 'items' => [['sales_recipe_id' => $this->dish->id], ['sales_recipe_id' => $this->dish2->id]]]);
+        ($this->run)('foodalchemist.paket_gerichte.SET', ['paket_id' => $p, 'items' => [['recipe_id' => $this->dish->id], ['recipe_id' => $this->dish2->id]]]);
         $slot = ($this->run)('foodalchemist.concept_slots.POST', ['concept_id' => $konzept, 'package_id' => $p, 'role' => 'station'])['slot'];
         expect($slot['package_id'])->toBe($p);
         expect(FoodAlchemistConceptSlot::find($slot['id'])->embedded_concept_id)->toBe($p);
@@ -148,7 +148,7 @@ it('Angebot kopieren: Kapitel, Blöcke, lokale Concepts, neue Identität, Origin
     $comp = app(OfferCompositionService::class);
     $orig = app(AngebotService::class)->create($this->rootTeam, ['name' => 'Brand X', 'personen' => 500]);
     $lokal = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Lokal', 'kind' => 'concept', 'status' => 'draft', 'offer_id' => $orig->id]);
-    $this->makeConceptSlot($lokal, ['position' => 0, 'type' => 'gericht', 'sales_recipe_id' => $this->dish->id]);
+    $this->makeConceptSlot($lokal, ['position' => 0, 'type' => 'gericht', 'recipe_id' => $this->dish->id]);
     $k1 = $comp->addKapitel($this->rootTeam, $orig->id, ['title' => 'Eltern']);
     $k2 = $comp->addKapitel($this->rootTeam, $orig->id, ['title' => 'Kind'], $k1->id);
     $comp->addBlock($this->rootTeam, $k2->id, ['type' => 'concept_ref', 'concept_id' => $lokal->id]);

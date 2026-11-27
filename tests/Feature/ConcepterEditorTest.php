@@ -28,7 +28,7 @@ beforeEach(function () {
     $this->paket = $this->concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall']);
     $this->concepts->update($this->rootTeam, $this->paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
     $ps = $this->concepts->addSlot($this->rootTeam, $this->paket->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $ps->id, ['sales_recipe_id' => $this->green->id]);
+    $this->concepts->fillSlot($this->rootTeam, $ps->id, ['recipe_id' => $this->green->id]);
 
     $this->concept = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
 });
@@ -84,7 +84,7 @@ it('rendert die Auftrags-Hochrechnung im Kalkulations-Tab', function () {
 it('ampelt einen Wareneinsatz auf oder unter Team-Ziel grün', function () {
     app(TeamSettingsService::class)->update($this->rootTeam, ['target_food_cost_pct' => 30]);
     $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->green->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->green->id]);
 
     $html = Livewire::test(Editor::class)
         ->call('oeffnen', 'concepts', $this->concept->id, 'kalkulation')
@@ -206,9 +206,9 @@ it('Phase 3: positionEinfuegen legt aus der Seiten-Liste direkt eine Gericht- bz
 
     $slots = $this->concept->slots()->orderBy('position')->get();
     expect($slots)->toHaveCount(2)
-        ->and($slots[0]->sales_recipe_id)->toBe($this->green->id)
+        ->and($slots[0]->recipe_id)->toBe($this->green->id)
         ->and($slots[0]->type)->toBe('gericht')
-        ->and($slots[1]->sales_recipe_id)->toBe($basis->id)
+        ->and($slots[1]->recipe_id)->toBe($basis->id)
         ->and($slots[1]->type)->toBe('basisrezept');
 });
 
@@ -238,7 +238,7 @@ it('Build C: Einfügeziel + Drop sortieren neue Positionen an die gewählte Stel
     // Drop = explizit hinter green → C zwischen green und B
     $comp->call('positionDrop', 'basisrezept', $c->id, $gruen->id);   // [green, C, B, A]
 
-    $reihenfolge = $this->concept->slots()->orderBy('position')->pluck('sales_recipe_id')->all();
+    $reihenfolge = $this->concept->slots()->orderBy('position')->pluck('recipe_id')->all();
     expect($reihenfolge)->toBe([$this->green->id, $c->id, $b->id, $a->id]);
 });
 

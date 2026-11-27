@@ -30,7 +30,7 @@ beforeEach(function () {
 
 it('verschieben: Datum, Linie und Wochentag wandern mit; eine Linie eines anderen Plans wird zu „ohne Linie“', function () {
     $g = ($this->gericht)($this->rootTeam, 'Gulasch');
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->menue->id, 'sales_recipe_id' => $g->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->menue->id, 'recipe_id' => $g->id]);
     $this->svc->setEintragPax($this->rootTeam, $e->id, 80);
 
     $neu = $this->svc->verschiebeEintrag($this->rootTeam, $e->id, '2026-10-07', $this->veg->id);
@@ -47,19 +47,19 @@ it('ersetzen: Inhalt getauscht, Zelle und Pax bleiben; fremder Inhalt wird abgel
     $a = ($this->gericht)($this->rootTeam, 'Alt');
     $b = ($this->gericht)($this->rootTeam, 'Neu');
     $fremd = ($this->gericht)($this->childB, 'Fremd');
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->menue->id, 'sales_recipe_id' => $a->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->menue->id, 'recipe_id' => $a->id]);
     $this->svc->setEintragPax($this->rootTeam, $e->id, 55);
 
-    $neu = $this->svc->ersetzeEintrag($this->rootTeam, $e->id, ['sales_recipe_id' => $b->id]);
-    expect($neu->sales_recipe_id)->toBe($b->id)->and($neu->pax)->toBe(55)->and((int) $neu->line_id)->toBe($this->menue->id);
+    $neu = $this->svc->ersetzeEintrag($this->rootTeam, $e->id, ['recipe_id' => $b->id]);
+    expect($neu->recipe_id)->toBe($b->id)->and($neu->pax)->toBe(55)->and((int) $neu->line_id)->toBe($this->menue->id);
 
-    expect(fn () => $this->svc->ersetzeEintrag($this->rootTeam, $e->id, ['sales_recipe_id' => $fremd->id]))->toThrow(RuntimeException::class);
+    expect(fn () => $this->svc->ersetzeEintrag($this->rootTeam, $e->id, ['recipe_id' => $fremd->id]))->toThrow(RuntimeException::class);
 });
 
 it('kopieren: auf weitere Tage, ohne Dublette bei gleichem Inhalt', function () {
     $g = ($this->gericht)($this->rootTeam, 'Salat');
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->veg->id, 'sales_recipe_id' => $g->id]);
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-07', 'line_id' => $this->veg->id, 'sales_recipe_id' => $g->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->veg->id, 'recipe_id' => $g->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-07', 'line_id' => $this->veg->id, 'recipe_id' => $g->id]);
 
     expect($this->svc->kopiereEintrag($this->rootTeam, $e->id, ['2026-10-06', '2026-10-07', $this->mo]))->toBe(1);   // Di neu, Mi schon da, Mo = Quelle
     expect($this->plan->entries()->count())->toBe(3);
@@ -68,20 +68,20 @@ it('kopieren: auf weitere Tage, ohne Dublette bei gleichem Inhalt', function () 
 it('Woche kopieren: ersetzt belegte Zielzellen, mit „zusammenführen“ bleiben sie; Pax optional', function () {
     $a = ($this->gericht)($this->rootTeam, 'Quelle');
     $alt = ($this->gericht)($this->rootTeam, 'Alt in Zielwoche');
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->menue->id, 'sales_recipe_id' => $a->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->menue->id, 'recipe_id' => $a->id]);
     $this->svc->setEintragPax($this->rootTeam, $e->id, 90);
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-12', 'line_id' => $this->menue->id, 'sales_recipe_id' => $alt->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-12', 'line_id' => $this->menue->id, 'recipe_id' => $alt->id]);
 
     $res = $this->svc->kopiereWoche($this->rootTeam, $this->plan->id, $this->mo, '2026-10-12');
     expect($res)->toBe(['kopiert' => 1, 'ersetzt' => 1]);
     $ziel = $this->plan->entries()->whereDate('entry_date', '2026-10-12')->get();
-    expect($ziel)->toHaveCount(1)->and($ziel->first()->sales_recipe_id)->toBe($a->id)->and($ziel->first()->pax)->toBe(90);
+    expect($ziel)->toHaveCount(1)->and($ziel->first()->recipe_id)->toBe($a->id)->and($ziel->first()->pax)->toBe(90);
 
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-19', 'line_id' => $this->menue->id, 'sales_recipe_id' => $alt->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-19', 'line_id' => $this->menue->id, 'recipe_id' => $alt->id]);
     $res2 = $this->svc->kopiereWoche($this->rootTeam, $this->plan->id, $this->mo, '2026-10-19', true, false);
     expect($res2)->toBe(['kopiert' => 1, 'ersetzt' => 0]);
     $ziel2 = $this->plan->entries()->whereDate('entry_date', '2026-10-19')->get();
-    expect($ziel2)->toHaveCount(2)->and($ziel2->firstWhere('sales_recipe_id', $a->id)->pax)->toBeNull();
+    expect($ziel2)->toHaveCount(2)->and($ziel2->firstWhere('recipe_id', $a->id)->pax)->toBeNull();
 
     expect(fn () => $this->svc->kopiereWoche($this->rootTeam, $this->plan->id, $this->mo, '2026-10-07'))->toThrow(RuntimeException::class, 'gleich');
 });
@@ -89,7 +89,7 @@ it('Woche kopieren: ersetzt belegte Zielzellen, mit „zusammenführen“ bleibe
 it('Mengen: Matrix, Zelle setzen, Vorwoche übernehmen, skalieren', function () {
     $g = ($this->gericht)($this->rootTeam, 'Eintopf', ['sales_net' => 5, 'ek_total_eur' => 1.5]);
     foreach (['2026-09-28', '2026-09-29', $this->mo, '2026-10-06'] as $d) {
-        $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $d, 'line_id' => $this->menue->id, 'sales_recipe_id' => $g->id]);
+        $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $d, 'line_id' => $this->menue->id, 'recipe_id' => $g->id]);
     }
     $this->svc->setzeZellenPax($this->rootTeam, $this->plan->id, $this->menue->id, '2026-09-28', 'mittag', 120);   // Vorwoche Mo
 
@@ -119,8 +119,8 @@ it('Editor: Drag & Drop verschiebt, fremde Eintrags-IDs bleiben wirkungslos; Det
     $b = ($this->gericht)($this->rootTeam, 'Zweitgericht');
     $plan = $this->svc->create($this->rootTeam, ['name' => 'DnD', 'start_date' => $montag]);
     $linie = $plan->lines()->first();
-    $e = $this->svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => $montag, 'line_id' => $linie->id, 'sales_recipe_id' => $a->id]);
-    $fremd = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'sales_recipe_id' => $a->id]);   // anderer Plan
+    $e = $this->svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => $montag, 'line_id' => $linie->id, 'recipe_id' => $a->id]);
+    $fremd = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'recipe_id' => $a->id]);   // anderer Plan
 
     Livewire::test(SpeiseplanEditor::class)
         ->call('oeffnenBearbeiten', $plan->id)
@@ -137,7 +137,7 @@ it('Editor: Drag & Drop verschiebt, fremde Eintrags-IDs bleiben wirkungslos; Det
         ->assertSet('pickerErsetzenId', null);
 
     expect($e->fresh()->entry_date->format('Y-m-d'))->toBe($dienstag)
-        ->and($e->fresh()->sales_recipe_id)->toBe($b->id)
+        ->and($e->fresh()->recipe_id)->toBe($b->id)
         ->and($plan->entries()->count())->toBe(1)                               // ersetzt, nicht dazugelegt
         ->and($fremd->fresh()->entry_date->format('Y-m-d'))->toBe($this->mo);   // fremder Plan unberührt
 });
@@ -148,7 +148,7 @@ it('Editor: Woche kopieren und Mengen-Tab', function () {
     $g = ($this->gericht)($this->rootTeam, 'Wochengericht');
     $plan = $this->svc->create($this->rootTeam, ['name' => 'Kopie', 'start_date' => $montag->format('Y-m-d')]);
     $linie = $plan->lines()->first();
-    $this->svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => $montag->format('Y-m-d'), 'line_id' => $linie->id, 'sales_recipe_id' => $g->id]);
+    $this->svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => $montag->format('Y-m-d'), 'line_id' => $linie->id, 'recipe_id' => $g->id]);
 
     Livewire::test(SpeiseplanEditor::class)
         ->call('oeffnenBearbeiten', $plan->id)
@@ -169,7 +169,7 @@ it('MCP: Einträge lesen und an Entwürfen umbauen, Woche kopieren mit confirm, 
     $registry = app(ToolRegistry::class);
     $ctx = new ToolContext($user, $this->rootTeam);
     $g = ($this->gericht)($this->rootTeam, 'MCP-Gericht');
-    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->menue->id, 'sales_recipe_id' => $g->id]);
+    $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $this->menue->id, 'recipe_id' => $g->id]);
 
     $get = $registry->get('foodalchemist.speiseplan_eintraege.GET')->execute(['plan_id' => $this->plan->id, 'von' => $this->mo, 'bis' => '2026-10-11'], $ctx);
     expect($get->success)->toBeTrue()->and($get->data['anzahl'])->toBe(1)

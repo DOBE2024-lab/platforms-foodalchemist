@@ -53,7 +53,7 @@ function gtKarte($test, string $name, ?string $bis): FoodAlchemistSpeisekartePos
     $rubrik = FoodAlchemistSpeisekarteRubrik::create(['team_id' => $test->t->id, 'menu_card_id' => $karte->id, 'title' => 'Hauptgang', 'position' => 0]);
 
     return FoodAlchemistSpeisekartePosition::create(['team_id' => $test->t->id, 'section_id' => $rubrik->id, 'type' => 'gericht_ref',
-        'sales_recipe_id' => $test->alt->id, 'position' => 0, 'wording' => 'Roulade nach Art des Hauses']);
+        'recipe_id' => $test->alt->id, 'position' => 0, 'wording' => 'Roulade nach Art des Hauses']);
 }
 
 function gtAngebot($test, string $name, string $status, string $preisModus = 'auto'): FoodAlchemistOfferBlock
@@ -63,18 +63,18 @@ function gtAngebot($test, string $name, string $status, string $preisModus = 'au
     $kap = FoodAlchemistOfferChapter::create(['team_id' => $test->t->id, 'offer_id' => $a->id, 'title' => 'Hauptgang', 'position' => 0]);
 
     return FoodAlchemistOfferBlock::create(['team_id' => $test->t->id, 'chapter_id' => $kap->id, 'type' => 'recipe_ref', 'position' => 0,
-        'visible' => true, 'sales_recipe_id' => $test->alt->id, 'quantity' => 1]);
+        'visible' => true, 'recipe_id' => $test->alt->id, 'quantity' => 1]);
 }
 
 it('Konzept-Position: Menge und Einheit bleiben, Darreichung mit gleicher Form, Wording geleert', function () {
     $konzept = $this->makeConcept($this->t, 'Herbstmenü');
-    $slot = $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->alt->id, 'quantity' => 2, 'presentation_id' => $this->altBuffet->id]);
+    $slot = $this->makeConceptSlot($konzept, ['recipe_id' => $this->alt->id, 'quantity' => 2, 'presentation_id' => $this->altBuffet->id]);
 
     $e = $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id);
 
     $slot->refresh();
     expect($e['getauscht']['konzepte'])->toBe(1)
-        ->and((int) $slot->sales_recipe_id)->toBe($this->neu->id)
+        ->and((int) $slot->recipe_id)->toBe($this->neu->id)
         ->and((float) $slot->quantity)->toBe(2.0)
         ->and((int) $slot->presentation_id)->toBe($this->neuBuffet->id)
         ->and($slot->wording)->toBeNull();
@@ -93,14 +93,14 @@ it('Komponente: Eltern-Zeile zeigt aufs neue Gericht', function () {
 it('Speiseplan: ab heute getauscht, vergangene Tage bleiben', function () {
     $sp = app(SpeiseplanService::class);
     $plan = $sp->create($this->t, ['name' => 'Kantine', 'start_date' => '2026-11-16']);
-    $gestern = $sp->addEintrag($this->t, $plan->id, ['entry_date' => '2026-11-20', 'sales_recipe_id' => $this->alt->id]);
-    $morgen = $sp->addEintrag($this->t, $plan->id, ['entry_date' => '2026-11-24', 'sales_recipe_id' => $this->alt->id]);
+    $gestern = $sp->addEintrag($this->t, $plan->id, ['entry_date' => '2026-11-20', 'recipe_id' => $this->alt->id]);
+    $morgen = $sp->addEintrag($this->t, $plan->id, ['entry_date' => '2026-11-24', 'recipe_id' => $this->alt->id]);
 
     $e = $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id);
 
     expect($e['getauscht']['speiseplan'])->toBe(1)
-        ->and((int) FoodAlchemistSpeiseplanEintrag::find($morgen->id)->sales_recipe_id)->toBe($this->neu->id)
-        ->and((int) FoodAlchemistSpeiseplanEintrag::find($gestern->id)->sales_recipe_id)->toBe($this->alt->id);
+        ->and((int) FoodAlchemistSpeiseplanEintrag::find($morgen->id)->recipe_id)->toBe($this->neu->id)
+        ->and((int) FoodAlchemistSpeiseplanEintrag::find($gestern->id)->recipe_id)->toBe($this->alt->id);
 });
 
 it('Speisekarte: gültige Karte getauscht (Wording zurück), abgelaufene bleibt', function () {
@@ -109,9 +109,9 @@ it('Speisekarte: gültige Karte getauscht (Wording zurück), abgelaufene bleibt'
 
     $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id);
 
-    expect((int) $gilt->fresh()->sales_recipe_id)->toBe($this->neu->id)
+    expect((int) $gilt->fresh()->recipe_id)->toBe($this->neu->id)
         ->and($gilt->fresh()->wording)->toBeNull()
-        ->and((int) $alt->fresh()->sales_recipe_id)->toBe($this->alt->id);
+        ->and((int) $alt->fresh()->recipe_id)->toBe($this->alt->id);
 });
 
 it('Angebote: offene getauscht (manueller Preis bleibt, Hinweis), versendete historisch, eingefrorene bleiben', function () {
@@ -129,30 +129,30 @@ it('Angebote: offene getauscht (manueller Preis bleibt, Hinweis), versendete his
 
     $e = $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id);
 
-    expect((int) $offen->fresh()->sales_recipe_id)->toBe($this->neu->id)
-        ->and((int) $manuell->fresh()->sales_recipe_id)->toBe($this->neu->id)
+    expect((int) $offen->fresh()->recipe_id)->toBe($this->neu->id)
+        ->and((int) $manuell->fresh()->recipe_id)->toBe($this->neu->id)
         ->and((float) FoodAlchemistAngebot::find($manuellId)->total_price)->toBe(999.0)   // manueller Preis bleibt
-        ->and((int) $versendet->fresh()->sales_recipe_id)->toBe($this->alt->id)
-        ->and((int) $eingefroren->fresh()->sales_recipe_id)->toBe($this->alt->id)
+        ->and((int) $versendet->fresh()->recipe_id)->toBe($this->alt->id)
+        ->and((int) $eingefroren->fresh()->recipe_id)->toBe($this->alt->id)
         ->and(collect($e['bleibt'])->pluck('grund')->all())->toContain('Angebot eingefroren (Stand der Abo-Rezepte)')
         ->and(app(GerichtVerwendungen::class)->loeschBilanz($this->t, $this->alt->id)['aktiv'])->toHaveCount(1);   // nur das eingefrorene sperrt
 });
 
 it('Foodbooks: Entwurf getauscht, aktives nur mit Haken, inaktives historisch', function () {
     $mk = fn (string $label, string $status) => $this->makeFoodbookBlock($this->makeChapter($this->makeFoodbook($this->t, $label, ['status' => $status])),
-        ['sales_recipe_id' => $this->alt->id]);
+        ['recipe_id' => $this->alt->id]);
     $entwurf = $mk('Entwurf 2027', 'entwurf');
     $aktiv = $mk('Foodbook 2026', 'aktiv');
     $inaktiv = $mk('Foodbook 2024', 'inaktiv');
 
     $ohne = $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id, ['foodbooks']);
-    expect((int) $entwurf->fresh()->sales_recipe_id)->toBe($this->neu->id)
-        ->and((int) $aktiv->fresh()->sales_recipe_id)->toBe($this->alt->id)
+    expect((int) $entwurf->fresh()->recipe_id)->toBe($this->neu->id)
+        ->and((int) $aktiv->fresh()->recipe_id)->toBe($this->alt->id)
         ->and($ohne['getauscht']['foodbooks'])->toBe(1);
 
     $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id, ['foodbooks'], auchAktiveFoodbooks: true);
-    expect((int) $aktiv->fresh()->sales_recipe_id)->toBe($this->neu->id)
-        ->and((int) $inaktiv->fresh()->sales_recipe_id)->toBe($this->alt->id);
+    expect((int) $aktiv->fresh()->recipe_id)->toBe($this->neu->id)
+        ->and((int) $inaktiv->fresh()->recipe_id)->toBe($this->alt->id);
 });
 
 it('Ersatz-Verknüpfung zieht aufs neue Gericht um', function () {
@@ -170,12 +170,12 @@ it('Ersatz-Verknüpfung zieht aufs neue Gericht um', function () {
 it('Vorschau schreibt nichts und nennt Angebotspreis vorher und nachher wie nach dem Tausch', function () {
     $offen = gtAngebot($this, 'Hochzeit', 'anfrage');
     $konzept = $this->makeConcept($this->t, 'Herbstmenü');
-    $slot = $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->alt->id]);
+    $slot = $this->makeConceptSlot($konzept, ['recipe_id' => $this->alt->id]);
 
     $v = $this->svc->vorschau($this->t, $this->alt->id, $this->neu->id);
 
-    expect((int) $offen->fresh()->sales_recipe_id)->toBe($this->alt->id)
-        ->and((int) $slot->fresh()->sales_recipe_id)->toBe($this->alt->id)
+    expect((int) $offen->fresh()->recipe_id)->toBe($this->alt->id)
+        ->and((int) $slot->fresh()->recipe_id)->toBe($this->alt->id)
         ->and($v['bereiche']['konzepte']['anzahl'])->toBe(1)
         ->and($v['bereiche']['angebote']['anzahl'])->toBe(1);
     $preis = collect($v['bereiche']['angebote']['preise'])->firstWhere('name', 'Hochzeit');
@@ -188,7 +188,7 @@ it('Vorschau schreibt nichts und nennt Angebotspreis vorher und nachher wie nach
 
 it('alles oder nichts: wirft ein Bereich, bleibt auch der Rest unverändert', function () {
     $konzept = $this->makeConcept($this->t, 'Herbstmenü');
-    $slot = $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->alt->id]);
+    $slot = $this->makeConceptSlot($konzept, ['recipe_id' => $this->alt->id]);
     gtKarte($this, 'Herbstkarte', null);
     app()->instance(SpeisekarteService::class, new class extends SpeisekarteService
     {
@@ -201,17 +201,17 @@ it('alles oder nichts: wirft ein Bereich, bleibt auch der Rest unverändert', fu
     });
 
     expect(fn () => $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id))->toThrow(RuntimeException::class, 'kaputt');
-    expect((int) $slot->fresh()->sales_recipe_id)->toBe($this->alt->id);
+    expect((int) $slot->fresh()->recipe_id)->toBe($this->alt->id);
 });
 
 it('fremdes Team: bleibt unangetastet und sperrt das Löschen mit Teamname', function () {
     $fremd = $this->makeConcept($this->childA, 'Menü Kind-Team');
-    $slot = $this->makeConceptSlot($fremd, ['sales_recipe_id' => $this->alt->id]);
+    $slot = $this->makeConceptSlot($fremd, ['recipe_id' => $this->alt->id]);
 
     $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id);
     $bilanz = app(GerichtVerwendungen::class)->loeschBilanz($this->t, $this->alt->id);
 
-    expect((int) $slot->fresh()->sales_recipe_id)->toBe($this->alt->id)
+    expect((int) $slot->fresh()->recipe_id)->toBe($this->alt->id)
         ->and($bilanz['frei'])->toBeFalse()
         ->and($bilanz['aktiv'][0]['grund'])->toContain('aktiv genutzt');
     expect(fn () => app(SalesRecipeService::class)->deleteDish($this->t, $this->alt->id))->toThrow(RuntimeException::class, 'Menü Kind-Team');
@@ -220,21 +220,21 @@ it('fremdes Team: bleibt unangetastet und sperrt das Löschen mit Teamname', fun
 it('Abnahme: Tausch aller Bereiche mit Haken → deleteDish geht durch → historische Verweise zeigen den Namen', function () {
     $sp = app(SpeiseplanService::class);
     $plan = $sp->create($this->t, ['name' => 'Kantine', 'start_date' => '2026-11-16']);
-    $gestern = $sp->addEintrag($this->t, $plan->id, ['entry_date' => '2026-11-20', 'sales_recipe_id' => $this->alt->id]);
-    $sp->addEintrag($this->t, $plan->id, ['entry_date' => '2026-11-24', 'sales_recipe_id' => $this->alt->id]);
-    $this->makeConceptSlot($this->makeConcept($this->t, 'Herbstmenü'), ['sales_recipe_id' => $this->alt->id]);
+    $gestern = $sp->addEintrag($this->t, $plan->id, ['entry_date' => '2026-11-20', 'recipe_id' => $this->alt->id]);
+    $sp->addEintrag($this->t, $plan->id, ['entry_date' => '2026-11-24', 'recipe_id' => $this->alt->id]);
+    $this->makeConceptSlot($this->makeConcept($this->t, 'Herbstmenü'), ['recipe_id' => $this->alt->id]);
     gtKarte($this, 'Herbstkarte', null);
     $abgelaufen = gtKarte($this, 'Sommerkarte', '2026-09-30');
     gtAngebot($this, 'Hochzeit', 'anfrage');
     $versendet = gtAngebot($this, 'Firmenfeier', 'versendet');
-    $aktivesFb = $this->makeFoodbookBlock($this->makeChapter($this->makeFoodbook($this->t, 'Foodbook 2026')), ['sales_recipe_id' => $this->alt->id]);
-    $archiv = $this->makeFoodbookBlock($this->makeChapter($this->makeFoodbook($this->t, 'Foodbook 2023', ['status' => 'archiviert'])), ['sales_recipe_id' => $this->alt->id]);
+    $aktivesFb = $this->makeFoodbookBlock($this->makeChapter($this->makeFoodbook($this->t, 'Foodbook 2026')), ['recipe_id' => $this->alt->id]);
+    $archiv = $this->makeFoodbookBlock($this->makeChapter($this->makeFoodbook($this->t, 'Foodbook 2023', ['status' => 'archiviert'])), ['recipe_id' => $this->alt->id]);
 
     expect(app(GerichtVerwendungen::class)->loeschBilanz($this->t, $this->alt->id)['frei'])->toBeFalse();
     $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id, auchAktiveFoodbooks: true);
     $bilanz = app(GerichtVerwendungen::class)->loeschBilanz($this->t, $this->alt->id);
     expect($bilanz['frei'])->toBeTrue()->and($bilanz['historisch'])->toBe(4)
-        ->and((int) $aktivesFb->fresh()->sales_recipe_id)->toBe($this->neu->id);
+        ->and((int) $aktivesFb->fresh()->recipe_id)->toBe($this->neu->id);
 
     app(SalesRecipeService::class)->deleteDish($this->t, $this->alt->id);
 
@@ -243,5 +243,5 @@ it('Abnahme: Tausch aller Bereiche mit Haken → deleteDish geht durch → histo
         ->and($abgelaufen->fresh()->dish->name)->toBe('Rinderroulade')
         ->and($versendet->fresh()->dish->name)->toBe('Rinderroulade')
         ->and($archiv->fresh()->dish->name)->toBe('Rinderroulade')
-        ->and(FoodAlchemistConceptSlot::where('sales_recipe_id', $this->alt->id)->count())->toBe(0);
+        ->and(FoodAlchemistConceptSlot::where('recipe_id', $this->alt->id)->count())->toBe(0);
 });

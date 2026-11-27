@@ -28,7 +28,7 @@ beforeEach(function () {
         'is_standard' => true, 'ek_portion' => 10, 'sales_net' => 99.0,
     ]);
     $this->concept = $this->makeConcept($this->childA, 'Edition A');
-    $this->makeConceptSlot($this->concept, ['sales_recipe_id' => $recipe->id]);
+    $this->makeConceptSlot($this->concept, ['recipe_id' => $recipe->id]);
 });
 
 it('outletPreisMap: €/Gast je Zeile betriebsscharf; ohne Brille leer', function () {

@@ -58,7 +58,7 @@ class ConceptPaketService
      * Menge/Einheit/Darreichung, solange das Item das Feld nicht mitbringt. Struktur-Slots
      * (Überschrift/Text) bleiben erhalten und rücken hinter die Gerichte.
      *
-     * @param  list<array{sales_recipe_id:int, quantity?:?float, unit_vocab_id?:?int, presentation_id?:?int}>  $items
+     * @param  list<array{recipe_id:int, quantity?:?float, unit_vocab_id?:?int, presentation_id?:?int}>  $items
      */
     public function syncGerichte(Team $team, int $paketId, array $items): FoodAlchemistConcept
     {
@@ -66,24 +66,24 @@ class ConceptPaketService
         return DB::transaction(fn () => $this->syncGerichteImLauf($team, $paketId, $items));
     }
 
-    /** @param  list<array{sales_recipe_id:int, quantity?:?float, unit_vocab_id?:?int, presentation_id?:?int}>  $items */
+    /** @param  list<array{recipe_id:int, quantity?:?float, unit_vocab_id?:?int, presentation_id?:?int}>  $items */
     private function syncGerichteImLauf(Team $team, int $paketId, array $items): FoodAlchemistConcept
     {
         $paket = $this->sichtbar($team, $paketId) ?? throw new \RuntimeException('Paket nicht sichtbar/vorhanden.');
         $slots = $paket->slots()->orderBy('position')->get();
-        $gerichtSlots = $slots->filter(fn ($s) => in_array($s->type, ['gericht', 'basisrezept'], true) && $s->sales_recipe_id !== null);
-        $frei = $gerichtSlots->groupBy(fn ($s) => (int) $s->sales_recipe_id)->map->values();
-        $istBasis = FoodAlchemistRecipe::whereIn('id', array_map(fn ($i) => (int) $i['sales_recipe_id'], $items))
+        $gerichtSlots = $slots->filter(fn ($s) => in_array($s->type, ['gericht', 'basisrezept'], true) && $s->recipe_id !== null);
+        $frei = $gerichtSlots->groupBy(fn ($s) => (int) $s->recipe_id)->map->values();
+        $istBasis = FoodAlchemistRecipe::whereIn('id', array_map(fn ($i) => (int) $i['recipe_id'], $items))
             ->pluck('is_sales_recipe', 'id');
 
         $reihenfolge = [];
         foreach ($items as $item) {
-            $rid = (int) $item['sales_recipe_id'];
+            $rid = (int) $item['recipe_id'];
             $slot = ($frei[$rid] ?? collect())->shift();
             if ($slot === null) {
                 $slot = $this->concepts->addSlot($team, $paket->id, []);
                 $slot = $this->concepts->fillSlot($team, $slot->id, [
-                    'sales_recipe_id' => $rid,
+                    'recipe_id' => $rid,
                     'type' => ($istBasis[$rid] ?? true) ? 'gericht' : 'basisrezept',
                     'quantity' => $item['quantity'] ?? null,
                     'unit_vocab_id' => $item['unit_vocab_id'] ?? null,
@@ -104,7 +104,7 @@ class ConceptPaketService
         foreach ($frei->flatten(1) as $rest) {
             $this->concepts->removeSlot($team, (int) $rest->id);
         }
-        $struktur = $slots->reject(fn ($s) => in_array($s->type, ['gericht', 'basisrezept'], true) && $s->sales_recipe_id !== null)
+        $struktur = $slots->reject(fn ($s) => in_array($s->type, ['gericht', 'basisrezept'], true) && $s->recipe_id !== null)
             ->pluck('id')->map(fn ($id) => (int) $id)->all();
         $this->concepts->reorderSlots($team, $paket->id, array_merge($reihenfolge, $struktur));
 
@@ -150,10 +150,10 @@ class ConceptPaketService
         if ($mitGerichten) {
             $p->loadMissing(['slots' => fn ($q) => $q->orderBy('position'), 'slots.dish:id,name', 'slots.unit:id,slug', 'slots.presentation.servingForm']);
             $out['dishes'] = $p->slots
-                ->filter(fn ($s) => $s->sales_recipe_id !== null)
+                ->filter(fn ($s) => $s->recipe_id !== null)
                 ->map(fn ($s) => [
                     'row_id' => (int) $s->id,
-                    'sales_recipe_id' => (int) $s->sales_recipe_id,
+                    'recipe_id' => (int) $s->recipe_id,
                     'name' => $s->dish?->name,
                     'quantity' => $s->quantity !== null ? (float) $s->quantity : null,
                     'unit' => $s->unit?->slug,

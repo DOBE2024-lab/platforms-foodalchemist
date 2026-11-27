@@ -59,7 +59,7 @@ final class ConceptVorgabenService
     /** Leere Gericht-Position: kein Gericht, kein Paket, kein Struktur-Block. */
     public static function istLeer(FoodAlchemistConceptSlot $slot): bool
     {
-        return $slot->sales_recipe_id === null && $slot->embedded_concept_id === null
+        return $slot->recipe_id === null && $slot->embedded_concept_id === null
             && ! in_array((string) $slot->type, ConceptService::STRUKTUR_TYPEN, true);
     }
 
@@ -90,7 +90,7 @@ final class ConceptVorgabenService
                 'position' => (int) FoodAlchemistDishIdea::where('team_id', $team->id)->where('concept_id', (int) $slot->concept_id)->max('position') + 1,
                 'title' => $titel,
                 'description' => $notiz,
-                'sales_recipe_id' => $bestand?->id,
+                'recipe_id' => $bestand?->id,
                 'target_form' => 'einzel',
                 'group_id' => null,
                 'status' => 'entwurf',
@@ -148,10 +148,10 @@ final class ConceptVorgabenService
             return;
         }
         $concepts = app(ConceptService::class);
-        if ((int) FoodAlchemistConceptSlot::whereKey($slotId)->value('sales_recipe_id') === $recipeId) {
+        if ((int) FoodAlchemistConceptSlot::whereKey($slotId)->value('recipe_id') === $recipeId) {
             return;   // Gericht-Hülle: steht schon in der Position — nicht neu füllen (Menge und Einheit bleiben)
         }
-        $slot = $concepts->fillSlot($team, $slotId, ['sales_recipe_id' => $recipeId]);
+        $slot = $concepts->fillSlot($team, $slotId, ['recipe_id' => $recipeId]);
         if ((($idee?->source_meta ?? [])['quelle'] ?? null) !== self::QUELLE) {
             return;
         }
@@ -167,10 +167,10 @@ final class ConceptVorgabenService
     public function uebernimmBestand(Team $team, int $ideaId, int $stepId): bool
     {
         $idee = FoodAlchemistDishIdea::where('team_id', $team->id)->find($ideaId);
-        if ($idee === null || (($idee->source_meta ?? [])['quelle'] ?? null) !== self::QUELLE || $idee->sales_recipe_id === null) {
+        if ($idee === null || (($idee->source_meta ?? [])['quelle'] ?? null) !== self::QUELLE || $idee->recipe_id === null) {
             return false;
         }
-        $gericht = FoodAlchemistRecipe::visibleToTeam($team)->where('is_sales_recipe', true)->find((int) $idee->sales_recipe_id);
+        $gericht = FoodAlchemistRecipe::visibleToTeam($team)->where('is_sales_recipe', true)->find((int) $idee->recipe_id);
         if ($gericht === null) {
             return false;   // inzwischen gelöscht oder nicht mehr sichtbar → normal bauen
         }

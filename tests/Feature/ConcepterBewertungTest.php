@@ -29,7 +29,7 @@ beforeEach(function () {
     // 98 · 2.6c: Paket = kind=paket-Concept (manueller Preis), eingebettet statt package_id
     $this->paket = $this->concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall', 'level' => 'klassisch']);
     $this->concepts->update($this->rootTeam, $this->paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
-    $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $this->paket->id, ['role' => 'Vorspeise'])->id, ['sales_recipe_id' => $veg->id]);
+    $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $this->paket->id, ['role' => 'Vorspeise'])->id, ['recipe_id' => $veg->id]);
 
     $this->concept = $this->concepts->create($this->rootTeam, ['name' => 'Mini-Menü', 'level' => 'klassisch']);
     $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);

@@ -21,7 +21,7 @@ beforeEach(function () {
     ]);
     $kap = $this->makeChapter($fb, ['title' => 'INTERN Vorspeisen', 'consumer_title' => 'Vorspeisen', 'position' => 1]);
     $suppe = $this->makeRecipe($this->rootTeam, 'Kürbissuppe', ['is_sales_recipe' => true, 'sales_net' => 6.5]);
-    $this->makeFoodbookBlock($kap, ['type' => 'recipe_ref', 'sales_recipe_id' => $suppe->id, 'position' => 1]);
+    $this->makeFoodbookBlock($kap, ['type' => 'recipe_ref', 'recipe_id' => $suppe->id, 'position' => 1]);
 
     $res = $this->svc->publish($this->rootTeam, 'foodbook', $fb->id, ['expires_at' => now()->addDays(30)->toDateString()]);
     $this->token = $res['token'];

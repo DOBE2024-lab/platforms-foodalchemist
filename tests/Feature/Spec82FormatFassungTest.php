@@ -96,7 +96,7 @@ beforeEach(function () {
     $mkKonzept = function (string $name, $gericht) use ($cs) {
         $c = $cs->create($this->master, ['name' => $name]);
         $s = $cs->addSlot($this->master, $c->id, ['role' => 'Hauptgang']);
-        $cs->fillSlot($this->master, $s->id, ['sales_recipe_id' => $gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+        $cs->fillSlot($this->master, $s->id, ['recipe_id' => $gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
 
         return $c;
     };

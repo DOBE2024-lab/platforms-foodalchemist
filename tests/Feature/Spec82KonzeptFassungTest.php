@@ -84,7 +84,7 @@ beforeEach(function () {
     $cs = app(ConceptService::class);
     $this->paketKonzept = $cs->createPaket($this->master, ['name' => 'Jus-Kompakt']);
     $s = $cs->addSlot($this->master, $this->paketKonzept->id, ['role' => 'Beilage']);
-    $cs->fillSlot($this->master, $s->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+    $cs->fillSlot($this->master, $s->id, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $cs->setSlotDarreichung($this->master, $s->id, $this->kleine->id);
 
     // Konzept: eingebettetes Paket-Konzept (embedded_concept_id), festes Gericht, Struktur-Block (Alt-Paket-Slot entfällt mit 98 · 2.6c)
@@ -92,7 +92,7 @@ beforeEach(function () {
     $s2 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Beilage']);
     $cs->fillSlot($this->master, $s2->id, ['embedded_concept_id' => $this->paketKonzept->id]);
     $s3 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Hauptgang']);
-    $cs->fillSlot($this->master, $s3->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+    $cs->fillSlot($this->master, $s3->id, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $cs->setSlotDarreichung($this->master, $s3->id, $this->standard->id);
     $cs->addBlock($this->master, $this->konzept->id, 'header', ['title' => 'Unser Menü']);
 
@@ -154,7 +154,7 @@ it('Veröffentlichen: Fassung ohne Master-Preise, Slots zeigen auf Fassungen (Pa
         ->and($f->ist_fassung)->toBeTrue()->and($f->fassung_von_id)->toBe($this->konzept->id)->and($f->aenderungsnotiz)->toBe('Menü erstmals')
         ->and($f->price_per_person_cache)->toBeNull()->and($f->price_per_person_manual)->toBeNull()->and($f->ek_per_person_cache)->toBeNull()
         ->and($slots->pluck('embedded_concept_id')->filter()->values()->all())->toBe([$konzeptF->id])
-        ->and($slots->pluck('sales_recipe_id')->filter()->values()->all())->toBe([$rezeptF->id])
+        ->and($slots->pluck('recipe_id')->filter()->values()->all())->toBe([$rezeptF->id])
         ->and($slots->where('type', 'header')->count())->toBe(1)   // Struktur-Block bleibt
         ->and($this->konzept->refresh()->ist_fassung)->toBeFalse()
         ->and((float) $this->konzept->price_per_person_manual)->toBe(99.0);
@@ -179,7 +179,7 @@ it('D10 + D9 · unveröffentlichte Rezept-Änderung ist ein Hinweis, die gewähl
 
     expect(implode(' ', $r['hinweise']))->toContain('unveröffentlichte Änderungen');
     $rezeptF = FoodAlchemistRecipe::mitFassungen()->where('fassung_von_id', $this->gericht->id)->where('ist_fassung', true)->sole();
-    $slotG = FoodAlchemistConcept::mitFassungen()->find($r['fassung_id'])->slots()->whereNotNull('sales_recipe_id')->sole();
+    $slotG = FoodAlchemistConcept::mitFassungen()->find($r['fassung_id'])->slots()->whereNotNull('recipe_id')->sole();
     $standardF = FoodAlchemistRecipeDarreichung::where('recipe_id', $rezeptF->id)->where('is_standard', true)->sole();
     expect($slotG->presentation_id)->toBe($standardF->id);
 });

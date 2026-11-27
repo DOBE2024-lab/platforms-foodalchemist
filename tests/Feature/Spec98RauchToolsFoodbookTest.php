@@ -32,9 +32,9 @@ beforeEach(function () {
     $this->kap2 = $this->svc->addKapitel($this->rootTeam, $this->fb->id, ['title' => 'Hauptgang']);
     $this->gericht = $this->makeRecipe($this->rootTeam, 'Rauch-Zander', ['is_sales_recipe' => true]);
     $this->concept = $this->makeConcept($this->rootTeam, 'Rauch-Menü', ['consumer_name' => 'Rauch-Genuss', 'price_per_person_cache' => 40.00]);
-    $this->makeConceptSlot($this->concept, ['sales_recipe_id' => $this->gericht->id, 'wording' => 'Zander auf Linsen']);
+    $this->makeConceptSlot($this->concept, ['recipe_id' => $this->gericht->id, 'wording' => 'Zander auf Linsen']);
     $this->blockKonzept = $this->svc->addBlock($this->rootTeam, $this->kap1->id, ['type' => 'concept_ref', 'concept_id' => $this->concept->id]);
-    $this->blockGericht = $this->svc->addBlock($this->rootTeam, $this->kap1->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $this->blockGericht = $this->svc->addBlock($this->rootTeam, $this->kap1->id, ['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id]);
     $this->blockText = $this->svc->addBlock($this->rootTeam, $this->kap1->id, ['type' => 'text', 'label' => 'Notiz']);
     $this->format = app(FormatService::class)->create($this->rootTeam, ['name' => 'RAUCH.CORNER', 'consumer_name' => 'Rauch Corner', 'story' => 'Hinführung.']);
     app(FormatService::class)->slotConceptEinfuegen($this->rootTeam, $this->format->id, $this->concept->id);

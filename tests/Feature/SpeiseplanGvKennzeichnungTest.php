@@ -59,7 +59,7 @@ it('Stufe A: Kostformen-Abdeckung + Wochen-Kennzeichnung am Plan', function () {
     $veg = gvGericht($this->rootTeam->id, 'v1', ['spec_is_vegetarian' => true, 'allergen_gluten' => 'enthalten']);
     $sp = $this->plan->create($this->rootTeam, ['name' => 'GV-Woche', 'start_date' => '2026-07-06']);
     // nur Montag ein vegetarisches Gericht → Di–Fr offen
-    $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'sales_recipe_id' => $veg->id]);
+    $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'recipe_id' => $veg->id]);
 
     $montag = Carbon::parse('2026-07-06');
     $kf = collect($this->plan->kostformAbdeckung($sp->refresh(), 'mittag', $montag))->firstWhere('key', 'vegetarisch');
@@ -73,7 +73,7 @@ it('Stufe A: Kostformen-Abdeckung + Wochen-Kennzeichnung am Plan', function () {
 it('Stufe B: Aushang-Daten — Grid + Codes + nur-verwendete Legende', function () {
     $veg = gvGericht($this->rootTeam->id, 'b1', ['spec_is_vegetarian' => true, 'allergen_gluten' => 'enthalten', 'additive_with_dye' => 3]);
     $sp = $this->plan->create($this->rootTeam, ['name' => 'Aushang', 'start_date' => '2026-07-06']);
-    $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'sales_recipe_id' => $veg->id]);
+    $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'recipe_id' => $veg->id]);
 
     $d = $this->plan->dokumentDaten($this->rootTeam, $sp->refresh(), 'mittag', '2026-07-06');
 
@@ -92,7 +92,7 @@ it('Stufe C: Pax-Override + Woche→Produktion erzeugt je Werktag einen Auftrag'
     $g = gvGericht($this->rootTeam->id, 'c1');
     $sp = $this->plan->create($this->rootTeam, ['name' => 'GV-C', 'start_date' => '2026-07-06']);
     $this->plan->update($this->rootTeam, $sp->id, ['default_pax' => 50]);
-    $e = $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'sales_recipe_id' => $g->id]);
+    $e = $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'recipe_id' => $g->id]);
 
     // 0 → NULL (Default gilt), dann echter Override 80
     $this->plan->setEintragPax($this->rootTeam, $e->id, 0);
@@ -119,7 +119,7 @@ it('Stufe D: Nährwert-Ø/Person/Tag + Abwechslungs-Mix', function () {
         'nutri_confidence' => 'high', 'sales_quantity_per_unit_g' => 250, 'dish_main_group_id' => $hg->id,
     ]);
     $sp = $this->plan->create($this->rootTeam, ['name' => 'GV-D', 'start_date' => '2026-07-06']);
-    $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'sales_recipe_id' => $g->id]);
+    $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'recipe_id' => $g->id]);
     $montag = Carbon::parse('2026-07-06');
 
     $nw = $this->plan->wochenNaehrwerte($sp->refresh(), 'mittag', $montag);

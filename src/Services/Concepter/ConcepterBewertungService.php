@@ -94,7 +94,7 @@ class ConcepterBewertungService
         // 6 — Sensorik passt zur Rolle (je Gang-Gericht; Sensorik-Layer, leichtgewichtig via fuerRezept)
         $gerichtIds = DB::table('foodalchemist_concept_slots')
             ->where('concept_id', $concept->id)->whereNull('deleted_at')
-            ->whereNotNull('sales_recipe_id')->pluck('sales_recipe_id')->all();
+            ->whereNotNull('recipe_id')->pluck('recipe_id')->all();
         if ($gerichtIds === []) {
             $checks[] = $this->check('sensorik_rolle', 'Sensorik / Rolle', 'info', 'Keine direkten Gang-Gerichte zum Prüfen.');
         } else {

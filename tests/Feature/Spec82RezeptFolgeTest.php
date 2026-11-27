@@ -142,7 +142,7 @@ it('Rezept im Baum eines EINGEFROREN Angebots folgt nicht (auch ohne Allergen-Ä
     $angebote = app(AngebotService::class);
     $angebot = $angebote->create($this->broich, ['name' => 'Hochzeit Müller']);
     app(OfferCompositionService::class)->addKapitel($this->broich, $angebot->id, ['title' => 'Menü'])->blocks()
-        ->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $this->lamm->id, 'position' => 1, 'visible' => true]);
+        ->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'recipe_id' => $this->lamm->id, 'position' => 1, 'visible' => true]);
     $angebote->setStatus($this->broich, $angebot->id, 'angebot');
     $andere = ($this->eigenes)($this->broich, 'Anderes Gericht');   // nicht eingefroren: folgt
 

@@ -26,7 +26,7 @@ beforeEach(function () {
     $this->concept = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Fire intern', 'kind' => 'concept', 'status' => 'active',
         'description' => 'Feuer, Rauch und Glut.', 'image_path' => 'concepts/fire.jpg', 'price_per_person_cache' => 45, 'ek_per_person_cache' => 14]);
     $this->slot = FoodAlchemistConceptSlot::create(['team_id' => $this->rootTeam->id, 'concept_id' => $this->concept->id, 'position' => 1, 'type' => 'gericht',
-        'sales_recipe_id' => $this->gericht->id, 'wording' => 'Rinderfilet vom Grill']);
+        'recipe_id' => $this->gericht->id, 'wording' => 'Rinderfilet vom Grill']);
     $this->k = $this->svc->anlegen($this->rootTeam, ['name' => 'Detail', 'gueltig_bis' => now()->addMonth()->format('Y-m-d')]);
     $this->kz = $this->svc->konzeptHinzu($this->rootTeam, $this->k->id, ['rolle' => 'haupt', 'dinner_concept_id' => $this->concept->id, 'kunden_titel' => 'Fire']);
     $this->svc->paketAnlegen($this->rootTeam, $this->k->id, ['von_pax' => 100, 'bis_pax' => 199]);
@@ -102,12 +102,12 @@ it('Speisen-Detail wie im Foodbook-Link: Gang-Überschrift, Wording, Foto, Codes
     $tag = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Lunch intern', 'kind' => 'concept', 'status' => 'active',
         'image_path' => 'concepts/lunch.jpg', 'price_per_person_cache' => 30, 'ek_per_person_cache' => 9]);
     FoodAlchemistConceptSlot::create(['team_id' => $this->rootTeam->id, 'concept_id' => $tag->id, 'position' => 1, 'type' => 'gericht',
-        'sales_recipe_id' => $this->gericht->id, 'wording' => 'Rinderfilet am Mittag']);
+        'recipe_id' => $this->gericht->id, 'wording' => 'Rinderfilet am Mittag']);
     $this->kz->update(['lunch_concept_id' => $tag->id]);
     $dessert = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Dessert intern', 'kind' => 'concept', 'status' => 'active',
         'image_path' => 'concepts/dessert.jpg', 'price_per_person_cache' => 8, 'ek_per_person_cache' => 2]);
     FoodAlchemistConceptSlot::create(['team_id' => $this->rootTeam->id, 'concept_id' => $dessert->id, 'position' => 1, 'type' => 'gericht',
-        'sales_recipe_id' => $this->gericht->id, 'wording' => 'Schokoladen-Tarte']);
+        'recipe_id' => $this->gericht->id, 'wording' => 'Schokoladen-Tarte']);
     $addon = $this->svc->konzeptHinzu($this->rootTeam, $this->k->id, ['rolle' => 'addon', 'dinner_concept_id' => $dessert->id, 'kunden_titel' => 'Dessert-Buffet', 'addon_tageszeit' => 'beide']);
 
     $link = ($this->publish)();
@@ -141,7 +141,7 @@ it('Überschreibung wirkt nur im Konfigurator, Zurücksetzen führt aufs Concept
 
     // fremde Position wird abgelehnt
     $anderes = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Anderes', 'kind' => 'concept', 'status' => 'active']);
-    $fremd = FoodAlchemistConceptSlot::create(['team_id' => $this->rootTeam->id, 'concept_id' => $anderes->id, 'position' => 1, 'type' => 'gericht', 'sales_recipe_id' => $this->gericht->id]);
+    $fremd = FoodAlchemistConceptSlot::create(['team_id' => $this->rootTeam->id, 'concept_id' => $anderes->id, 'position' => 1, 'type' => 'gericht', 'recipe_id' => $this->gericht->id]);
     expect(fn () => $this->svc->wordingSetzen($this->rootTeam, $this->kz->id, $fremd->id, 'x'))->toThrow(InvalidArgumentException::class);
 });
 

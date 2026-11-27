@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 /** MCP-Steuerbarkeit · D7: einen Foodbook-Block bearbeiten (Label/Text/Menge/Preis/Sichtbarkeit). */
 class FoodbookBlocksPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {
-    private const FELDER = ['label', 'customer_text', 'interne_bemerkung', 'sales_recipe_id', 'quantity', 'price_value', 'price_basis', 'visible', 'level', 'presentation_id'];   // presentation_id: Dienst lehnt ab (B7)
+    private const FELDER = ['label', 'customer_text', 'interne_bemerkung', 'recipe_id', 'quantity', 'price_value', 'price_basis', 'visible', 'level', 'presentation_id'];   // presentation_id: Dienst lehnt ab (B7)
 
     public function getName(): string
     {
@@ -21,7 +21,7 @@ class FoodbookBlocksPutTool extends FoodAlchemistTool implements ToolContract, T
     public function getDescription(): string
     {
         return 'Bearbeitet einen Block eines team-eigenen Entwurf-Foodbooks (felder: label, customer_text, quantity, '
-            . 'price_value, price_basis, visible, level, sales_recipe_id). Struktur/Preis-Wahrheit bleibt im Service.';
+            . 'price_value, price_basis, visible, level, recipe_id). Struktur/Preis-Wahrheit bleibt im Service.';
     }
 
     public function getSchema(): array
@@ -38,6 +38,7 @@ class FoodbookBlocksPutTool extends FoodAlchemistTool implements ToolContract, T
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');

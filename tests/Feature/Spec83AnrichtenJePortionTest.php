@@ -259,7 +259,7 @@ it('B3c Kalkulation: Lohn je Block getrennt („davon“-Zeilen), Summe = FEK', 
     $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Gala']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Hauptgang']);
-    $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->gericht->id]);
+    $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->gericht->id]);
     $concepts->recomputeCache($concept->refresh());
 
     $k = $costing->costConcept($this->rootTeam, $concept->refresh(), 100);
@@ -318,7 +318,7 @@ it('B3h Kalkulation: Posten-Last nur bei den beteiligten Posten, Sammel-Pass tr�
     $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Gala']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Hauptgang']);
-    $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->gericht->id]);
+    $concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->gericht->id]);
     $concepts->recomputeCache($concept->refresh());
 
     $k = app(\Platform\FoodAlchemist\Services\Bestellung\OrderCostingService::class)->costConcept($this->rootTeam, $concept->refresh(), 100);

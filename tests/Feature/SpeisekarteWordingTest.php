@@ -23,7 +23,7 @@ beforeEach(function () {
 it('Stufe D: Wording-Override ersetzt den Standard-Namen im Dokument', function () {
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
-    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
     $this->karten->updatePosition($this->rootTeam, $pos->id, ['wording' => 'Dry Aged Filet vom Weiderind']);
 
     $dok = $this->karten->dokumentDaten($this->rootTeam, $karte->refresh());
@@ -38,7 +38,7 @@ it('Stufe D: Weinkarte — Metadaten aus payload_json + manueller Glaspreis', fu
     $karte = $this->karten->create($this->rootTeam, ['name' => 'Weinkarte', 'karten_typ' => 'weinkarte']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Weißweine', 'art' => 'getraenke']);
     $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, [
-        'type' => 'gericht_ref', 'sales_recipe_id' => $wein->id,
+        'type' => 'gericht_ref', 'recipe_id' => $wein->id,
         'price_mode' => 'manuell', 'price_value' => 7.50,   // 0,1 l Glas
         'payload_json' => ['wein' => ['jahrgang' => '2022', 'region' => 'Rheingau', 'rebsorte' => 'Riesling']],
     ]);

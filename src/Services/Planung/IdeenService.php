@@ -102,7 +102,7 @@ class IdeenService
             'position' => $this->naechstePosition($team, $owner, FoodAlchemistDishIdea::class),
             'title' => $titel,
             'description' => $this->clean($in['description'] ?? null),
-            'sales_recipe_id' => null,
+            'recipe_id' => null,
             'target_form' => $targetForm,
             'group_id' => $groupId,
             'status' => 'entwurf',
@@ -114,12 +114,12 @@ class IdeenService
     /**
      * Bestands-Übernahme als Skizze: ein echtes VK-Gericht wird als Idee gestempelt
      * (Reuse der `slotVorschlaege`/Picker-Idee). Das Gericht wird NICHT erdet/dupliziert —
-     * nur die `sales_recipe_id` referenziert (loser Zeiger). Titel-Default = Gericht-Name.
+     * nur die `recipe_id` referenziert (loser Zeiger). Titel-Default = Gericht-Name.
      */
     public function uebernehmeBestand(Team $team, array $in): FoodAlchemistDishIdea
     {
         $owner = $this->resolveOwner($team, $in);
-        $recipe = $this->pruefeBestandGericht($team, isset($in['sales_recipe_id']) ? (int) $in['sales_recipe_id'] : null);
+        $recipe = $this->pruefeBestandGericht($team, isset($in['recipe_id']) ? (int) $in['recipe_id'] : null);
 
         [$targetForm, $groupId] = $this->normForm($team, $in, $owner);
         $titel = trim((string) ($in['title'] ?? '')) ?: (string) $recipe->name;
@@ -132,7 +132,7 @@ class IdeenService
             'position' => $this->naechstePosition($team, $owner, FoodAlchemistDishIdea::class),
             'title' => $titel,
             'description' => $this->clean($in['description'] ?? null),
-            'sales_recipe_id' => $recipe->id,
+            'recipe_id' => $recipe->id,
             'target_form' => $targetForm,
             'group_id' => $groupId,
             'status' => 'entwurf',
@@ -143,7 +143,7 @@ class IdeenService
 
     /**
      * Inhalt/Form einer Skizze ändern (Titel, Beschreibung, Paket-Zuordnung, Position).
-     * NICHT über diesen Pfad: status (→ setStatus), Owner-Wechsel, sales_recipe_id,
+     * NICHT über diesen Pfad: status (→ setStatus), Owner-Wechsel, recipe_id,
      * generation_/materialized_-Felder (E7).
      */
     public function update(Team $team, int $id, array $in): FoodAlchemistDishIdea
@@ -357,8 +357,8 @@ class IdeenService
         // werden. Fällt sauber weg (kein Block, byte-identisch), wenn die Folge noch leer/ungemappt
         // ist — reine Erdung, keine harte Filterung.
         $belegteIds = FoodAlchemistConceptSlot::where('concept_id', $conceptId)
-            ->whereNotNull('sales_recipe_id')
-            ->pluck('sales_recipe_id')->map(fn ($v) => (int) $v)->filter()->unique()->values()->all();
+            ->whereNotNull('recipe_id')
+            ->pluck('recipe_id')->map(fn ($v) => (int) $v)->filter()->unique()->values()->all();
         if ($belegteIds !== []) {
             $belegte = FoodAlchemistRecipe::visibleToTeam($team)->whereIn('id', $belegteIds)->get();
             $profil = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->menueAromaProfil($belegte);
@@ -411,7 +411,7 @@ class IdeenService
                 'position' => $this->naechstePosition($team, $owner, FoodAlchemistDishIdea::class),
                 'title' => $titel,
                 'description' => $this->clean($i['beschreibung'] ?? $i['description'] ?? null),
-                'sales_recipe_id' => null,
+                'recipe_id' => null,
                 'target_form' => 'einzel',
                 'group_id' => null,
                 'status' => 'entwurf',
@@ -503,7 +503,7 @@ class IdeenService
                 'position' => $this->naechstePosition($team, $owner, FoodAlchemistDishIdea::class),
                 'title' => $titel,
                 'description' => $this->clean($i['beschreibung'] ?? $i['description'] ?? null),
-                'sales_recipe_id' => null,
+                'recipe_id' => null,
                 'target_form' => 'einzel',
                 'group_id' => null,
                 'status' => 'entwurf',
@@ -631,13 +631,13 @@ class IdeenService
     private function pruefeBestandGericht(Team $team, ?int $salesRecipeId): FoodAlchemistRecipe
     {
         if ($salesRecipeId === null) {
-            throw new \RuntimeException('Bestands-Übernahme braucht ein sales_recipe_id (VK-Gericht).');
+            throw new \RuntimeException('Bestands-Übernahme braucht ein recipe_id (VK-Gericht).');
         }
         $recipe = FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
             ->whereNull('variant_source_recipe_id')
             ->find($salesRecipeId);
         if ($recipe === null) {
-            throw new \RuntimeException("sales_recipe_id {$salesRecipeId} ist kein gültiges, sichtbares VK-Gericht (keine Slot-Variante).");
+            throw new \RuntimeException("recipe_id {$salesRecipeId} ist kein gültiges, sichtbares VK-Gericht (keine Slot-Variante).");
         }
 
         return $recipe;

@@ -31,7 +31,7 @@ beforeEach(function () {
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'mcp-sp-g1', 'name' => 'Tagessuppe', 'status' => 'approved',
         'is_sales_recipe' => true, 'sales_net' => 3.50, 'ek_total_eur' => 1.00,
     ]);
-    $this->eintrag = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2027-01-04', 'mahlzeit' => 'mittag', 'line_id' => $this->linie->id, 'sales_recipe_id' => $this->gericht->id]);
+    $this->eintrag = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2027-01-04', 'mahlzeit' => 'mittag', 'line_id' => $this->linie->id, 'recipe_id' => $this->gericht->id]);
 });
 
 it('Registry-Smoke: alle 13 D9-Tools registriert mit type=object', function () {

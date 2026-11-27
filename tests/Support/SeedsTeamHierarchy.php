@@ -504,7 +504,7 @@ trait SeedsTeamHierarchy
      * Gericht-Slot eines Konzepts. Default = Pflicht-Slot mit Kunden-Wording, also
      * die saubere Variante: so löst er weder `konzept_slot_luecke` noch
      * `konzept_ohne_wording` aus. Ein Test verschlechtert genau ein Feld
-     * (`sales_recipe_id` => null, `wording` => null …).
+     * (`recipe_id` => null, `wording` => null …).
      */
     protected function makeConceptSlot(
         \Platform\FoodAlchemist\Models\FoodAlchemistConcept $concept,

@@ -62,7 +62,7 @@ class FoodAlchemistSpeiseplanEintrag extends Model
 
     public function dish(): BelongsTo
     {
-        return $this->belongsTo(FoodAlchemistRecipe::class, 'sales_recipe_id')
+        return $this->belongsTo(FoodAlchemistRecipe::class, 'recipe_id')
             ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis')->withTrashed();   // Spec 82: Verweis löst auch Fassungen auf · Gericht-Verwaltung: weich gelöschte Gerichte bleiben als Verweis lesbar (historische Ansichten)
     }
 
@@ -84,7 +84,7 @@ class FoodAlchemistSpeiseplanEintrag extends Model
     {
         return match (true) {
             $this->concept_id !== null => 'c' . $this->concept_id,
-            $this->sales_recipe_id !== null => 'g' . $this->sales_recipe_id,
+            $this->recipe_id !== null => 'g' . $this->recipe_id,
             default => null,
         };
     }

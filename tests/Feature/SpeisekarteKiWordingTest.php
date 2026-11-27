@@ -56,7 +56,7 @@ it('Stufe E: KI-Wording schlägt vor, schreibt aber nichts an die Position', fun
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $this->karten->update($this->rootTeam, $karte->id, ['default_niveau' => 'gehoben']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
-    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
 
     $r = $this->karten->kiWordingVorschlag($this->rootTeam, $pos->id);
     expect($r['text'])->toContain('Rinderfilet')
@@ -71,7 +71,7 @@ it('Stufe E: leere KI-Antwort wirft', function () {
     bindSpeisekarteKiStub('   ');
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
-    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
 
     expect(fn () => $this->karten->kiWordingVorschlag($this->rootTeam, $pos->id))
         ->toThrow(RuntimeException::class, 'keinen Text');
@@ -81,7 +81,7 @@ it('Stufe E: geerbte Karte — KI-Vorschlag nur durchs Besitzer-Team (D1)', func
     bindSpeisekarteKiStub('Text.');
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
-    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
 
     expect(fn () => $this->karten->kiWordingVorschlag($this->childA, $pos->id))
         ->toThrow(RuntimeException::class, 'Besitzer-Team');
@@ -91,7 +91,7 @@ it('Stufe E: KI-Kartentext nutzt die Gericht-Namen im Kontext', function () {
     bindSpeisekarteKiStub('Willkommen — von Klassik bis Kreativ.');
     $karte = $this->karten->create($this->rootTeam, ['name' => 'Abendkarte']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
 
     $r = $this->karten->kiKartenText($this->rootTeam, $karte->id);
     expect($r['text'])->toContain('Willkommen')
@@ -108,7 +108,7 @@ it('A/Bug-Fix: der Schreibstil-Sprach-Duktus der Karte landet im KI-Prompt', fun
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $this->karten->update($this->rootTeam, $karte->id, ['writing_style_id' => $stil->id]);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
-    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
 
     $this->karten->kiWordingVorschlag($this->rootTeam, $pos->id);
     expect($GLOBALS['sk_ki_prompt'] ?? '')->toContain('SK-DUKTUS-MARKER');   // war der Bug: Stil ging nie mit
@@ -123,7 +123,7 @@ it('A: speisekarteWordingRegenerieren betextet alle Positionen im Stil + schreib
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $this->karten->update($this->rootTeam, $karte->id, ['writing_style_id' => $stil->id]);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
-    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $pos = $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
 
     $n = $this->karten->speisekarteWordingRegenerieren($this->rootTeam, $karte->id);
     expect($n)->toBe(1)
@@ -132,6 +132,6 @@ it('A: speisekarteWordingRegenerieren betextet alle Positionen im Stil + schreib
     // Ohne Stil: nichts betextet, kein Call.
     $karteOhne = $this->karten->create($this->rootTeam, ['name' => 'Ohne']);
     $r2 = $this->karten->addRubrik($this->rootTeam, $karteOhne->id);
-    $this->karten->addPosition($this->rootTeam, $r2->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $this->karten->addPosition($this->rootTeam, $r2->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
     expect($this->karten->speisekarteWordingRegenerieren($this->rootTeam, $karteOhne->id))->toBe(0);
 });

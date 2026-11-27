@@ -27,7 +27,7 @@ beforeEach(function () {
         $c = $concepts->create($this->rootTeam, ['name' => $name]);
         $c->update(['status' => 'active', 'consumer_name' => $name . ' Edition', 'price_per_person_cache' => $preis]);
         $recipe = $this->makeRecipe($this->rootTeam, $name . '-Bowl', ['is_sales_recipe' => true, 'status' => 'approved']);
-        $this->makeConceptSlot($c, ['position' => 1, 'sales_recipe_id' => $recipe->id, 'wording' => $name . ' Bowl mit Kräutern']);
+        $this->makeConceptSlot($c, ['position' => 1, 'recipe_id' => $recipe->id, 'wording' => $name . ' Bowl mit Kräutern']);
 
         return $c;
     };
@@ -42,7 +42,7 @@ beforeEach(function () {
         $paket = $this->makeConcept($this->rootTeam, 'Paket Italien', ['consumer_name' => 'ITALIEN', 'price_per_person_cache' => 28.5]);
         $this->makeConceptSlot($paket, ['position' => 1, 'type' => 'header', 'title' => 'Vorspeise', 'wording' => null, 'is_pflicht' => false]);
         $recipe = $this->makeRecipe($this->rootTeam, 'Vitello', ['is_sales_recipe' => true, 'status' => 'approved']);
-        $this->makeConceptSlot($paket, ['position' => 2, 'sales_recipe_id' => $recipe->id, 'wording' => 'Vitello tonnato mit Kapernäpfeln']);
+        $this->makeConceptSlot($paket, ['position' => 2, 'recipe_id' => $recipe->id, 'wording' => 'Vitello tonnato mit Kapernäpfeln']);
         $this->makeConceptSlot($edition, ['position' => 2, 'embedded_concept_id' => $paket->id, 'wording' => null, 'is_pflicht' => false]);
     };
 });

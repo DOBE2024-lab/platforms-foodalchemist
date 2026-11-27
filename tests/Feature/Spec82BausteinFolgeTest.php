@@ -61,7 +61,7 @@ beforeEach(function () {
     $cs = app(ConceptService::class);
     $this->paket = $cs->createPaket($this->master, ['name' => 'Beilagen-Duo']);
     $ps = $cs->addSlot($this->master, $this->paket->id, ['role' => 'Beilage']);
-    $cs->fillSlot($this->master, $ps->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+    $cs->fillSlot($this->master, $ps->id, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $this->konzept = $cs->create($this->master, ['name' => 'Schwaben-Menü']);
     $s1 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Beilage']);
     $cs->fillSlot($this->master, $s1->id, ['embedded_concept_id' => $this->paket->id]);

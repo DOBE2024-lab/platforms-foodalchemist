@@ -70,7 +70,7 @@ beforeEach(function () {
     $this->angebote = app(AngebotService::class);
     $this->angebot = $this->angebote->create($this->broich, ['name' => 'Hochzeit Müller']);
     $this->kapitel = app(OfferCompositionService::class)->addKapitel($this->broich, $this->angebot->id, ['title' => 'Menü']);
-    $this->block = fn ($recipe) => $this->kapitel->blocks()->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $recipe->id, 'position' => 1 + $this->kapitel->blocks()->count(), 'visible' => true]);
+    $this->block = fn ($recipe) => $this->kapitel->blocks()->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'recipe_id' => $recipe->id, 'position' => 1 + $this->kapitel->blocks()->count(), 'visible' => true]);
     $this->svc = app(AngebotEinfrierService::class);
     $this->kostenFest = function (array $k) {
         app()->instance(EinfrierKosten::class, new class($k) extends EinfrierKosten {
@@ -114,7 +114,7 @@ it('Angebot nur mit eigenem Gericht: wird ebenfalls eingefroren (feste Preise); 
 
 it('Gerichte aus Concepts (Slot) werden gefunden', function () {
     $concept = $this->makeConcept($this->broich, 'Hochzeitsmenü');
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => $this->lamm->id]);
+    $this->makeConceptSlot($concept, ['recipe_id' => $this->lamm->id]);
     $this->kapitel->blocks()->create(['team_id' => $this->broich->id, 'type' => 'concept_ref', 'concept_id' => $concept->id, 'position' => 1, 'visible' => true]);
 
     $e = $this->svc->einfrieren($this->broich, $this->koch, $this->angebot);
@@ -294,7 +294,7 @@ it('Allergen-Änderung: ohne Bestätigung nichts, mit Bestätigung nur ab Rolle 
 it('Gericht ist selbst die Fassung: Verweise der Blöcke und angebots-lokaler Concepts wandern auf die neue Fassung, die Zeile zeigt auf sie', function () {
     ($this->block)(($this->fassung)(1));
     $concept = $this->makeConcept($this->broich, 'Lokales Menü', ['offer_id' => $this->angebot->id]);
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => ($this->fassung)(1)->id]);
+    $this->makeConceptSlot($concept, ['recipe_id' => ($this->fassung)(1)->id]);
     $e = $this->svc->einfrieren($this->broich, $this->koch, $this->angebot);
     expect($e->zeilen)->toHaveCount(1);
     $this->jus->ingredients()->where('raw_text', 'Kalbsknochen')->update(['quantity' => '2500']);
@@ -304,7 +304,7 @@ it('Gericht ist selbst die Fassung: Verweise der Blöcke und angebots-lokaler Co
 
     $f2 = ($this->fassung)(2);
     expect($b['umgehaengt']['bloecke'])->toBe(1)->and($b['umgehaengt']['concepts_lokal'])->toBe(1)
-        ->and($this->kapitel->blocks()->first()->sales_recipe_id)->toBe((int) $f2->id)
+        ->and($this->kapitel->blocks()->first()->recipe_id)->toBe((int) $f2->id)
         ->and($this->svc->aktive($this->angebot)->zeilen->first()->recipe_id)->toBe((int) $f2->id);
 });
 
@@ -315,9 +315,9 @@ it('Betroffene Ausgaben: andere Angebote des Mandanten mit derselben Fassungs-Fa
     ($this->publiziere)('Mehr Knochen');
 
     $live = $this->angebote->create($this->broich, ['name' => 'Entwurf Gala']);
-    app(OfferCompositionService::class)->addKapitel($this->broich, $live->id, ['title' => 'Menü'])->blocks()->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $this->lamm->id, 'position' => 1, 'visible' => true]);
+    app(OfferCompositionService::class)->addKapitel($this->broich, $live->id, ['title' => 'Menü'])->blocks()->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'recipe_id' => $this->lamm->id, 'position' => 1, 'visible' => true]);
     $gefroren = $this->angebote->create($this->broich, ['name' => 'Freigegeben Taufe']);
-    app(OfferCompositionService::class)->addKapitel($this->broich, $gefroren->id, ['title' => 'Menü'])->blocks()->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $this->lamm->id, 'position' => 1, 'visible' => true]);
+    app(OfferCompositionService::class)->addKapitel($this->broich, $gefroren->id, ['title' => 'Menü'])->blocks()->create(['team_id' => $this->broich->id, 'type' => 'recipe_ref', 'recipe_id' => $this->lamm->id, 'position' => 1, 'visible' => true]);
     $this->svc->einfrieren($this->broich, $this->koch, $gefroren);
     $soulAngebot = $this->angebote->create($this->soul, ['name' => 'Soul Fest']);   // anderer Mandant, darf nie auftauchen
 

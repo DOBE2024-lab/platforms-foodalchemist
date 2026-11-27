@@ -50,30 +50,30 @@ beforeEach(function () {
 });
 
 it('Gericht je Person: Foodbook und Angebot rechnen dieselbe Standard-Darreichung × Menge', function () {
-    $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => 2]));
-    $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => 2]));
+    $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id, 'quantity' => 2]));
+    $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id, 'quantity' => 2]));
 
     expect($fb)->toBe($ag)                                  // PR2 (P1): eine Regel, Team-Kontext in beiden
         ->and($fb['vk_pp'])->toBe(20.0)->and($fb['ek_pp'])->toBe(6.0)->and($fb['ek_vollstaendig'])->toBeTrue();
 });
 
 it('P2 fehlender VK: Foodbook und Angebot melden vk_fehlt (vorher Foodbook still 0)', function () {
-    $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->ohneVk->id]));
-    $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->ohneVk->id]));
+    $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'recipe_ref', 'recipe_id' => $this->ohneVk->id]));
+    $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'recipe_id' => $this->ohneVk->id]));
 
     expect($fb['vk_pp'])->toBe(0.0)->and($fb['vk_fehlt'])->toBeTrue()
         ->and($ag['vk_pp'])->toBe(0.0)->and($ag['vk_fehlt'])->toBeTrue();
 });
 
 it('A4 Darreichung: am Angebots-Block gesetzt, aber im Preis ignoriert (Ziel P3: bleibt so, nur Konzept preiswirksam)', function () {
-    $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'presentation_id' => $this->buffet->id]));
+    $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id, 'presentation_id' => $this->buffet->id]));
 
     expect($ag['vk_pp'])->toBe(10.0);   // Standard, nicht Buffet (12)
 });
 
 it('Darreichung im Konzept ist preiswirksam (Referenz für P3)', function () {
     $konzept = $this->makeConcept($this->t, 'Herbstmenü');
-    $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'presentation_id' => $this->buffet->id]);
+    $this->makeConceptSlot($konzept, ['recipe_id' => $this->gericht->id, 'quantity' => 1, 'presentation_id' => $this->buffet->id]);
 
     $c = app(ConceptService::class)->preisCockpit($konzept->fresh(), null, $this->t);
 
@@ -81,8 +81,8 @@ it('Darreichung im Konzept ist preiswirksam (Referenz für P3)', function () {
 });
 
 it('P8 Gericht pauschal: Foodbook und Angebot führen den EK als ek_pauschal mit (vorher fiel er weg)', function () {
-    $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal']));
-    $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal']));
+    $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal']));
+    $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal']));
 
     expect($fb)->toBe($ag)
         ->and($fb['pauschal'])->toBe(10.0)->and($fb['ek_pp'])->toBe(0.0)->and($fb['ek_pauschal'])->toBe(3.0);
@@ -90,7 +90,7 @@ it('P8 Gericht pauschal: Foodbook und Angebot führen den EK als ek_pauschal mit
 
 it('Konzept: Foodbook und Angebot rechnen dasselbe Konzept identisch (PR2: Team-Kontext in beiden)', function () {
     $konzept = $this->makeConcept($this->t, 'Herbstmenü');
-    $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
+    $this->makeConceptSlot($konzept, ['recipe_id' => $this->gericht->id, 'quantity' => 1]);
 
     $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'concept_ref', 'concept_id' => $konzept->id]));
     $ag = ($this->agPreis)(($this->agBlock)(['type' => 'concept_ref', 'concept_id' => $konzept->id]));
@@ -116,7 +116,7 @@ it('P4 Wahlgruppen: Kapitel rechnet mit der teuersten Alternative, die Spanne vo
 
 it('P6 header_preis im Konzept: neue Blöcke werden abgelehnt (er rechnete nie mit); Bestand bleibt im Preis ungezählt', function () {
     $konzept = $this->makeConcept($this->t, 'Herbstmenü');
-    $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
+    $this->makeConceptSlot($konzept, ['recipe_id' => $this->gericht->id, 'quantity' => 1]);
     expect(fn () => app(ConceptService::class)->addBlock($this->t, $konzept->id, 'header_preis', ['title' => 'Aufpreis', 'price_value' => 5]))
         ->toThrow(RuntimeException::class, 'Unbekannter Block-Typ');
 

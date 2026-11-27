@@ -66,7 +66,7 @@ it('Speisekarte: Hinweis nur mit Schalter, nie als Nummer oder in der Legende', 
     $karten = app(SpeisekarteService::class);
     $karte = $karten->create($this->rootTeam, ['name' => 'Karte']);
     $rubrik = $karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Backwaren']);
-    $karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $this->gericht->id]);
 
     $aus = $karten->dokumentDaten($this->rootTeam, $karte->refresh());
     $this->settings->update($this->rootTeam, ['iodized_hint_active' => true]);

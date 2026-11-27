@@ -116,7 +116,7 @@ it('M11-11: foodbook.GET liefert Kopf + Kapitel/Blöcke + aggregierten Angebotsp
     expect($miss->success)->toBeFalse()->and($miss->errorCode)->toBe('NOT_FOUND');
 });
 
-it('E1.4: foodbook_blocks.POST recipe_ref-Roundtrip — sales_recipe_id + price_basis-Angleich (pro_stueck→pauschal)', function () {
+it('E1.4: foodbook_blocks.POST recipe_ref-Roundtrip — recipe_id + price_basis-Angleich (pro_stueck→pauschal)', function () {
     $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $vk = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'vk_ref', 'name' => 'HG: Wolfsbarsch',
@@ -130,28 +130,28 @@ it('E1.4: foodbook_blocks.POST recipe_ref-Roundtrip — sales_recipe_id + price_
     // pro_stueck (€/Position, flach) muss kanonisch als 'pauschal' landen — die „pro_stueck-Falle".
     $res = $tool->execute([
         'chapter_id' => $kap->id, 'type' => 'recipe_ref',
-        'sales_recipe_id' => $vk->id, 'price_basis' => 'pro_stueck',
+        'recipe_id' => $vk->id, 'price_basis' => 'pro_stueck',
     ], $this->kontext);
     expect($res->success)->toBeTrue()
         ->and($res->data['block']['type'])->toBe('recipe_ref')
-        ->and($res->data['block']['sales_recipe_id'])->toBe($vk->id);
+        ->and($res->data['block']['recipe_id'])->toBe($vk->id);
     $block = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock::find($res->data['block']['id']);
     expect($block->price_basis)->toBe('pauschal');                       // NICHT roh 'pro_stueck'
 
     // pro_person → person (Per-Person, ×Pax)
     $res2 = $tool->execute([
         'chapter_id' => $kap->id, 'type' => 'recipe_ref',
-        'sales_recipe_id' => $vk->id, 'price_basis' => 'pro_person',
+        'recipe_id' => $vk->id, 'price_basis' => 'pro_person',
     ], $this->kontext);
     $block2 = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock::find($res2->data['block']['id']);
     expect($block2->price_basis)->toBe('person');
 
-    // recipe_ref ohne sales_recipe_id → Service-Guard als VALIDATION_ERROR
+    // recipe_ref ohne recipe_id → Service-Guard als VALIDATION_ERROR
     $ohne = $tool->execute(['chapter_id' => $kap->id, 'type' => 'recipe_ref'], $this->kontext);
     expect($ohne->success)->toBeFalse()->and($ohne->errorCode)->toBe('VALIDATION_ERROR');
 });
 
-it('E1.4: foodbook_blocks.POST Tenancy — fremd-Team-Gericht als sales_recipe_id blockt (NOT_FOUND)', function () {
+it('E1.4: foodbook_blocks.POST Tenancy — fremd-Team-Gericht als recipe_id blockt (NOT_FOUND)', function () {
     $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     // Gericht gehört Kind A — für Root (Ancestry aufwärts) NICHT sichtbar.
     $fremd = FoodAlchemistRecipe::create([
@@ -162,7 +162,7 @@ it('E1.4: foodbook_blocks.POST Tenancy — fremd-Team-Gericht als sales_recipe_i
     $kap = $foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Kap']);
 
     $res = $this->registry->get('foodalchemist.foodbook_blocks.POST')->execute([
-        'chapter_id' => $kap->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $fremd->id,
+        'chapter_id' => $kap->id, 'type' => 'recipe_ref', 'recipe_id' => $fremd->id,
     ], $this->kontext);
     expect($res->success)->toBeFalse()->and($res->errorCode)->toBe('NOT_FOUND');
 });

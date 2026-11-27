@@ -171,7 +171,7 @@ it('nennt die Doppelzählung dort, wo die Zahlen stehen — nicht als Fußnote i
     DB::table('foodalchemist_menu_card_items')->insert([
         'uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(),
         'team_id' => $this->rootTeam->id, 'section_id' => $rubrik->id,
-        'type' => 'gericht_ref', 'sales_recipe_id' => $gericht->id, 'position' => 1,
+        'type' => 'gericht_ref', 'recipe_id' => $gericht->id, 'position' => 1,
         'created_at' => now(), 'updated_at' => now(),
     ]);
     FoodAlchemistSalesFact::create([

@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Services\Planung\IdeenService;
  * Spec 19 „Foodbook-Leitstelle" (E6.5): Kreativ-Skizze ODER Paket-Gruppe anlegen (nur Entwürfe).
  * Owner-XOR chapter_id/concept_id. Diskriminator `objekt`:
  *  - objekt=idee (Default): freie Skizze (title Pflicht) ODER Bestands-Übernahme
- *    (sales_recipe_id = echtes VK-Gericht, loser Zeiger — dupliziert NICHTS). ziel_form
+ *    (recipe_id = echtes VK-Gericht, loser Zeiger — dupliziert NICHTS). ziel_form
  *    einzel|paket; paket ⇒ paket_gruppe (group_id) nötig.
  *  - objekt=gruppe: leere Paket-Gruppe (name Pflicht, paket_zielpreis_pp = €/Gast-Ziel).
  *
@@ -32,7 +32,7 @@ class KapitelIdeenPostTool extends FoodAlchemistTool implements ToolContract, To
     {
         return 'Legt eine Kreativ-Skizze (objekt=idee) oder eine Paket-Gruppe (objekt=gruppe) an, '
             . 'immer als Entwurf am Owner (chapter_id XOR concept_id). Skizze: title (Pflicht) oder '
-            . 'sales_recipe_id (Bestands-Gericht als Idee). Paket-Zuordnung via ziel_form=paket + '
+            . 'recipe_id (Bestands-Gericht als Idee). Paket-Zuordnung via ziel_form=paket + '
             . 'paket_gruppe. Gruppe: name (Pflicht) + paket_zielpreis_pp. '
             . 'Erzeugt KEINE Rezepte/Konzepte — das Anlegen macht ein Mensch beim Kapitel-Go.';
     }
@@ -48,7 +48,8 @@ class KapitelIdeenPostTool extends FoodAlchemistTool implements ToolContract, To
                 // objekt=idee
                 'title' => ['type' => 'string', 'description' => 'Skizzen-Titel (Pflicht bei freier Idee)'],
                 'description' => ['type' => 'string', 'description' => 'Optionale Skizzen-Beschreibung'],
-                'sales_recipe_id' => ['type' => 'integer', 'description' => 'Bestands-Übernahme: echtes VK-Gericht als Idee (loser Zeiger)'],
+                'recipe_id' => ['type' => 'integer', 'description' => 'Bestands-Übernahme: echtes VK-Gericht als Idee (loser Zeiger)'],
+                'sales_recipe_id' => \Platform\FoodAlchemist\Support\RezeptIdAlias::schema(),
                 'ziel_form' => ['type' => 'string', 'enum' => FoodAlchemistDishIdea::TARGET_FORMS, 'description' => 'einzel | paket (paket ⇒ paket_gruppe nötig)'],
                 'paket_gruppe' => ['type' => 'integer', 'description' => 'group_id einer bestehenden Paket-Gruppe (bei ziel_form=paket)'],
                 // objekt=gruppe
@@ -60,6 +61,7 @@ class KapitelIdeenPostTool extends FoodAlchemistTool implements ToolContract, To
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
@@ -97,8 +99,8 @@ class KapitelIdeenPostTool extends FoodAlchemistTool implements ToolContract, To
                 $in['group_id'] = (int) $arguments['paket_gruppe'];
             }
 
-            if (isset($arguments['sales_recipe_id'])) {
-                $in['sales_recipe_id'] = (int) $arguments['sales_recipe_id'];
+            if (isset($arguments['recipe_id'])) {
+                $in['recipe_id'] = (int) $arguments['recipe_id'];
                 $idee = $svc->uebernehmeBestand($team, $in);
             } else {
                 $idee = $svc->add($team, $in);

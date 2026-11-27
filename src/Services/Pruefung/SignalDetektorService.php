@@ -366,7 +366,7 @@ class SignalDetektorService
             // betroffene Konzepte über die betroffenen Gerichte (direkte Slots; Alt-Pakete entfallen mit 98 · 2.6c)
             $gerichtIds = $gerichte->pluck('id')->map(fn ($v) => (int) $v)->all();
             $conceptDirekt = $gerichtIds === [] ? [] : DB::table('foodalchemist_concept_slots')
-                ->whereIn('sales_recipe_id', $gerichtIds)->whereNull('deleted_at')
+                ->whereIn('recipe_id', $gerichtIds)->whereNull('deleted_at')
                 ->whereNotNull('concept_id')->distinct()->pluck('concept_id')->all();
             $nConcepts = count(array_unique($conceptDirekt));
 

@@ -23,8 +23,8 @@ beforeEach(function () {
 
     $this->konzepte = app(ConceptService::class);
     $this->paket = $this->makeConcept($this->t, 'Grünes Paket', ['kind' => 'paket']);
-    $this->makeConceptSlot($this->paket, ['sales_recipe_id' => $this->mitEk->id, 'quantity' => 1]);
-    $this->makeConceptSlot($this->paket, ['sales_recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 2]);
+    $this->makeConceptSlot($this->paket, ['recipe_id' => $this->mitEk->id, 'quantity' => 1]);
+    $this->makeConceptSlot($this->paket, ['recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 2]);
     $this->konzepte->recomputeCache($this->paket->fresh());
 
     $this->konzept = $this->makeConcept($this->t, 'Green & Tasty');
@@ -59,7 +59,7 @@ it('auch über zwei Ebenen: Paket im Paket', function () {
 
 it('Paket mit vollständigem EK bleibt ohne Merker', function () {
     $voll = $this->makeConcept($this->t, 'Volles Paket', ['kind' => 'paket']);
-    $this->makeConceptSlot($voll, ['sales_recipe_id' => $this->mitEk->id, 'quantity' => 1]);
+    $this->makeConceptSlot($voll, ['recipe_id' => $this->mitEk->id, 'quantity' => 1]);
     $this->konzepte->recomputeCache($voll->fresh());
     $k = $this->makeConcept($this->t, 'Vollständig');
     $this->makeConceptSlot($k, ['type' => 'paket', 'embedded_concept_id' => $voll->id]);
@@ -74,8 +74,8 @@ it('Messtest: die Paket-Lücke kostet keine Abfragen je Paket (Cache-Merker ek_i
         $k = $this->makeConcept($this->t, "K$n");
         for ($i = 0; $i < $n; $i++) {
             $p = $this->makeConcept($this->t, "P$n-$i", ['kind' => 'paket']);
-            $this->makeConceptSlot($p, ['sales_recipe_id' => $this->mitEk->id, 'quantity' => 1]);
-            $this->makeConceptSlot($p, ['sales_recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 2]);
+            $this->makeConceptSlot($p, ['recipe_id' => $this->mitEk->id, 'quantity' => 1]);
+            $this->makeConceptSlot($p, ['recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 2]);
             $this->konzepte->recomputeCache($p->fresh());
             $this->makeConceptSlot($k, ['type' => 'paket', 'embedded_concept_id' => $p->id, 'position' => $i]);
         }
@@ -153,7 +153,7 @@ it('Foodbook: bei EK-Lücke keine Wareneinsatz-Quote — Kapitel, Gesamt, intern
 
 it('Foodbook ohne Lücke: Quote bleibt', function () {
     $voll = $this->makeConcept($this->t, 'Volles Konzept');
-    $this->makeConceptSlot($voll, ['sales_recipe_id' => $this->mitEk->id, 'quantity' => 1]);
+    $this->makeConceptSlot($voll, ['recipe_id' => $this->mitEk->id, 'quantity' => 1]);
     $fb = $this->makeFoodbook($this->t, 'Foodbook voll', ['status' => 'entwurf']);
     $kap = $this->makeChapter($fb, ['title' => 'Hauptgang']);
     $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $voll->id]);
@@ -166,9 +166,9 @@ it('Folge-PR (B1): die Gericht-Karte im Paket zeigt den EK je Person der Positio
     $beigabe = $this->makeRecipe($this->t, 'Hot Dog', ['is_sales_recipe' => true, 'ek_total_eur' => 1.26, 'sales_unit_count' => 1]);
     $this->makeStandardDarreichung($beigabe, 4.5, ['ek_portion' => 0.79]);
     $p = $this->makeConcept($this->t, 'Snack-Paket', ['kind' => 'paket']);
-    $this->makeConceptSlot($p, ['sales_recipe_id' => $beigabe->id, 'quantity' => 1]);
-    $this->makeConceptSlot($p, ['sales_recipe_id' => $this->mitEk->id, 'quantity' => 2, 'position' => 2]);
-    $this->makeConceptSlot($p, ['sales_recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 3]);
+    $this->makeConceptSlot($p, ['recipe_id' => $beigabe->id, 'quantity' => 1]);
+    $this->makeConceptSlot($p, ['recipe_id' => $this->mitEk->id, 'quantity' => 2, 'position' => 2]);
+    $this->makeConceptSlot($p, ['recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 3]);
     $this->konzepte->recomputeCache($p->fresh());
     $k = $this->makeConcept($this->t, 'Snack-Menü');
     $this->makeConceptSlot($k, ['type' => 'paket', 'embedded_concept_id' => $p->id]);
@@ -197,8 +197,8 @@ it('Detail-Hinweis nennt die Zahl der Gerichte ohne EK (Singular bei 1), ohne Ab
 
     $zweites = $this->makeRecipe($this->t, 'Falafel', ['is_sales_recipe' => true, 'sales_unit_count' => 10]);
     $this->makeStandardDarreichung($zweites, 4.0);
-    $this->makeConceptSlot($this->paket, ['sales_recipe_id' => $zweites->id, 'quantity' => 1, 'position' => 3]);
-    $this->makeConceptSlot($this->konzept, ['sales_recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 2]);   // dasselbe Gericht zählt einmal
+    $this->makeConceptSlot($this->paket, ['recipe_id' => $zweites->id, 'quantity' => 1, 'position' => 3]);
+    $this->makeConceptSlot($this->konzept, ['recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 2]);   // dasselbe Gericht zählt einmal
     $this->konzepte->recomputeCache($this->paket->fresh());
     $mehrere = preg_replace('/\s+/u', ' ', strip_tags(\Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\DetailPanel::class)->call('zeige', 'concepts', $this->konzept->id)->html()));
 

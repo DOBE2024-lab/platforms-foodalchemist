@@ -35,7 +35,7 @@ it('#3: mitKaskade hängt den Produktions-Baum je Gericht an; EK nur intern', fu
     $fb = ($this->makeFb)();
     $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kap 1', 'position' => 0]);
     $kap->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref',
-        'sales_recipe_id' => $gericht->id, 'quantity' => 1, 'position' => 0, 'visible' => true]);
+        'recipe_id' => $gericht->id, 'quantity' => 1, 'position' => 0, 'visible' => true]);
 
     // Kundensicht: Kaskade da, EK-Flag aus
     $kunde = $this->svc->dokumentDaten($this->rootTeam, $fb->fresh(), intern: false, kapitelFilter: [], mitKaskade: true);
@@ -60,7 +60,7 @@ it('#5b: §-Codes PRO GERICHT + Legende (nur real vorkommende Allergene/Zusatzst
     $fb = ($this->makeFb)();
     $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kap', 'position' => 0]);
     $kap->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref',
-        'sales_recipe_id' => $gericht->id, 'quantity' => 1, 'position' => 0, 'visible' => true]);
+        'recipe_id' => $gericht->id, 'quantity' => 1, 'position' => 0, 'visible' => true]);
 
     $data = $this->svc->dokumentDaten($this->rootTeam, $fb->fresh());
     // Codes hängen am recipe_ref-Block (Einzelgericht = eigenes Gericht), nicht auf Konzept-Ebene.
@@ -95,7 +95,7 @@ it('#5a: das Foodbook-Dokument rendert die Produktions-Kaskade NICHT mehr (die l
     $fb = ($this->makeFb)();
     $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kap', 'position' => 0]);
     $kap->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref',
-        'sales_recipe_id' => $gericht->id, 'quantity' => 1, 'position' => 0, 'visible' => true]);
+        'recipe_id' => $gericht->id, 'quantity' => 1, 'position' => 0, 'visible' => true]);
 
     // #5a: das Dokument zeigt das Gericht + den Allergen-Toggle, aber KEINE Produktions-Kaskade mehr.
     $data = $this->svc->dokumentDaten($this->rootTeam, $fb->fresh()) + ['deklaration' => true];

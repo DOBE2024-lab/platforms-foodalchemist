@@ -65,7 +65,7 @@ it('materialisiereLeereSlots: eine Station (target_count>=2) wird ein Paket mit 
     $paketSlots = FoodAlchemistConceptSlot::where('concept_id', $paket->id)->get();
     expect($paketSlots->where('type', 'header'))->toHaveCount(1)
         ->and($paketSlots->firstWhere('type', 'header')->title)->toBe('Bowl-Station')
-        ->and($paketSlots->whereNull('embedded_concept_id')->whereNull('sales_recipe_id')->where('type', '!=', 'header'))->toHaveCount(3);
+        ->and($paketSlots->whereNull('embedded_concept_id')->whereNull('recipe_id')->where('type', '!=', 'header'))->toHaveCount(3);
 });
 
 it('materialisiereLeereSlots: eine Einzel-Station (target_count=1) bleibt flach (kein Paket)', function () {

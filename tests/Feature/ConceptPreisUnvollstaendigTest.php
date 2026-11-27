@@ -34,7 +34,7 @@ beforeEach(function () {
     $this->einbetten = fn (FoodAlchemistConcept $in, FoodAlchemistConcept $paket) => $this->concepts->fillSlot($t,
         $this->concepts->addSlot($t, $in->id, ['role' => 'Station'])->id, ['embedded_concept_id' => $paket->id]);
     $this->gericht = fn (FoodAlchemistConcept $in, FoodAlchemistRecipe $r) => $this->concepts->fillSlot($t,
-        $this->concepts->addSlot($t, $in->id, ['role' => 'Dessert'])->id, ['sales_recipe_id' => $r->id]);
+        $this->concepts->addSlot($t, $in->id, ['role' => 'Dessert'])->id, ['recipe_id' => $r->id]);
 });
 
 it('vollständige Positionen: Merker false; eine Position ohne VK: true, der Preis bleibt die Summe der bekannten', function () {

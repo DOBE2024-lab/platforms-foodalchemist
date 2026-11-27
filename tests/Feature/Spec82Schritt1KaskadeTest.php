@@ -124,7 +124,7 @@ it('Foodbook mit CRM-Firma: das Kapitel-Wording (concept.wording) übergibt die 
     $kapitel = $this->makeChapter($fb, ['writing_style_id' => $stil->id]);
     $dish = $this->makeRecipe($this->rootTeam, 'Zander auf Linsen');
     $concept = $this->makeConcept($this->rootTeam, 'Menü A');
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => $dish->id]);
+    $this->makeConceptSlot($concept, ['recipe_id' => $dish->id]);
     $this->makeFoodbookBlock($kapitel, ['type' => 'concept_ref', 'concept_id' => $concept->id]);
 
     $optionen = null;
@@ -175,7 +175,7 @@ it('Foodbook ohne CRM-Firma: keine Kunden-Ebene (Option bleibt leer)', function 
     $fb = $this->makeFoodbook($this->rootTeam, 'Ohne Firma');
     $kapitel = $this->makeChapter($fb, ['writing_style_id' => $stil->id]);
     $concept = $this->makeConcept($this->rootTeam, 'Menü A');
-    $this->makeConceptSlot($concept, ['sales_recipe_id' => $this->makeRecipe($this->rootTeam, 'Zander')->id]);
+    $this->makeConceptSlot($concept, ['recipe_id' => $this->makeRecipe($this->rootTeam, 'Zander')->id]);
     $this->makeFoodbookBlock($kapitel, ['type' => 'concept_ref', 'concept_id' => $concept->id]);
     $optionen = null;
     $this->mock(AiGatewayService::class, function ($mock) use (&$optionen) {

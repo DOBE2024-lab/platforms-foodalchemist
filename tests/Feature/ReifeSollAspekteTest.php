@@ -30,7 +30,7 @@ beforeEach(function () {
 it('jeder gemessene Lücken-Code ist als Soll-Aspekt deklariert', function () {
     // Je Kind ein frisch angelegtes, möglichst leeres Artefakt — das erzeugt die meisten Codes.
     $konzept = $this->makeConcept($this->rootTeam, 'Wächter-Konzept', ['status' => 'draft']);
-    $this->makeConceptSlot($konzept, ['sales_recipe_id' => null]);
+    $this->makeConceptSlot($konzept, ['recipe_id' => null]);
     $foodbook = $this->makeFoodbook($this->rootTeam, 'Wächter-Buch');
     $this->makeChapter($foodbook, ['title' => 'Leeres Kapitel']);
     $rezept = $this->makeRecipe($this->rootTeam, 'Wächter-Rezept');

@@ -118,7 +118,7 @@ it('Promotion: der Umsatz je laufender Ausgabe summiert die Verkäufe der Stando
     $rubrik = app(SpeisekarteService::class)->addRubrik($this->childA, (int) $karte->id, ['name' => 'Speisen']);
     DB::table('foodalchemist_menu_card_items')->insert([
         'uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(), 'team_id' => $this->childA->id, 'section_id' => $rubrik->id,
-        'type' => 'gericht_ref', 'sales_recipe_id' => $this->gA->id, 'position' => 1, 'created_at' => now(), 'updated_at' => now(),
+        'type' => 'gericht_ref', 'recipe_id' => $this->gA->id, 'position' => 1, 'created_at' => now(), 'updated_at' => now(),
     ]);
     ($this->fakt)($this->childA, $this->gA, 100.0, 'promo-a');   // Verkauf am Standort A
     ($this->fakt)($this->fremd, $this->gF, 999.0, 'promo-f');    // fremder Mandant: nie

@@ -23,7 +23,7 @@ class ConceptSlotZielService
 {
     /**
      * Prüft das Ziel, das fillSlot setzen will (genau eines: embedded_concept_id, package_id,
-     * sales_recipe_id). Liefert für ein Rezept den Slot-Typ, sonst null. Wirft bei nicht sichtbarem
+     * recipe_id). Liefert für ein Rezept den Slot-Typ, sonst null. Wirft bei nicht sichtbarem
      * Ziel, Kreis oder widersprechendem Typ.
      */
     public function pruefe(Team $team, FoodAlchemistConceptSlot $slot, array $in): ?string
@@ -32,8 +32,8 @@ class ConceptSlotZielService
             $this->pruefeEinbettung($team, $slot, (int) $in['embedded_concept_id']);
         } elseif (! empty($in['package_id'])) {
             $this->pruefeAltPaket($team, (int) $in['package_id']);
-        } elseif (! empty($in['sales_recipe_id'])) {
-            return $this->rezeptTyp($team, (int) $in['sales_recipe_id'], $in['type'] ?? null);
+        } elseif (! empty($in['recipe_id'])) {
+            return $this->rezeptTyp($team, (int) $in['recipe_id'], $in['type'] ?? null);
         }
 
         return null;

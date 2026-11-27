@@ -80,8 +80,8 @@
             // der Karte. Dieselben Events wie im Rezept-/Concepter-Browser; die Modale hängen auf
             // Seitenebene in der index.blade.
             $sprungAufruf = match ($pos->type) {
-                'gericht_ref' => $pos->sales_recipe_id
-                    ? sprintf("\$dispatch('%s', { id: %d })", $pos->dish?->is_sales_recipe ? 'vk-modal.oeffnen' : 'recipe-modal.oeffnen', (int) $pos->sales_recipe_id)
+                'gericht_ref' => $pos->recipe_id
+                    ? sprintf("\$dispatch('%s', { id: %d })", $pos->dish?->is_sales_recipe ? 'vk-modal.oeffnen' : 'recipe-modal.oeffnen', (int) $pos->recipe_id)
                     : null,
                 'menue_ref' => $pos->concept_id
                     ? sprintf("\$dispatch('concepter-editor.oeffnen', { type: '%s', id: %d })", $pos->concept?->kind === 'paket' ? 'pakete' : 'concepts', (int) $pos->concept_id)

@@ -77,7 +77,7 @@ it('POST / PUT / DUPLICATE / RECOMPUTE', function () {
 it('paket_gerichte: SET (+FK-Re-Auth) / MENGE / REORDER', function () {
     $set = ($this->run)('foodalchemist.paket_gerichte.SET', [
         'paket_id' => $this->paket->id,
-        'items' => [['sales_recipe_id' => $this->dishA->id], ['sales_recipe_id' => $this->dishB->id]],
+        'items' => [['recipe_id' => $this->dishA->id], ['recipe_id' => $this->dishB->id]],
     ]);
     expect($set->success)->toBeTrue('set: ' . ($set->error ?? ''))
         ->and(count($set->data['paket']['dishes']))->toBe(2);
@@ -101,7 +101,7 @@ it('SET: fremdes Gericht → NOT_FOUND, nichts geschrieben', function () {
     $fremd = $this->makeRecipe($this->childA, 'DES: Fremd', ['is_sales_recipe' => true, 'sales_net' => 3.0]);
     $res = ($this->run)('foodalchemist.paket_gerichte.SET', [
         'paket_id' => $this->paket->id,
-        'items' => [['sales_recipe_id' => $fremd->id]],
+        'items' => [['recipe_id' => $fremd->id]],
     ]);
     expect($res->errorCode)->toBe('NOT_FOUND');
     expect(FoodAlchemistConceptSlot::where('concept_id', $this->paket->id)->count())->toBe(0);

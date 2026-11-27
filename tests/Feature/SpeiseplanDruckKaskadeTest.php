@@ -31,7 +31,7 @@ it('#3: mitKaskade hängt den Produktions-Baum je Wochen-Gericht an; EK nur inte
     ]);
 
     $sp = $this->plan->create($this->rootTeam, ['name' => 'Woche', 'start_date' => '2026-07-06']);
-    $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'sales_recipe_id' => $g->id]);
+    $this->plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'recipe_id' => $g->id]);
 
     // Kundensicht
     $data = $this->plan->dokumentDaten($this->rootTeam, $sp->refresh(), 'mittag', '2026-07-06', intern: false, mitKaskade: true);

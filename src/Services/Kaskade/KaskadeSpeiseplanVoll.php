@@ -420,7 +420,7 @@ class KaskadeSpeiseplanVoll
                 throw new RuntimeException('Die KI hat kein Rezept geliefert. Bitte neu erzeugen.');
             }
             app(SpeiseplanService::class)->addEintrag($team, $planId, [
-                'entry_date' => $entryDate, 'mahlzeit' => $meal, 'line_id' => $lineId, 'sales_recipe_id' => (int) $recipe->id,
+                'entry_date' => $entryDate, 'mahlzeit' => $meal, 'line_id' => $lineId, 'recipe_id' => (int) $recipe->id,
             ]);
             if ($planningSessionId !== null) {
                 $sess = app(PlanningSessionService::class)->get($team, $planningSessionId);

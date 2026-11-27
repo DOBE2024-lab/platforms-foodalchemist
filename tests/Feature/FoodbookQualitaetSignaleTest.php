@@ -180,7 +180,7 @@ it('zählt keine Skizze ohne Go und keine, aus der etwas geworden ist', function
     // Mit Go, aber jeder Ausgang außer „queued und nichts passiert" ist kein Befund.
     $erledigt = $this->makeFoodbook($this->rootTeam, 'Erledigt');
     $kap = $this->makeChapter($erledigt, fqGoAbgelaufen());
-    $this->makeDishIdea($kap, ['title' => 'Bestand-Ref', 'sales_recipe_id' => $this->makeRecipe($this->rootTeam, 'Gericht A')->id, 'generation_status' => null]);
+    $this->makeDishIdea($kap, ['title' => 'Bestand-Ref', 'recipe_id' => $this->makeRecipe($this->rootTeam, 'Gericht A')->id, 'generation_status' => null]);
     $this->makeDishIdea($kap, ['title' => 'Erzeugt', 'position' => 2, 'generated_recipe_id' => $this->makeRecipe($this->rootTeam, 'Gericht B')->id]);
     $this->makeDishIdea($kap, ['title' => 'Materialisiert', 'position' => 3, 'materialized_at' => now()]);
     $this->makeDishIdea($kap, ['title' => 'Verworfen', 'position' => 4, 'status' => 'verworfen']);

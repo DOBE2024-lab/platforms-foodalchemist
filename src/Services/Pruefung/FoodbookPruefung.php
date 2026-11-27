@@ -323,7 +323,7 @@ final class FoodbookPruefung
      * die dort hängen geblieben ist.
      *
      * Der Zustand ist exakt der, den `materialisiereFreitextIdee` als „noch offen" liest
-     * (`sales_recipe_id` null · `generation_status='queued'` · `materialized_at` null) —
+     * (`recipe_id` null · `generation_status='queued'` · `materialized_at` null) —
      * gespiegelt statt neu formuliert, damit Signal und Queue nicht auseinanderlaufen.
      * Dazu `generated_recipe_id` null: ein erzeugtes Rezept ist das Ergebnis, auch wenn
      * der Rest-Stempel fehlen sollte.
@@ -343,7 +343,7 @@ final class FoodbookPruefung
                 ->whereColumn('di.chapter_id', 'k.id')
                 ->whereNull('di.deleted_at')
                 ->where('di.generation_status', 'queued')
-                ->whereNull('di.sales_recipe_id')
+                ->whereNull('di.recipe_id')
                 ->whereNull('di.generated_recipe_id')
                 ->whereNull('di.materialized_at')
                 ->where('di.status', '!=', 'verworfen'));

@@ -26,7 +26,7 @@ it('Stufe A: Speisekarte-Tabellen + Kern-Spalten existieren', function () {
     ]))->toBeTrue();
 
     expect(Schema::hasColumns('foodalchemist_menu_card_items', [
-        'uuid', 'team_id', 'section_id', 'position', 'type', 'sales_recipe_id', 'concept_id',
+        'uuid', 'team_id', 'section_id', 'position', 'type', 'recipe_id', 'concept_id',
         'presentation_id', 'wording', 'price_mode', 'price_value', 'payload_json',
     ]))->toBeTrue();
 });

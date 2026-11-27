@@ -35,8 +35,8 @@ it('Stufe B: Position bekommt Allergen-Code, Spuren als *, Zusatzstoff-Nummer', 
 
     $karte = $this->karten->create($this->rootTeam, ['name' => 'Karte']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id, ['title' => 'Hauptgänge']);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $gluten->id]);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $spuren->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $gluten->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $spuren->id]);
 
     $dok = $this->karten->dokumentDaten($this->rootTeam, $karte->refresh());
     $positionen = $dok['rubriken'][0]['positionen'];
@@ -52,7 +52,7 @@ it('Stufe B: Legende enthält nur tatsächlich vorkommende Codes', function () {
     $gluten = skGericht($this->rootTeam->id, 'skb3', 'Pasta', ['allergen_gluten' => 'enthalten']);
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $gluten->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $gluten->id]);
 
     $dok = $this->karten->dokumentDaten($this->rootTeam, $karte->refresh());
     $labels = collect($dok['legende']['allergene'])->pluck('label');
@@ -66,9 +66,9 @@ it('Fix b: Menü-Position (menue_ref) trägt die Codes PRO GANG, nicht aggregier
     $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Menü', 'status' => 'active']);
     $s1 = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
-    $concepts->fillSlot($this->rootTeam, $s1->id, ['sales_recipe_id' => $gluten->id]);
+    $concepts->fillSlot($this->rootTeam, $s1->id, ['recipe_id' => $gluten->id]);
     $s2 = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Dessert']);
-    $concepts->fillSlot($this->rootTeam, $s2->id, ['sales_recipe_id' => $nuss->id]);
+    $concepts->fillSlot($this->rootTeam, $s2->id, ['recipe_id' => $nuss->id]);
 
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K']);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
@@ -88,7 +88,7 @@ it('Stufe B: Brutto-Preis = Netto × (1 + MwSt)', function () {
     $g = skGericht($this->rootTeam->id, 'skb4', 'Filet'); // sales_net 24,00
     $karte = $this->karten->create($this->rootTeam, ['name' => 'K', 'preis_anzeige_brutto' => true]);
     $rubrik = $this->karten->addRubrik($this->rootTeam, $karte->id);
-    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g->id]);
+    $this->karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'recipe_id' => $g->id]);
 
     $dok = $this->karten->dokumentDaten($this->rootTeam, $karte->refresh());
     $pos = $dok['rubriken'][0]['positionen'][0];

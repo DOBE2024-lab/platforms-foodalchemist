@@ -70,7 +70,7 @@ class PortfolioGetTool extends FoodAlchemistTool implements ToolContract, ToolMe
 
         $zeilen = $portfolio->uebersicht($team, $tag, $filter);
 
-        return ToolResult::success([
+        return ToolResult::success(\Platform\FoodAlchemist\Support\RezeptIdAlias::ausgabe([
             'stichtag' => $tag ?? now()->toDateString(),
             'brille' => $brille,
             'n_gesamt' => count($zeilen),
@@ -94,7 +94,7 @@ class PortfolioGetTool extends FoodAlchemistTool implements ToolContract, ToolMe
                 fn ($z) => ['art' => $z['art'], 'id' => $z['id'], 'name' => $z['name'], 'laeuft' => $z['laeuft']],
                 $portfolio->ohneZuordnung($team, $tag),
             ),
-        ]);
+        ]));
     }
 
     public function getMetadata(): array

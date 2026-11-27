@@ -49,10 +49,10 @@ beforeEach(function () {
     $this->slot = function ($dish, ?int $unit = null) {
         $s = $this->svc->addSlot($this->rootTeam, $this->konzept->id, ['role' => 'Hauptgang']);
 
-        return $this->svc->fillSlot($this->rootTeam, $s->id, ['sales_recipe_id' => $dish->id, 'quantity' => 1, 'unit_vocab_id' => $unit]);
+        return $this->svc->fillSlot($this->rootTeam, $s->id, ['recipe_id' => $dish->id, 'quantity' => 1, 'unit_vocab_id' => $unit]);
     };
     $this->auswahl = function ($dish): array {
-        $s = FoodAlchemistConceptSlot::where('sales_recipe_id', $dish->id)->firstOrFail();
+        $s = FoodAlchemistConceptSlot::where('recipe_id', $dish->id)->firstOrFail();
         $s->setRelation('concept', $this->konzept->refresh());
 
         return app(SlotEinheitService::class)->wirksame($this->rootTeam, $dish, app(SlotEinheitService::class)->darreichungFuerSlot($s))
@@ -71,7 +71,7 @@ it('Auswahl: mit Grammatur g/kg + Portion, ohne Stück-Ertrag kein stk; ohne Gra
 it('Basisrezept: Menge ist Gramm — wirksam nur g, stk nur mit Stück-Ertrag', function () {
     $basis = $this->makeRecipe($this->rootTeam, 'Fond: Kalb', ['is_sales_recipe' => false, 'yield_kg' => 5]);
     $s = $this->svc->addSlot($this->rootTeam, $this->konzept->id, []);
-    $this->svc->fillSlot($this->rootTeam, $s->id, ['sales_recipe_id' => $basis->id, 'type' => 'basisrezept', 'quantity' => 80]);
+    $this->svc->fillSlot($this->rootTeam, $s->id, ['recipe_id' => $basis->id, 'type' => 'basisrezept', 'quantity' => 80]);
 
     expect(($this->auswahl)($basis))->toBe(['g']);
     expect(fn () => $this->svc->setSlotMengeEinheit($this->rootTeam, $s->id, 80, $this->kg->id))
@@ -86,9 +86,9 @@ it('Speichern lehnt nicht wirksame Einheiten mit Grund ab — Service, Concepter
         ->and(fn () => $this->svc->setSlotMengeEinheit($this->rootTeam, $s->id, 1, $this->karton->id))->toThrow(RuntimeException::class, 'still als Portion');
     $m = ($this->slot)($this->mitG);
     expect(fn () => $this->svc->setSlotMengeEinheit($this->rootTeam, $m->id, 2, $this->stk->id))->toThrow(RuntimeException::class, 'Stück-Ertrag')
-        ->and(fn () => $this->svc->fillSlot($this->rootTeam, $m->id, ['sales_recipe_id' => $this->ohneG->id, 'quantity' => 100, 'unit_vocab_id' => $this->g->id]))
+        ->and(fn () => $this->svc->fillSlot($this->rootTeam, $m->id, ['recipe_id' => $this->ohneG->id, 'quantity' => 100, 'unit_vocab_id' => $this->g->id]))
         ->toThrow(RuntimeException::class, 'keine Grammatur');
-    expect($s->fresh()->unit_vocab_id)->toBeNull()->and((int) $m->fresh()->sales_recipe_id)->toBe((int) $this->mitG->id);
+    expect($s->fresh()->unit_vocab_id)->toBeNull()->and((int) $m->fresh()->recipe_id)->toBe((int) $this->mitG->id);
 
     // Editor: Meldung am Feld, gespeichert wird nichts
     Livewire::test(Editor::class)->call('oeffnen', 'concepts', $this->konzept->id)
@@ -103,16 +103,16 @@ it('Speichern lehnt nicht wirksame Einheiten mit Grund ab — Service, Concepter
     $put = $reg->get('foodalchemist.concept_slots.PUT')->execute(['slot_id' => $s->id, 'felder' => ['quantity' => 1, 'unit_vocab_id' => $this->ml->id]], $ctx);
     expect($put->success)->toBeFalse()->and($put->errorCode)->toBe('VALIDATION_ERROR')->and($put->error)->toContain('Volumen');
     $vorher = FoodAlchemistConceptSlot::where('concept_id', $this->konzept->id)->count();
-    $post = $reg->get('foodalchemist.concept_slots.POST')->execute(['concept_id' => $this->konzept->id, 'sales_recipe_id' => $this->ohneG->id, 'quantity' => 1, 'unit' => 'kg'], $ctx);
+    $post = $reg->get('foodalchemist.concept_slots.POST')->execute(['concept_id' => $this->konzept->id, 'recipe_id' => $this->ohneG->id, 'quantity' => 1, 'unit' => 'kg'], $ctx);
     expect($post->success)->toBeFalse()->and($post->errorCode)->toBe('VALIDATION_ERROR')
         ->and(FoodAlchemistConceptSlot::where('concept_id', $this->konzept->id)->count())->toBe($vorher);
 
     $paket = $this->svc->create($this->rootTeam, ['name' => 'Paket', 'kind' => 'paket']);
     expect(fn () => app(ConceptPaketService::class)->syncGerichte($this->rootTeam, $paket->id, [
-        ['sales_recipe_id' => $this->mitG->id, 'quantity' => 1],
-        ['sales_recipe_id' => $this->ohneG->id, 'quantity' => 100, 'unit_vocab_id' => $this->g->id],
+        ['recipe_id' => $this->mitG->id, 'quantity' => 1],
+        ['recipe_id' => $this->ohneG->id, 'quantity' => 100, 'unit_vocab_id' => $this->g->id],
     ]))->toThrow(RuntimeException::class);
-    expect(FoodAlchemistConceptSlot::where('concept_id', $paket->id)->whereNotNull('sales_recipe_id')->count())->toBe(0);   // Vollersatz zurückgerollt
+    expect(FoodAlchemistConceptSlot::where('concept_id', $paket->id)->whereNotNull('recipe_id')->count())->toBe(0);   // Vollersatz zurückgerollt
 });
 
 it('Concepter zeigt je Position nur wirksame Einheiten, Standard-Beschriftung aus der Darreichung, Altbestand gesperrt markiert', function () {

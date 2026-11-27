@@ -22,9 +22,9 @@ beforeEach(function () {
         $dish1 = $this->makeRecipe($team, 'Menü A HG', ['is_sales_recipe' => true, 'sales_net' => 30.00]);
         $dish2 = $this->makeRecipe($team, 'Menü B HG', ['is_sales_recipe' => true, 'sales_net' => 28.00]);
         $c1 = $this->makeConcept($team, 'Menü A', ['consumer_name' => 'Genuss A', 'price_per_person_cache' => 42.50]);
-        $this->makeConceptSlot($c1, ['sales_recipe_id' => $dish1->id, 'wording' => 'Rinderfilet']);
+        $this->makeConceptSlot($c1, ['recipe_id' => $dish1->id, 'wording' => 'Rinderfilet']);
         $c2 = $this->makeConcept($team, 'Menü B', ['consumer_name' => 'Genuss B', 'price_per_person_cache' => 39.50]);
-        $this->makeConceptSlot($c2, ['sales_recipe_id' => $dish2->id, 'wording' => 'Zanderfilet']);
+        $this->makeConceptSlot($c2, ['recipe_id' => $dish2->id, 'wording' => 'Zanderfilet']);
 
         $format = $this->fmt->create($team, ['name' => 'CHEFS.CORNER', 'consumer_name' => 'Chefs Corner', 'claim' => 'World on a plate', 'story' => 'Die Welt auf dem Teller.']);
         $this->fmt->slotConceptEinfuegen($team, $format->id, $c1->id);

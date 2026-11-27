@@ -59,18 +59,18 @@ beforeEach(function () {
 
     $this->conceptA = $this->concepts->create($this->rootTeam, ['name' => 'Konzept A']);
     $slotA = $this->concepts->addSlot($this->rootTeam, $this->conceptA->id, ['role' => 'Dessert']);
-    $this->slotA = $this->concepts->fillSlot($this->rootTeam, $slotA->id, ['sales_recipe_id' => $this->gericht->id]);
+    $this->slotA = $this->concepts->fillSlot($this->rootTeam, $slotA->id, ['recipe_id' => $this->gericht->id]);
 
     $this->conceptB = $this->concepts->create($this->rootTeam, ['name' => 'Konzept B']);
     $slotB = $this->concepts->addSlot($this->rootTeam, $this->conceptB->id, ['role' => 'Dessert']);
-    $this->slotB = $this->concepts->fillSlot($this->rootTeam, $slotB->id, ['sales_recipe_id' => $this->gericht->id]);
+    $this->slotB = $this->concepts->fillSlot($this->rootTeam, $slotB->id, ['recipe_id' => $this->gericht->id]);
 });
 
 it('Tausch in Konzept A: Slot-Variante entsteht, Quell-Gericht + Konzept B nachweislich unverändert', function () {
     $slot = $this->svc->tauscheZutatKonzeptLokal($this->rootTeam, $this->slotA->id, $this->zutat->id);
 
     // Slot A zeigt die Variante mit getauschter Zutat
-    $variante = FoodAlchemistRecipe::find($slot->sales_recipe_id);
+    $variante = FoodAlchemistRecipe::find($slot->recipe_id);
     expect($slot->variant_source_recipe_id)->toBe($this->gericht->id)
         ->and($variante->id)->not->toBe($this->gericht->id)
         ->and((int) $variante->variant_source_recipe_id)->toBe($this->gericht->id)
@@ -82,7 +82,7 @@ it('Tausch in Konzept A: Slot-Variante entsteht, Quell-Gericht + Konzept B nachw
         ->and($this->gericht->refresh()->name)->toBe('DES: Butterkuchen');
 
     // Konzept B unverändert: zeigt weiter das Original
-    expect((int) $this->slotB->refresh()->sales_recipe_id)->toBe($this->gericht->id)
+    expect((int) $this->slotB->refresh()->recipe_id)->toBe($this->gericht->id)
         ->and($this->slotB->variant_source_recipe_id)->toBeNull();
 
     // EK rechnet gegen die Variante: Margarine (4 €/kg) statt Butter (12 €/kg) bei 500 g
@@ -93,7 +93,7 @@ it('Tausch in Konzept A: Slot-Variante entsteht, Quell-Gericht + Konzept B nachw
 it('Variante ist katalog-unsichtbar (Picker + VK-Browser), Idempotenz beim zweiten Tausch-Aufruf', function () {
     $this->svc->varianteFuerSlot($this->rootTeam, $this->slotA->id);
     $slot = $this->svc->varianteFuerSlot($this->rootTeam, $this->slotA->id); // idempotent
-    $varianteId = (int) $slot->sales_recipe_id;
+    $varianteId = (int) $slot->recipe_id;
 
     expect(FoodAlchemistRecipe::where('variant_source_recipe_id', $this->gericht->id)->count())->toBe(1);
 
@@ -109,11 +109,11 @@ it('Variante ist katalog-unsichtbar (Picker + VK-Browser), Idempotenz beim zweit
 
 it('Rücksetzen: Original zurück im Slot, Variante wird verworfen', function () {
     $this->svc->tauscheZutatKonzeptLokal($this->rootTeam, $this->slotA->id, $this->zutat->id);
-    $varianteId = (int) $this->slotA->refresh()->sales_recipe_id;
+    $varianteId = (int) $this->slotA->refresh()->recipe_id;
 
     $slot = $this->svc->zuruecksetzen($this->rootTeam, $this->slotA->id);
 
-    expect((int) $slot->sales_recipe_id)->toBe($this->gericht->id)
+    expect((int) $slot->recipe_id)->toBe($this->gericht->id)
         ->and($slot->variant_source_recipe_id)->toBeNull()
         ->and(FoodAlchemistRecipe::find($varianteId))->toBeNull(); // soft-deleted
 });
@@ -151,5 +151,5 @@ it('MCP: concept_slot_variante.POST tauscht konzept-lokal und setzt zurück', fu
     ], $kontext);
     expect($reset->success)->toBeTrue()
         ->and($reset->data['variiert'])->toBeFalse()
-        ->and($reset->data['sales_recipe_id'])->toBe($this->gericht->id);
+        ->and($reset->data['recipe_id'])->toBe($this->gericht->id);
 });

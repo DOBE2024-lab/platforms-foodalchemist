@@ -39,20 +39,20 @@ beforeEach(function () {
     // Fremdes Paket (neues Modell) in Team B, mit fremdem Gericht.
     $this->fremdPaket = FoodAlchemistConcept::create(['team_id' => $this->childB->id, 'name' => 'Fremdes Paket', 'kind' => 'paket', 'status' => 'active']);
     FoodAlchemistConceptSlot::create(['team_id' => $this->childB->id, 'concept_id' => $this->fremdPaket->id, 'role' => 'x',
-        'position' => 0, 'type' => 'gericht', 'sales_recipe_id' => $this->fremd->id]);
+        'position' => 0, 'type' => 'gericht', 'recipe_id' => $this->fremd->id]);
 });
 
 // ── Schreiben ────────────────────────────────────────────────────────────
 
 it('fillSlot: eigenes und geerbtes Gericht sind erlaubt', function () {
-    expect($this->concepts->fillSlot($this->childA, $this->slot->id, ['sales_recipe_id' => $this->eigen->id])->sales_recipe_id)->toBe($this->eigen->id)
-        ->and($this->concepts->fillSlot($this->childA, $this->slot->id, ['sales_recipe_id' => $this->geerbt->id])->sales_recipe_id)->toBe($this->geerbt->id);
+    expect($this->concepts->fillSlot($this->childA, $this->slot->id, ['recipe_id' => $this->eigen->id])->recipe_id)->toBe($this->eigen->id)
+        ->and($this->concepts->fillSlot($this->childA, $this->slot->id, ['recipe_id' => $this->geerbt->id])->recipe_id)->toBe($this->geerbt->id);
 });
 
 it('fillSlot: fremdes Gericht wird abgelehnt', function () {
-    expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['sales_recipe_id' => $this->fremd->id]))
+    expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['recipe_id' => $this->fremd->id]))
         ->toThrow(ModelNotFoundException::class);
-    expect($this->slot->fresh()->sales_recipe_id)->toBeNull();
+    expect($this->slot->fresh()->recipe_id)->toBeNull();
 });
 
 it('fillSlot: fremdes eingebettetes Paket wird abgelehnt', function () {
@@ -71,7 +71,7 @@ it('fillSlot: ein Konzept (kind≠paket) kann nicht als Paket eingebettet werden
 it('fillSlot: package_id (Alt-Paket) wird seit 98 · 2.6c immer abgelehnt, der Slot bleibt unverändert', function () {
     expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['package_id' => 4711]))
         ->toThrow(\RuntimeException::class, 'alte Pakete gibt es nicht mehr');
-    expect($this->slot->fresh()->only(['embedded_concept_id', 'sales_recipe_id']))->toBe(['embedded_concept_id' => null, 'sales_recipe_id' => null]);
+    expect($this->slot->fresh()->only(['embedded_concept_id', 'recipe_id']))->toBe(['embedded_concept_id' => null, 'recipe_id' => null]);
 });
 
 it('fillSlot: Paket bettet sich selbst nicht ein, und ein Zyklus über zwei Pakete wird abgelehnt', function () {
@@ -92,14 +92,14 @@ it('fillSlot: Paket bettet sich selbst nicht ein, und ein Zyklus über zwei Pake
 // ── Typ: Gericht vs. Basisrezept ──────────────────────────────────────────
 
 it('fillSlot: ohne Typ wird er aus dem Rezept abgeleitet', function () {
-    expect($this->concepts->fillSlot($this->childA, $this->slot->id, ['sales_recipe_id' => $this->eigen->id])->type)->toBe('gericht')
-        ->and($this->concepts->fillSlot($this->childA, $this->slot->id, ['sales_recipe_id' => $this->basis->id])->type)->toBe('basisrezept');
+    expect($this->concepts->fillSlot($this->childA, $this->slot->id, ['recipe_id' => $this->eigen->id])->type)->toBe('gericht')
+        ->and($this->concepts->fillSlot($this->childA, $this->slot->id, ['recipe_id' => $this->basis->id])->type)->toBe('basisrezept');
 });
 
 it('fillSlot: ein Typ, der nicht zum Rezept passt, wird abgelehnt', function () {
-    expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['sales_recipe_id' => $this->basis->id, 'type' => 'gericht']))
+    expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['recipe_id' => $this->basis->id, 'type' => 'gericht']))
         ->toThrow(\RuntimeException::class, 'basisrezept');
-    expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['sales_recipe_id' => $this->eigen->id, 'type' => 'basisrezept']))
+    expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['recipe_id' => $this->eigen->id, 'type' => 'basisrezept']))
         ->toThrow(\RuntimeException::class, 'gericht');
 });
 
@@ -125,7 +125,7 @@ it('Abo: der Mandant setzt eine abonnierte Fassung ein; ein Master-Rezept ohne A
     $c = $this->concepts->create($mandant, ['name' => 'Mandanten-Menü']);
     $slot = $this->concepts->addSlot($mandant, $c->id, ['role' => 'Hauptgang']);
 
-    expect($this->concepts->fillSlot($mandant, $slot->id, ['sales_recipe_id' => $jusF->id])->sales_recipe_id)->toBe($jusF->id);
-    expect(fn () => $this->concepts->fillSlot($mandant, $slot->id, ['sales_recipe_id' => $geheim->id]))
+    expect($this->concepts->fillSlot($mandant, $slot->id, ['recipe_id' => $jusF->id])->recipe_id)->toBe($jusF->id);
+    expect(fn () => $this->concepts->fillSlot($mandant, $slot->id, ['recipe_id' => $geheim->id]))
         ->toThrow(ModelNotFoundException::class);
 });

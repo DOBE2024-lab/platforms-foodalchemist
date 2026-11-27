@@ -30,16 +30,16 @@ final class BlockReferenz
         $wert = fn (string $f) => array_key_exists($f, $daten) ? $daten[$f] : $block?->{$f};
         $gesetzt = fn (string $f) => $block === null || $typWechsel || array_key_exists($f, $daten);
 
-        if ($typ === 'recipe_ref' && $gesetzt('sales_recipe_id')) {
-            self::gericht($team, $wert('sales_recipe_id'));
+        if ($typ === 'recipe_ref' && $gesetzt('recipe_id')) {
+            self::gericht($team, $wert('recipe_id'));
         }
         if ($typ === 'concept_ref' && $gesetzt('concept_id')) {
             self::concept($team, $wert('concept_id'));
         }
-        if ($typ !== 'recipe_ref' && ($daten['sales_recipe_id'] ?? null) !== null && $daten['sales_recipe_id'] !== '') {
-            self::gericht($team, $daten['sales_recipe_id']);   // 98 · 3.6 PR5: wie zuvor die Vorab-Prüfung im MCP-Tool — ein gesetztes Gericht ist immer sichtbar
+        if ($typ !== 'recipe_ref' && ($daten['recipe_id'] ?? null) !== null && $daten['recipe_id'] !== '') {
+            self::gericht($team, $daten['recipe_id']);   // 98 · 3.6 PR5: wie zuvor die Vorab-Prüfung im MCP-Tool — ein gesetztes Gericht ist immer sichtbar
         }
-        \Platform\FoodAlchemist\Services\Position\PositionValidierung::darreichung($daten['presentation_id'] ?? null, $wert('sales_recipe_id'));
+        \Platform\FoodAlchemist\Services\Position\PositionValidierung::darreichung($daten['presentation_id'] ?? null, $wert('recipe_id'));
         if (($daten['unit_vocab_id'] ?? null) !== null && $daten['unit_vocab_id'] !== ''
             && ! Verweisziel::sichtbar(FoodAlchemistVocabEinheit::class, $team)->whereKey((int) $daten['unit_vocab_id'])->exists()) {
             throw new PositionFehler("Einheit {$daten['unit_vocab_id']} ist nicht sichtbar/vorhanden.", 'NOT_FOUND');
@@ -49,12 +49,12 @@ final class BlockReferenz
     private static function gericht(Team $team, mixed $id): void
     {
         if ($id === null || $id === '') {
-            throw new PositionFehler('recipe_ref-Block braucht ein sales_recipe_id (VK-Gericht).');
+            throw new PositionFehler('recipe_ref-Block braucht ein recipe_id (VK-Gericht).');
         }
         $ok = Verweisziel::sichtbar(FoodAlchemistRecipe::class, $team)->verkauf()
             ->whereNull('variant_source_recipe_id')->whereKey((int) $id)->exists();
         if (! $ok) {
-            throw new PositionFehler("sales_recipe_id {$id} ist kein gültiges, sichtbares VK-Gericht (keine Slot-Variante) — via foodalchemist.verkaufsrezepte.SEARCH ermitteln.", 'NOT_FOUND');
+            throw new PositionFehler("recipe_id {$id} ist kein gültiges, sichtbares VK-Gericht (keine Slot-Variante) — via foodalchemist.verkaufsrezepte.SEARCH ermitteln.", 'NOT_FOUND');
         }
     }
 

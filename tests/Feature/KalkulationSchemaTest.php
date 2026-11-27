@@ -80,7 +80,7 @@ it('conceptHk: Katalog-Rollup bleibt ohne Pax frei von Produktionslohn', functio
     ]);
     // 98 · 2.6c: Paket = kind=paket-Concept, eingebettet
     $paket = app(ConceptService::class)->createPaket($this->rootTeam, ['name' => 'P']);
-    app(ConceptService::class)->fillSlot($this->rootTeam, app(ConceptService::class)->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise'])->id, ['sales_recipe_id' => $g->id]);
+    app(ConceptService::class)->fillSlot($this->rootTeam, app(ConceptService::class)->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise'])->id, ['recipe_id' => $g->id]);
     $concept = app(ConceptService::class)->create($this->rootTeam, ['name' => 'C']);
     $slot = app(ConceptService::class)->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
     app(ConceptService::class)->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);

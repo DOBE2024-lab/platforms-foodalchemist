@@ -22,7 +22,7 @@ class PaketGerichteSetTool extends FoodAlchemistTool implements ToolContract, To
     public function getDescription(): string
     {
         return 'Pakete = Concepter-Pakete (concepts mit kind=paket), dieselben, die der Concepter im Reiter „Pakete“ zeigt. Setzt die Gericht-Positionen eines team-eigenen Pakets im Entwurf (Vollersatz der Liste, Reihenfolge = items). '
-            . 'items: [{sales_recipe_id, quantity?, unit_vocab_id?, presentation_id?}]. Bestehende Positionen behalten Menge/Einheit/Darreichung, '
+            . 'items: [{recipe_id, quantity?, unit_vocab_id?, presentation_id?}]. Bestehende Positionen behalten Menge/Einheit/Darreichung, '
             . 'solange das Item das Feld nicht mitbringt. Überschrift-/Text-Positionen bleiben erhalten. presentation_id = Darreichung (0 = Standard).';
     }
 
@@ -38,12 +38,13 @@ class PaketGerichteSetTool extends FoodAlchemistTool implements ToolContract, To
                     'items' => [
                         'type' => 'object',
                         'properties' => [
-                            'sales_recipe_id' => ['type' => 'integer'],
+                            'recipe_id' => ['type' => 'integer'],
+                            'sales_recipe_id' => \Platform\FoodAlchemist\Support\RezeptIdAlias::schema(),
                             'quantity' => ['type' => 'number'],
                             'unit_vocab_id' => ['type' => 'integer', 'description' => 'Nur Einheiten, die rechnen (leer/portion bzw. Einheit der Darreichung; stk nur mit Stück-Ertrag; g/kg nur mit Grammatur; Basisrezept leer/g) — sonst VALIDATION_ERROR.'],
                             'presentation_id' => ['type' => 'integer', 'description' => 'Darreichung des Gerichts (0 = Standard, weglassen = unverändert).'],
                         ],
-                        'required' => ['sales_recipe_id'],
+                        'required' => ['recipe_id'],
                     ],
                 ],
             ],
@@ -53,6 +54,7 @@ class PaketGerichteSetTool extends FoodAlchemistTool implements ToolContract, To
 
     public function execute(array $arguments, ToolContext $context): ToolResult
     {
+        $arguments = \Platform\FoodAlchemist\Support\RezeptIdAlias::eingabe($arguments);   // 98 · 3.5: alter Name sales_recipe_id als Alias bis 4 Wochen nach Deploy
         $team = $this->team($context);
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
@@ -67,12 +69,12 @@ class PaketGerichteSetTool extends FoodAlchemistTool implements ToolContract, To
         $items = [];
         $recipeIds = [];
         foreach ($arguments['items'] as $row) {
-            $rid = (int) ($row['sales_recipe_id'] ?? 0);
+            $rid = (int) ($row['recipe_id'] ?? 0);
             if ($rid <= 0) {
                 continue;
             }
             $recipeIds[] = $rid;
-            $item = ['sales_recipe_id' => $rid];
+            $item = ['recipe_id' => $rid];
             if (array_key_exists('quantity', $row)) {
                 $item['quantity'] = $row['quantity'] !== null ? (float) $row['quantity'] : null;
             }
@@ -87,7 +89,7 @@ class PaketGerichteSetTool extends FoodAlchemistTool implements ToolContract, To
 
         try {
             if ($recipeIds !== []) {
-                TeamScope::referenzen(\Platform\FoodAlchemist\Models\FoodAlchemistRecipe::class, $recipeIds, $team, 'sales_recipe_id');
+                TeamScope::referenzen(\Platform\FoodAlchemist\Models\FoodAlchemistRecipe::class, $recipeIds, $team, 'recipe_id');
             }
         } catch (\RuntimeException $e) {
             return ToolResult::error($e->getMessage(), 'NOT_FOUND');   // fremdes/unsichtbares Gericht

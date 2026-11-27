@@ -81,7 +81,7 @@ function macheRecipeRefBlock($team, int $recipeId): \Platform\FoodAlchemist\Mode
     $fb = $fbSvc->create($team, ['label' => 'Dar-FB']);
     $kapitel = $fbSvc->addKapitel($team, $fb->id, ['title' => 'Kap']);
 
-    return $fbSvc->addBlock($team, $kapitel->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $recipeId]);
+    return $fbSvc->addBlock($team, $kapitel->id, ['type' => 'recipe_ref', 'recipe_id' => $recipeId]);
 }
 
 it('fuerBlock: ohne presentation_id + ohne Servierform → standardFuer (bit-identisch heute)', function () {
@@ -106,7 +106,7 @@ it('fuerBlock: expliziter presentation_id-Override wird zurückgegeben', functio
 
 it('fuerBlock: recipe_ref ohne Gericht → null (kein stiller Preis)', function () {
     $block = macheRecipeRefBlock($this->rootTeam, $this->gericht->id);
-    $block->update(['sales_recipe_id' => null]); // dish löst zu null auf
+    $block->update(['recipe_id' => null]); // dish löst zu null auf
 
     expect($this->resolver->fuerBlock($block->fresh(), null))->toBeNull();
 });

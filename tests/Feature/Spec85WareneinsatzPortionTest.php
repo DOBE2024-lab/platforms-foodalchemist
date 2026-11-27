@@ -62,8 +62,14 @@ it('ekProPortion braucht sales_unit_count nicht mehr: kein Wurf, kein Nachladen,
         ->and(array_key_exists('sales_unit_count', $ohneSpalte->getAttributes()))->toBeFalse();
 });
 
-it('Benchmark: Ø Wareneinsatz 40 % statt 160 %', function () {
+it('Benchmark: Teiler fest 1 — ohne ek_portion zählt der Gericht-EK als Portions-EK, sales_unit_count wird ignoriert (98 · 3.5-6a)', function () {
+    // Dominique 27.11.: Darreichung = Portion, Teiler fest 1. Das Gericht trägt noch den Spiegel sales_unit_count = 4;
+    // vorher teilte der Benchmark 2,00 € ÷ 4 = 0,50 € (10 %), jetzt 2,00 € gegen 5,00 € VK = 40 %.
+    $this->gericht->update(['ek_total_eur' => 2.00]);
     expect(app(BenchmarkService::class)->kpisFuerTeam($this->rootTeam->id)['avg_w_pct'])->toEqualWithDelta(40.0, 0.01);
+
+    $this->standard->update(['ek_portion' => 1.50]);   // ek_portion hat Vorrang
+    expect(app(BenchmarkService::class)->kpisFuerTeam($this->rootTeam->id)['avg_w_pct'])->toEqualWithDelta(30.0, 0.01);
 });
 
 it('Rezept-Bericht: food_cost_percent 40 %, mit ek_portion 30 %', function () {

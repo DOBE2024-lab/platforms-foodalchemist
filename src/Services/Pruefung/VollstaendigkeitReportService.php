@@ -122,7 +122,9 @@ class VollstaendigkeitReportService
         // Spec 85 D-1: „ohne Aufschlagsklasse“ = Standard-Darreichung ohne Klasse.
         $ohneKlasse = (clone $this->gerichte($team))
             ->whereDoesntHave('standardPresentation', fn ($q) => $q->whereNotNull('markup_class_id'))->count();
-        $ohnePortionAmRezept = (clone $this->gerichte($team))->whereNull('sales_quantity_per_unit_g')->count();
+        // 98 · 3.5-6a: Portionsgewicht der Standard-Darreichung statt des Rezept-Spiegels sales_quantity_per_unit_g (Schlüssel bleibt).
+        $ohnePortionAmRezept = (clone $this->gerichte($team))
+            ->whereDoesntHave('standardPresentation', fn ($q) => $q->whereNotNull('quantity_per_unit_g'))->count();
 
         $ohneDarreichung = (clone $this->gerichte($team))
             ->whereNotExists(fn ($q) => $q->from('foodalchemist_recipe_presentations AS p')
@@ -157,11 +159,11 @@ class VollstaendigkeitReportService
         $beispiele = (clone $this->gerichte($team))
             ->whereDoesntHave('standardPresentation', fn ($q) => $q->whereNotNull('markup_class_id'))
             ->orderBy('id')->limit($limit)
-            ->select(['id', 'name', 'sales_quantity_per_unit_g'])->mitStandardVk()->get()
+            ->select(['id', 'name'])->mitStandardVk()->with('standardPresentation:id,recipe_id,quantity_per_unit_g')->get()
             ->map(fn ($r) => [
                 'recipe_id' => (int) $r->id,
                 'name' => (string) $r->name,
-                'portion_g' => $r->sales_quantity_per_unit_g !== null ? (float) $r->sales_quantity_per_unit_g : null,
+                'portion_g' => $r->standardPresentation?->quantity_per_unit_g !== null ? (float) $r->standardPresentation->quantity_per_unit_g : null,   // 98 · 3.5-6a
                 'vk_netto_eur' => $r->vk_netto,
             ])->all();
 

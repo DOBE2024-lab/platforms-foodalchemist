@@ -192,8 +192,6 @@ it('Geld-Helfer: keine neuen Handrechnungen für Wareneinsatz, EK je Portion und
             'resources/views/presentation/blocks/chapter_loop.blade.php' => [1, 'VK per Wahrheitswert geprüft (negativer VK zeigte eine Quote) — nicht still vereinheitlicht'],
         ],
         'ek_je_portion' => [
-            'src/Services/Trend/BenchmarkService.php' => [1, 'SQL-Zeile ohne Model, ek_portion kommt schon aus der Abfrage'],
-            'src/Services/Pruefung/MoneyTruthReportService.php' => [1, 'Diagnose vergleicht bewusst Ansatz ÷ Portionen mit der Darreichung'],
             'src/Services/Concepter/ConceptPreisService.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
             'src/Services/Concepter/ConcepterAggregateService.php' => [1, 'Paket-EK mit PAE-Faktor, Rückfall 0'],
         ],

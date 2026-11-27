@@ -70,75 +70,7 @@ beforeEach(function () {
     };
 });
 
-// ── A · V-041 — die zwei Lesarten von sales_unit_count ────────────────────────
-
-it('A: findet die Divisions-Lesart bei sales_unit_count > 1 und beziffert den Faktor', function () {
-    // Der Fall aus V-041, in klein: Charge-EK 24 €, 10 Einheiten je Verkauf, VK 96 €.
-    //   Divisions-Lesart (heutige recipeHk):  24 / 10 / 96  = 2,5 %
-    //   Darreichungs-Lesart (mengenkonsistent): 24 / 96     = 25,0 %
-    // Faktor 10 — genau die Größenordnung, die die Backlog-Zeile behauptet.
-    ($this->mkGericht)('[FIX] Praline | Nougat', ['sales_unit_count' => 10, 'ek_total_eur' => 24.0],
-        ['sales_net' => 96.00, 'ek_portion' => 24.0, 'quantity_per_unit_g' => 20, 'unit_count' => 10]);
-
-    $a = $this->svc->messe($this->rootTeam)['a_sales_unit_count'];
-
-    expect($a['verteilung']['unit_count_gt_1'])->toBe(1)
-        ->and($a['vergleichbar'])->toBe(1)
-        ->and($a['abweichend']['unit_count_gt_1'])->toBe(1)
-        ->and($a['abweichend']['unit_count_le_1'])->toBe(0)
-        ->and($a['faktor_max'])->toBe(10.0);
-
-    $b = $a['beispiele'][0];
-    expect($b['w_pct_division'])->toBe(2.5)
-        ->and($b['w_pct_darreichung'])->toBe(25.0)
-        ->and($b['delta_pp'])->toBe(22.5);
-});
-
-it('A: findet auch den spiegelbildlichen Fall (unit_count = 1, Grammatur ≠ Charge)', function () {
-    // Die zweite Hälfte von V-041: eine Einheit je Verkauf, aber die Portion ist nur ein
-    // Bruchteil der Charge. Division rechnet mit dem CHARGEN-EK gegen einen PORTIONS-VK
-    // ⇒ Quote zu hoch (hier 4× zu hoch). Am echten Bestand ist genau das der Fall,
-    // der auftritt — nicht der aus dem ersten Test.
-    ($this->mkGericht)('[FIX] Suppe | Kürbis', ['sales_unit_count' => 1, 'ek_total_eur' => 8.0],
-        ['sales_net' => 10.00, 'ek_portion' => 2.0, 'quantity_per_unit_g' => 250, 'unit_count' => 1]);
-
-    $a = $this->svc->messe($this->rootTeam)['a_sales_unit_count'];
-
-    expect($a['abweichend']['unit_count_le_1'])->toBe(1)
-        ->and($a['abweichend']['unit_count_gt_1'])->toBe(0)
-        ->and($a['beispiele'][0]['w_pct_division'])->toBe(80.0)
-        ->and($a['beispiele'][0]['w_pct_darreichung'])->toBe(20.0)
-        ->and($a['beispiele'][0]['faktor'])->toBe(0.25);
-});
-
-it('A: mengenkonsistente Gerichte gelten NICHT als abweichend (kein falsches Rot)', function () {
-    ($this->mkGericht)('[FIX] Salat | Feldsalat', ['sales_unit_count' => 1, 'ek_total_eur' => 3.0],
-        ['sales_net' => 12.00, 'ek_portion' => 3.0, 'quantity_per_unit_g' => 1000, 'unit_count' => 1]);
-
-    $a = $this->svc->messe($this->rootTeam)['a_sales_unit_count'];
-
-    expect($a['vergleichbar'])->toBe(1)
-        ->and($a['abweichend_gesamt'])->toBe(0)
-        ->and($a['faktor_max'])->toBeNull()
-        ->and($a['beispiele'])->toBe([]);
-});
-
-it('A: unvergleichbare Gerichte fallen aus der Quoten-Rechnung, bleiben aber in der Verteilung', function () {
-    // Ohne VK, ohne Darreichungs-EK oder ohne Charge-EK ist keine der beiden Quoten
-    // definiert — der Bericht darf hier nicht dividieren und nicht raten.
-    ($this->mkGericht)('[FIX] Ohne VK | Test', ['sales_unit_count' => 4, 'ek_total_eur' => 5.0],
-        ['sales_net' => null, 'ek_portion' => 1.25, 'quantity_per_unit_g' => 100, 'unit_count' => 4]);
-    ($this->mkGericht)('[FIX] Ohne EK | Test', ['sales_unit_count' => 4, 'ek_total_eur' => null],
-        ['sales_net' => 20.00, 'ek_portion' => 1.25, 'quantity_per_unit_g' => 100, 'unit_count' => 4]);
-    ($this->mkGericht)('[FIX] Ohne Darreichung | Test', ['sales_unit_count' => 4, 'ek_total_eur' => 5.0]);
-
-    $a = $this->svc->messe($this->rootTeam)['a_sales_unit_count'];
-
-    expect($a['vk_gerichte'])->toBe(3)
-        ->and($a['verteilung']['unit_count_gt_1'])->toBe(3)
-        ->and($a['vergleichbar'])->toBe(0)
-        ->and($a['abweichend_gesamt'])->toBe(0);
-});
+// A · V-041 (sales_unit_count) entfallen mit 98 · 3.5-6a: Teiler fest 1 (Dominique 27.11.), die Spalte fällt mit 6c.
 
 // ── B · Preis-Wahrheit — genau eine Standard-Darreichung je Verkaufsrezept (Spec 85 D-1 PR-C) ─────
 // Seit PR-C gibt es keinen Rezept-Preis mehr: „Divergenz Darreichung ↔ Rezept" und „Legacy-Rückfall" fallen weg.
@@ -222,21 +154,22 @@ it('C: gesperrte und gelöschte Preiszeilen zählen in keiner Fassung', function
 it('D1: der Bericht eines Kind-Teams sieht die Fälle des Geschwister-Teams nicht', function () {
     // Bewusst über die Fixture-Helfer des ROOT-Teams gebaut und dann umgehängt: die
     // Sichtbarkeit läuft über die Team-Kette, nicht über eine Gleichheit auf team_id.
-    $g = ($this->mkGericht)('[FIX] Fremd | A', ['sales_unit_count' => 10, 'ek_total_eur' => 24.0],
-        ['sales_net' => 96.00, 'ek_portion' => 24.0, 'quantity_per_unit_g' => 20, 'unit_count' => 10]);
+    $g = ($this->mkGericht)('[FIX] Fremd | A', ['ek_total_eur' => 24.0],
+        ['sales_net' => null, 'ek_portion' => 24.0, 'quantity_per_unit_g' => 200, 'unit_count' => 1]);
     $g->update(['team_id' => $this->childA->id]);
     FoodAlchemistRecipeDarreichung::where('recipe_id', $g->id)->update(['team_id' => $this->childA->id]);
 
-    $eigen = $this->svc->messe($this->childA)['a_sales_unit_count'];
-    $fremd = $this->svc->messe($this->childB)['a_sales_unit_count'];
+    $eigen = $this->svc->messe($this->childA)['b_preis_wahrheit'];
+    $fremd = $this->svc->messe($this->childB)['b_preis_wahrheit'];
 
-    expect($eigen['abweichend_gesamt'])->toBe(1)
+    expect($eigen['vk_gerichte'])->toBe(1)
+        ->and($eigen['kein_preis'])->toBe(1)
         ->and($fremd['vk_gerichte'])->toBe(0)
-        ->and($fremd['abweichend_gesamt'])->toBe(0);
+        ->and($fremd['kein_preis'])->toBe(0);
 });
 
 it('read-only: die Messung schreibt nichts (kein Signal, keine Lauf-Zeile, keine Preis-Zeile)', function () {
-    ($this->mkGericht)('[FIX] Praline | Nougat', ['sales_unit_count' => 10, 'ek_total_eur' => 24.0],
+    ($this->mkGericht)('[FIX] Praline | Nougat', ['ek_total_eur' => 24.0],
         ['sales_net' => 96.00, 'ek_portion' => 24.0, 'quantity_per_unit_g' => 20, 'unit_count' => 10]);
     ($this->mkGpMitLead)('Statusfremd', [['price' => 4.20, 'status' => '9', 'valid_to' => null]]);
 
@@ -255,8 +188,8 @@ it('read-only: die Messung schreibt nichts (kein Signal, keine Lauf-Zeile, keine
     expect($nachher)->toBe($vorher);
 });
 
-it('Kommando läuft und liefert JSON mit allen drei Blöcken', function () {
-    ($this->mkGericht)('[FIX] Praline | Nougat', ['sales_unit_count' => 10, 'ek_total_eur' => 24.0],
+it('Kommando läuft und liefert JSON mit den Blöcken B und C', function () {
+    ($this->mkGericht)('[FIX] Praline | Nougat', ['ek_total_eur' => 24.0],
         ['sales_net' => 96.00, 'ek_portion' => 24.0, 'quantity_per_unit_g' => 20, 'unit_count' => 10]);
 
     $this->artisan('foodalchemist:diagnose:money-truth-report', ['--team' => $this->rootTeam->id, '--json' => true])

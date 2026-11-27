@@ -25,7 +25,7 @@ class MoneyTruthReportCommand extends Command
         {--limit=5 : wie viele Beispiel-Zeilen je Block}
         {--json : Maschinen-lesbare Ausgabe statt Tabellen}';
 
-    protected $description = 'Messbericht der Geld-Wahrheiten (sales_unit_count, Preis-Leiter, Lead-LA-Preis) — read-only.';
+    protected $description = 'Messbericht der Geld-Wahrheiten (Preis-Leiter, Lead-LA-Preis) — read-only.';
 
     public function handle(MoneyTruthReportService $report): int
     {
@@ -51,7 +51,6 @@ class MoneyTruthReportCommand extends Command
             }
 
             $this->info("── Team {$team->id} ({$team->name}) ──");
-            $this->zeigeA($mess['a_sales_unit_count']);
             $this->zeigeB($mess['b_preis_wahrheit']);
             $this->zeigeC($mess['c_lead_la_preis']);
         }
@@ -63,32 +62,7 @@ class MoneyTruthReportCommand extends Command
         return self::SUCCESS;
     }
 
-    private function zeigeA(array $a): void
-    {
-        $this->line('  A · sales_unit_count — zwei Lesarten derselben Spalte (V-041)');
-        $this->table(['Kennzahl', 'Wert'], [
-            ['VK-Gerichte', $a['vk_gerichte']],
-            ['davon sales_unit_count NULL', $a['verteilung']['unit_count_null']],
-            ['davon sales_unit_count <= 1', $a['verteilung']['unit_count_le_1']],
-            ['davon sales_unit_count > 1', $a['verteilung']['unit_count_gt_1']],
-            ['vergleichbar (EK + Darreichungs-EK + VK)', $a['vergleichbar']],
-            ['Quoten weichen ab · unit_count > 1', $a['abweichend']['unit_count_gt_1']],
-            ['Quoten weichen ab · unit_count <= 1', $a['abweichend']['unit_count_le_1']],
-            ['Faktor Darreichung/Division (min/median/max)',
-                $this->drei($a['faktor_min'], $a['faktor_median'], $a['faktor_max'])],
-        ]);
-
-        if ($a['beispiele'] !== []) {
-            $this->table(
-                ['ID', 'Name', 'unit_count', 'EK ges.', 'EK Portion', 'VK', 'W% Div.', 'W% Darr.', 'Δ pp', 'Faktor'],
-                array_map(fn ($b) => [
-                    $b['recipe_id'], $this->kurz($b['name']), $b['sales_unit_count'], $b['ek_total_eur'],
-                    $b['ek_portion_eur'], $b['vk_netto_eur'], $b['w_pct_division'],
-                    $b['w_pct_darreichung'], $b['delta_pp'], $b['faktor'] ?? '–',
-                ], $a['beispiele'])
-            );
-        }
-    }
+    // A · V-041 (sales_unit_count) entfallen mit 98 · 3.5-6a: Teiler fest 1 (Dominique 27.11.), die Spalte fällt mit 6c.
 
     private function zeigeB(array $b): void
     {
@@ -131,11 +105,6 @@ class MoneyTruthReportCommand extends Command
             $this->table(['GP-ID', 'Name', 'Lead-LA'],
                 array_map(fn ($z) => [$z['gp_id'], $this->kurz($z['name']), $z['lead_la_supplier_item_id']], $zeilen));
         }
-    }
-
-    private function drei(?float $min, ?float $median, ?float $max): string
-    {
-        return $min === null ? '–' : "{$min} / {$median} / {$max}";
     }
 
     private function kurz(string $name): string

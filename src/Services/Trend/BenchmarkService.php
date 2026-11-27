@@ -59,17 +59,15 @@ class BenchmarkService
             . ' AND std.is_standard = 1 AND std.deleted_at IS NULL ORDER BY std.id LIMIT 1)';
         $preiszeilen = (clone $base)
             ->whereRaw($vkSql . ' > 0')->where('ek_total_eur', '>', 0)
-            ->selectRaw('ek_total_eur, sales_unit_count, ' . $ekPortionSql . ' as ek_portion, ' . $vkSql . ' as sales_net')
+            ->selectRaw('ek_total_eur, ' . $ekPortionSql . ' as ek_portion, ' . $vkSql . ' as sales_net')
             ->get();
         $wPct = null;
         if ($preiszeilen->isNotEmpty()) {
             $summe = 0.0;
             foreach ($preiszeilen as $z) {
-                // Spec 85: EK EINER Portion gegen den Portions-VK (ek_portion, sonst Ansatz ÷ Portionen) —
-                // vorher Ansatz-EK ÷ Portions-VK, bei 4 Portionen also das Vierfache.
-                $ekPortion = $z->ek_portion !== null
-                    ? (float) $z->ek_portion
-                    : (float) $z->ek_total_eur / max(1, (int) ($z->sales_unit_count ?? 1));
+                // Spec 85: EK EINER Portion gegen den Portions-VK (ek_portion der Standard-Darreichung, sonst der Gericht-EK).
+                // 98 · 3.5-6a: Darreichung = Portion, Teiler fest 1 (Dominique 27.11.) — kein ÷ sales_unit_count mehr.
+                $ekPortion = $z->ek_portion !== null ? (float) $z->ek_portion : (float) $z->ek_total_eur;
                 $summe += \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ekPortion, $z->sales_net, null);
             }
             $wPct = $summe / $preiszeilen->count();

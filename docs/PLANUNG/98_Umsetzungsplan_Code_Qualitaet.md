@@ -1,6 +1,6 @@
 # 98 Umsetzungsplan Code-Qualität (Wellen 1–3)
 
-Stand: 2026-11-19 (nach Gegenprüfung durch Codex) · Grundlage: [97 Code-Qualitäts-Audit](97_Code_Qualitaet_Audit.md) · Status: Entwurf
+Stand: 2026-11-19 (nach Gegenprüfung durch Codex), Welle-3-Stand 2026-11-27 · Grundlage: [97 Code-Qualitäts-Audit](97_Code_Qualitaet_Audit.md) · Status: Entwurf
 
 Befund-IDs (K1, B3, U2 …) verweisen auf Bericht 97. Aufwand: S ≤ ½ Tag, M 1–3 Tage, L 1–2 Wochen (jeweils mit Claude-Unterstützung).
 
@@ -141,6 +141,20 @@ Befund-IDs (K1, B3, U2 …) verweisen auf Bericht 97. Aufwand: S ≤ ½ Tag, M 1
 | 3.7 | **Taxonomie Teil 2:** Rollen-Flags an Warengruppen (Getränk, Non-Food, kühl, fertig) statt Code-Literale `'15'`/`'16'`/`'09.6'` | – | 0 Literale; Regel-Test | M |
 | 3.8 | **Ordnung:** Services in Fachordner (Rezept, Concepter, Foodbook, Produktion, Einkauf, Wissen, Planung); Qualitäts-Engines (DataQuality, SignalDetektor, Reife, Conformance) zu einer Prüf-Registry | 3.3 | flacher Root < 50 Dateien | L |
 | 3.9 | Dunkle Editor-Ebene bleibt bewusst (E5); nur Kontraste nach WCAG AA prüfen und Übergang weicher machen | 2.4 | Kontrast-Check grün | S |
+
+### Stand Welle 3 (27.11.2026, main `298dc5e40`, alles auf io live außer #1018)
+
+| Paket | Stand | Abnahme |
+|---|---|---|
+| 3.1 | **abgeschlossen** (#1010, io 27.11., Migration `2027_01_13_100000_drop_alt_pakete`, Batch 85; volles Backup vorher) | Riegel 0 Treffer; `foodalchemist_packages`/`_package_dishes` und `package_id` an Slots und Speiseplan-Einträgen weg |
+| 3.2 | **abgeschlossen** (#992) | Doppelungen weg, Inhalts-Hash bit-gleich (Zwillingstest) |
+| 3.3 | **abgeschlossen** (Speiseplan, Foodbook, Kaskade; 27.11.: #1011–#1018 KnowledgeContext, RecipeGenerator, Order, DataQuality, Angebots-Editor, Foodbook-Editor, Pairing) | keine Klasse unter `src` > 1.500 Zeilen, `DateigroessenBasis` leer; je Schnitt PR0-Charakterisierung (Golden auf altem Code) |
+| 3.4 | **abgeschlossen** | Rückkanten 2 → 0; Kreis-Klinke `klassen_in_kreisen` 60 → 51, größte Komponente 12 → 7 (darf nur sinken) |
+| 3.5 | **in Arbeit** (Lisa): Schritt 3 entfällt; offen Alias-Fix, FKs (Schritt 5), Spiegelfelder (6c nur mit Ja von Dominique), Aliase nach einer Woche Log-Beobachtung | – |
+| 3.6 | **abgeschlossen** (PR0–PR6, #1003–#1009) | Konzept, Foodbook und Angebot rechnen über `PositionGericht`/`PositionPreisService`; eine Schreibprüfung `PositionValidierung`; EK-Lücke sichtbar (`ek_incomplete`) |
+| 3.7 | **abgeschlossen** (`WgRolle`) | Rest: Literal `'09.6'` in `ZukaufBasisrezeptService` |
+| 3.8 | **abgeschlossen** | Root von `src/Services` = 3 Dateien; Prüf-Registry |
+| 3.9 | **abgeschlossen** | WCAG AA, weicher Modal-Übergang |
 
 ---
 

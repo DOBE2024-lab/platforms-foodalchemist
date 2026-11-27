@@ -201,15 +201,17 @@ class RecipeReviseService
     {
         $r->loadMissing([
             'ingredients.gp', 'ingredients.referencedRecipe', 'ingredients.unit',
-            'dishClass', 'presentations.servingForm', 'salesUnit',
+            'dishClass', 'presentations.servingForm',
         ]);
+        // 98 · 3.5-6a: Verkaufseinheit und Portionsgewicht aus der Standard-Darreichung, nicht aus den Spiegeln am Rezept.
+        $standard = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($r);
 
         $facetten = [
             'speisen_klasse' => $r->dishClass?->label,
             'diaetform' => $r->dishClass?->diet_form,
             'darreichungen' => $r->presentations->map(fn ($d) => $d->servingForm?->label)->filter()->values()->all(),
-            'verkaufseinheit' => trim(($r->sales_unit_count !== null ? $r->sales_unit_count . ' × ' : '') . ($r->salesUnit?->display_de ?? '')) ?: null,
-            'portion_g' => $r->sales_quantity_per_unit_g,
+            'verkaufseinheit' => trim(($standard?->unit_count !== null ? $standard->unit_count . ' × ' : '') . ($standard?->unit?->display_de ?? '')) ?: null,
+            'portion_g' => $standard?->quantity_per_unit_g,
             'aufschlagsklasse' => $r->vk_klasse?->code,   // Spec 85 D-1 PR-B: Klasse der Standard-Darreichung
         ];
 

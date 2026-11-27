@@ -96,8 +96,10 @@ final class GerichtHuelleService
         }
 
         $vorher = $ziel->only([...self::GESCHUETZT, 'description_source', 'dish_class_source']);
-        $portion = $ziel->sales_quantity_per_unit_g !== null && ! isset($params['ziel_portion_g'])
-            ? ['ziel_portion_g' => (float) $ziel->sales_quantity_per_unit_g] : [];
+        // 98 · 3.5-6a: die Portion der Hülle ist die Grammatur ihrer Standard-Darreichung (nicht mehr der Spiegel am Rezept).
+        $hullenPortion = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($ziel)?->quantity_per_unit_g;
+        $portion = $hullenPortion !== null && ! isset($params['ziel_portion_g'])
+            ? ['ziel_portion_g' => (float) $hullenPortion] : [];
         $gen = $generator->generiere($team, $beschreibung,
             [...$params, ...$portion, 'gericht_fuellen_id' => (int) $ziel->id, 'titel_vorgabe' => (string) $ziel->name],
             null, true, 'plan_go', $context, $melde);

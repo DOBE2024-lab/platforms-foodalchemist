@@ -619,8 +619,8 @@ class RecipeConformanceAdapter implements ConformanceAdapter
             // gespiegelt aus dem Review-Kontext — kein Schreibziel.
             $kontext['speisen_klasse'] = $r->dishClass?->label;
             $kontext['diaetform'] = $r->dishClass?->diet_form;
-            $kontext['portion_g'] = $r->sales_quantity_per_unit_g;
-            $kontext['verkaufseinheiten'] = $r->sales_unit_count;
+            $kontext['portion_g'] = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($r)?->quantity_per_unit_g;   // 98 · 3.5-6a: Grammatur der Standard-Darreichung
+            // 98 · 3.5-6a: keine Verkaufseinheiten-Zahl mehr — ein Gericht ist eine Portion (Dominique 27.11. „fest 1“).
             // Die Diätklasse setzt die Anreicherung bei der Freigabe (SpeisenKlassenService) — direkt nach dem Bau ist
             // sie oft noch leer. Das ist kein Regelverstoß (demo 3754: §2.2 hart gemeldet, nie heilbar).
             if ($r->dish_class_id === null) {

@@ -567,8 +567,8 @@ class StepEditor extends Component
                 'raw_text' => $z->raw_text,
             ])->values()->all(),
             'verkaufseinheit' => $gericht ? [
-                'anzahl' => $recipe->sales_unit_count,
-                'portion_g' => $recipe->sales_quantity_per_unit_g,
+                // 98 · 3.5-6a: keine Anzahl mehr — ein Gericht ist eine Portion (Dominique 27.11. „fest 1“).
+                'portion_g' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($recipe)?->quantity_per_unit_g,   // 98 · 3.5-6a: Grammatur der Standard-Darreichung
             ] : null,
             'schritte_bestand' => FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene($this->ebene)
                 ->orderBy('position')->pluck('text')->all(),

@@ -193,7 +193,7 @@ final class KonzeptPruefung
      *
      * @return list<int>
      */
-    public function konzeptGerichtIds(int $conceptId): array
+    private function konzeptGerichtIds(int $conceptId): array
     {
         $direkt = DB::table('foodalchemist_concept_slots')
             ->where('concept_id', $conceptId)

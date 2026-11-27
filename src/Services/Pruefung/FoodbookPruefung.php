@@ -11,13 +11,12 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 /**
  * Register der Foodbook-Qualität (Tranche D, 98 · 3.3 aus DataQualityService verschoben): je Check Label,
  * Signal-Deskriptor und Prädikat, dazu die Helfer (Foodbooks in Gebrauch, Kapitel-Prädikate, Kapitel-Ziele über
- * CoverageService, Preis-Drift). foodbookGerichtIds hat derzeit keinen Aufrufer (wörtlich mitverschoben). Nur lesend.
+ * CoverageService, Preis-Drift). Nur lesend.
  */
 final class FoodbookPruefung
 {
     public function __construct(
         private \Platform\FoodAlchemist\Services\Concepter\CoverageService $coverage,
-        private KonzeptPruefung $konzepte,
     ) {}
 
     /**
@@ -178,40 +177,6 @@ final class FoodbookPruefung
                     ->whereColumn('sk.foodbook_id', 'foodalchemist_foodbooks.id')
                     ->whereNull('sk.deleted_at')
                     ->whereNotNull('sk.snapshot_at')));
-    }
-
-    /**
-     * Die Gerichte EINES Foodbooks über beide Befüllungs-Arten der Spec-19-Duality:
-     * `recipe_ref`-Block (Einzelgericht) und `concept_ref`-Block (Paket/Konzept, dessen
-     * Gerichte über {@see konzeptGerichtIds} kommen — inklusive Paket-Slots).
-     *
-     * **Nur sichtbare Blöcke**, dieselbe Grenze wie bei {@see kapitelOhneInhalt}: beurteilt
-     * wird, was im Kundendokument LANDET. Ein ausgeschalteter Block trägt keinen Preis nach
-     * draußen und kann deshalb auch keinen überholten zeigen.
-     *
-     * @return list<int>
-     */
-    private function foodbookGerichtIds(int $foodbookId): array
-    {
-        $bloecke = DB::table('foodalchemist_foodbook_blocks as fb')
-            ->join('foodalchemist_foodbook_chapters as k', 'k.id', '=', 'fb.chapter_id')
-            ->where('k.foodbook_id', $foodbookId)
-            ->whereNull('k.deleted_at')
-            ->whereNull('fb.deleted_at')
-            ->where('fb.visible', true)
-            ->get(['fb.sales_recipe_id', 'fb.concept_id']);
-
-        $ids = [];
-        foreach ($bloecke as $b) {
-            if ($b->sales_recipe_id !== null) {
-                $ids[] = (int) $b->sales_recipe_id;
-            }
-            if ($b->concept_id !== null) {
-                $ids = array_merge($ids, $this->konzepte->konzeptGerichtIds((int) $b->concept_id));
-            }
-        }
-
-        return array_values(array_unique($ids));
     }
 
     /**

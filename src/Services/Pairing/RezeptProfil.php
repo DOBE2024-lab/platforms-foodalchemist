@@ -11,7 +11,6 @@ use Platform\FoodAlchemist\Enums\WissensStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
-use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\Rezept\SensorikService;
 
@@ -95,7 +94,7 @@ final class RezeptProfil
     private array $cache = [];
 
     public function __construct(
-        private readonly PairingService $pairing,
+        private readonly AnkerAufloesung $anker,   // 98 · 3.3 KI-c: Anker-Lesewege direkt, nicht über die PairingService-Fassade (Kreis)
         private readonly SensorikService $sensorik,
         private readonly RecipeRecomputeService $recompute,
     ) {}
@@ -229,8 +228,8 @@ final class RezeptProfil
             return ['vollstaendig' => true, 'eigenschaften' => $this->eigenschaften($recipeId, [])] + $leer;
         }
 
-        $gpAnker = $this->pairing->gpAnkerZuordnungen($zeilen->pluck('gp_id')->filter()->unique()->all());
-        $neutral = $this->pairing->neutralAnker();
+        $gpAnker = $this->anker->gpAnkerZuordnungen($zeilen->pluck('gp_id')->filter()->unique()->all());
+        $neutral = $this->anker->neutralAnker();
         $namensVerfahren = Verfahren::ausText((string) $rezept->name);
         $istGericht = (bool) $rezept->is_sales_recipe;
         $standard = $istGericht ? app(DarreichungService::class)->standardProEinheit($rezept, Team::find($rezept->team_id)) : [];
@@ -290,7 +289,7 @@ final class RezeptProfil
             $kerne = $mappings->where('role', 'kern')->pluck('anchor_id')->all();
             $neben = $mappings->where('role', 'neben')->pluck('anchor_id')->all();
             if ($kerne === [] && $neben === []) {
-                $fallback = $this->pairing->ankerIdExakt($z->gp_id !== null ? $gpName : $z->raw_text);
+                $fallback = $this->anker->ankerIdExakt($z->gp_id !== null ? $gpName : $z->raw_text);
                 $kerne = $fallback === null ? [] : [$fallback];
             }
             if ($z->gp_id !== null) {

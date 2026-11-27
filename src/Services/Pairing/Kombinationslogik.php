@@ -14,7 +14,6 @@ use Platform\FoodAlchemist\Enums\WissensStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
-use Platform\FoodAlchemist\Services\Pairing\PairingService;
 
 /**
  * Spec 60 · P6: Kombinationslogik eines Gerichts — klare Aussagen und Vorschläge.
@@ -73,7 +72,7 @@ final class Kombinationslogik
     public function __construct(
         private readonly RezeptProfil $profil,
         private readonly RezeptGraph $graph,
-        private readonly PairingService $pairing,
+        private readonly AnkerAufloesung $anker,   // 98 · 3.3 KI-c: Anker-Lesewege direkt, nicht über die PairingService-Fassade (Kreis)
     ) {}
 
     /**
@@ -97,8 +96,8 @@ final class Kombinationslogik
                 $gramm[$schluessel] = ($gramm[$schluessel] ?? 0.0) + ($massen[$z->id]['masse_g'] ?? 0.0);
             }
         }
-        $gpAnker = $this->pairing->gpAnkerZuordnungen($zeilen->pluck('gp_id')->filter()->unique()->all());
-        $neutral = $this->pairing->neutralAnker();
+        $gpAnker = $this->anker->gpAnkerZuordnungen($zeilen->pluck('gp_id')->filter()->unique()->all());
+        $neutral = $this->anker->neutralAnker();
         $out = [];
         $gesehen = [];
         foreach ($zeilen as $z) {
@@ -117,7 +116,7 @@ final class Kombinationslogik
             $label = (string) ($z->display_name ?: $z->gp?->name ?: $z->raw_text);
             $mappings = $gpAnker->get($z->gp_id, collect());
             $kerne = $mappings->isEmpty()
-                ? [$this->pairing->ankerIdExakt($z->gp_id !== null ? $z->gp?->name : $z->raw_text)]
+                ? [$this->anker->ankerIdExakt($z->gp_id !== null ? $z->gp?->name : $z->raw_text)]
                 : $mappings->where('role', 'kern')->pluck('anchor_id')->all();
             $kerne = array_diff($kerne, [null, $neutral]);
             $neben = array_diff($mappings->where('role', 'neben')->pluck('anchor_id')->all(), [$neutral]);
@@ -876,7 +875,7 @@ final class Kombinationslogik
         // zweiter Riegel: kein Kern-Anker, der der Ernährungsform widerspricht
         $ids = array_map(fn ($a) => $a['anchor_id'], $k['profil']['anker']);
         foreach (DB::table('foodalchemist_vocab_pairing_anchors')->whereIn('id', $ids)->get(['slug', 'category', 'subcategory']) as $a) {
-            if (! $this->pairing->passtZurDiaet($a, $diaet)) {
+            if (! $this->anker->passtZurDiaet($a, $diaet)) {
                 return false;
             }
         }

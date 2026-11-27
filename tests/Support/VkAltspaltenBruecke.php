@@ -166,10 +166,10 @@ final class VkAltspaltenBruecke
             'created_via' => self::HERKUNFT, 'unit_count' => 1, ...$werte,
         ]));
         if (! array_key_exists('sales_net', $werte)) {
-            // Grammatur nur für den Auto-Preis vorbelegen (wie ensureStandard: Portion bzw. Ertrag ÷ Einheiten). Bei festem Fixture-VK bleibt
+            // Grammatur nur für den Auto-Preis vorbelegen (wie ensureStandard: der Ertrag). Bei festem Fixture-VK bleibt
             // sie leer — die Brücken-Darreichung vertritt dann nur den Preis und verschiebt keine Mengenrechnung (Auftragssimulation).
-            $neu->forceFill(['quantity_per_unit_g' => $r->sales_quantity_per_unit_g
-                ?? ($r->yield_kg !== null && (float) $r->yield_kg > 0 ? round((float) $r->yield_kg * 1000 / max(1, (int) ($r->sales_unit_count ?? 0)), 1) : null)])->saveQuietly();
+            // 98 · 3.5 6c: kein Rezept-Kopf mehr — eine Portion = der ganze Ertrag (Dominique 27.11.: Darreichung = Portion, fest 1)
+            $neu->forceFill(['quantity_per_unit_g' => $r->yield_kg !== null && (float) $r->yield_kg > 0 ? round((float) $r->yield_kg * 1000, 1) : null])->saveQuietly();
             // Nur Klasse, kein VK: wie früher ensureStandard den Auto-Preis gleich mitrechnen (sonst stünde die Darreichung ohne VK da).
             // Ein Fehler hier bleibt im Fixture sichtbar (VK fehlt), reißt aber keine fremden Tests.
             try {

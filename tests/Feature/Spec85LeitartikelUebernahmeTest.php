@@ -89,7 +89,8 @@ it('vom Master wird nie übernommen: Mandant direkt unter dem Master bekommt des
 });
 
 it('Umschalten markiert die Team-Kosten der Standorte veraltet', function () {
-    DB::table('foodalchemist_recipe_team_kosten')->insert(['recipe_id' => 1, 'team_id' => $this->childA->id, 'veraltet' => false, 'created_at' => now(), 'updated_at' => now()]);
+    $rezept = $this->makeRecipe($this->rootTeam, 'Leitartikel-Rezept');   // 3.5 Schritt 5: recipe_team_kosten.recipe_id hat einen FK — echtes Rezept
+    DB::table('foodalchemist_recipe_team_kosten')->insert(['recipe_id' => $rezept->id, 'team_id' => $this->childA->id, 'veraltet' => false, 'created_at' => now(), 'updated_at' => now()]);
     $this->actingAs($this->makeUser($this->rootTeam, 'Mandant Admin', 'owner'));
     app(TeamSettingsService::class)->update($this->rootTeam, ['standorte_uebernehmen_leitartikel' => false]);
 

@@ -761,7 +761,7 @@ class KnowledgeEmbeddingService
             $stem = str_starts_with($slug, 'pairing.') ? substr($slug, 8) : $slug;
             $surface = str_replace('_', ' ', $stem);
 
-            $names = (new KnowledgeContextService())->extractPairingNames($inhalt);
+            $names = (new KnowledgeQueryText())->extractPairingNames($inhalt);
             if ($names !== []) {
                 $surface .= ': ' . implode(', ', array_slice($names, 0, self::PAIRING_MAX_PARTNERS));
             }

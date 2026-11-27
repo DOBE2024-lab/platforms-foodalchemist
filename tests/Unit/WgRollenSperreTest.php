@@ -7,7 +7,8 @@
  *  · WgRolle: die Standard-Belegung selbst.
  *  · Herstellkosten: `$marge = '15'` (Prozent-Vorbelegung, keine Warengruppe).
  *  · VocabularyService::PARAGRAF3_CODES: die vollständige §3-Code-Liste, keine Rolle.
- *  · ZukaufBasisrezeptService: die benannte Fachregel SUB_KNABBEREIEN = '09.6'.
+ *  · ZukaufBasisrezeptService: die benannte Fachregel SUB_KNABBEREIEN = '09.6' — eine Unterkategorie, keine Rolle:
+ *    WgRolle belegt nur Warengruppen-Codes, Unterkategorien bekommen kein Flag (Entscheid 22.11., geprüft 27.11.).
  * Migrationen sind ausgenommen (eingefrorener Stand).
  */
 it('Sperre: keine Warengruppen-Rollen als Code-Literal (CQ 3.7)', function () {

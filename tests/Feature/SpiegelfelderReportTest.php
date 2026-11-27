@@ -16,9 +16,10 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  * Spiegel-Logik der Dienste sie nicht sofort wieder angleicht.
  */
 beforeEach(function () {
+    // Schema zuerst (wie FremdschluesselKernketteTest): allein oder als erster im Prozess gäbe es sonst keine Tabelle.
+    $this->seedTeamHierarchy();
     // 98 · 3.5 6c: im Test-Schema sind die Spalten gedroppt — für den Report kurz zurückholen, danach wieder entfernen
     SpiegelfelderRueckbau::wiederherstellen();
-    $this->seedTeamHierarchy();
     $this->actingAs($this->makeUser($this->rootTeam));
     $this->portion = FoodAlchemistVocabEinheit::create(['team_id' => $this->rootTeam->id, 'slug' => 'portion', 'display_de' => 'Portion', 'dimension' => 'count', 'default_in_g' => null]);
     $this->stueck = FoodAlchemistVocabEinheit::create(['team_id' => $this->rootTeam->id, 'slug' => 'stueck', 'display_de' => 'Stück', 'dimension' => 'count', 'default_in_g' => null]);

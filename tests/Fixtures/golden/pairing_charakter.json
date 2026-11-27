@@ -1,0 +1,1531 @@
+{
+    "aufloesung": {
+        "normalizeAnkerSlug": [
+            "knob-lauch zehe",
+            " granat_apfel "
+        ],
+        "ankerSlugMatches": [
+            true,
+            false,
+            false
+        ],
+        "fold": [
+            " groesse aepfel ",
+            " crème "
+        ],
+        "resolveByName": [
+            3,
+            7,
+            null
+        ],
+        "lexicalAnkerKandidaten": [
+            8,
+            7
+        ],
+        "ankerSlugExakt": [
+            {
+                "slug": "tomate",
+                "via": "exakt"
+            },
+            {
+                "slug": "tomate",
+                "via": "singular"
+            },
+            null
+        ],
+        "ankerIdExakt": [
+            3,
+            null,
+            null
+        ],
+        "ankerAufgeloest": [
+            {
+                "id": 5,
+                "via": "exakt"
+            },
+            null,
+            {
+                "id": 6,
+                "via": "exakt"
+            }
+        ],
+        "neutralAnker": true,
+        "neighborsForName": [
+            {
+                "anker": {
+                    "id": 2,
+                    "slug": "tahin",
+                    "display_de": "Tahin",
+                    "resolution": {
+                        "via": "slug"
+                    }
+                },
+                "partner": [
+                    {
+                        "id": 3,
+                        "slug": "knoblauch",
+                        "display_de": "Knoblauch",
+                        "type": "aroma",
+                        "evidence": "Foodpairing Inspire (best match)",
+                        "axis": "harmony",
+                        "level": 3,
+                        "weight": 1.0
+                    },
+                    {
+                        "id": 6,
+                        "slug": "zitrone",
+                        "display_de": "Zitrone",
+                        "type": "aroma",
+                        "evidence": "Foodpairing Inspire (best match)",
+                        "axis": "harmony",
+                        "level": 3,
+                        "weight": 1.0
+                    }
+                ]
+            },
+            {
+                "anker": {
+                    "id": 7,
+                    "slug": "tomate",
+                    "display_de": "Tomate",
+                    "resolution": {
+                        "via": "slug"
+                    }
+                },
+                "partner": [
+                    {
+                        "id": 8,
+                        "slug": "basilikum",
+                        "display_de": "Basilikum",
+                        "type": "aroma",
+                        "evidence": "Foodpairing Inspire (best match)",
+                        "axis": "harmony",
+                        "level": 3,
+                        "weight": 1.0
+                    }
+                ]
+            },
+            {
+                "anker": null,
+                "partner": []
+            }
+        ],
+        "ankerNeighbors": [
+            [
+                {
+                    "id": 1,
+                    "slug": "kichererbse",
+                    "display_de": "Kichererbse",
+                    "type": "aroma",
+                    "evidence": "Foodpairing Inspire (best match)",
+                    "axis": "harmony",
+                    "level": 3,
+                    "weight": 1.0
+                },
+                {
+                    "id": 2,
+                    "slug": "tahin",
+                    "display_de": "Tahin",
+                    "type": "aroma",
+                    "evidence": "Foodpairing Inspire (best match)",
+                    "axis": "harmony",
+                    "level": 3,
+                    "weight": 1.0
+                }
+            ],
+            [
+                {
+                    "id": 3,
+                    "slug": "knoblauch",
+                    "display_de": "Knoblauch",
+                    "type": "aroma",
+                    "evidence": "Foodpairing Inspire (best match)",
+                    "axis": "harmony",
+                    "level": 3,
+                    "weight": 1.0
+                },
+                {
+                    "id": 6,
+                    "slug": "zitrone",
+                    "display_de": "Zitrone",
+                    "type": "aroma",
+                    "evidence": "Foodpairing Inspire (best match)",
+                    "axis": "harmony",
+                    "level": 3,
+                    "weight": 1.0
+                }
+            ]
+        ]
+    },
+    "gp_anker": {
+        "vorher": {
+            "gpAnkers": [
+                {
+                    "id": 2,
+                    "slug": "tahin",
+                    "display_de": "Tahin",
+                    "source": "manual",
+                    "ai_confidence": null
+                }
+            ],
+            "gpAnkerAlle": [
+                {
+                    "id": 2,
+                    "slug": "tahin",
+                    "display_de": "Tahin",
+                    "role": "kern",
+                    "staerke": "stark",
+                    "source": "manual",
+                    "ai_confidence": null
+                },
+                {
+                    "id": 6,
+                    "slug": "zitrone",
+                    "display_de": "Zitrone",
+                    "role": "neben",
+                    "staerke": null,
+                    "source": "bridge_alt_neu+exact",
+                    "ai_confidence": 0.8
+                }
+            ]
+        },
+        "inferenz": [
+            true,
+            true
+        ],
+        "nach_remove": [
+            {
+                "id": 2,
+                "slug": "tahin",
+                "display_de": "Tahin",
+                "role": "kern",
+                "staerke": "stark",
+                "source": "manual",
+                "ai_confidence": null
+            }
+        ],
+        "zu_lange_quelle": "source zu lang (max. 32 Zeichen): \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" hat 40.",
+        "gpKernAnker": {
+            "6": 2,
+            "8": 7,
+            "7": 2
+        },
+        "gpAnkerZuordnungen": {
+            "6": [
+                {
+                    "gp_id": 6,
+                    "anchor_id": 2,
+                    "role": "kern",
+                    "staerke": "stark"
+                }
+            ],
+            "7": [
+                {
+                    "gp_id": 7,
+                    "anchor_id": 2,
+                    "role": "kern",
+                    "staerke": null
+                }
+            ]
+        },
+        "gpsForAnkerIds": [
+            [
+                2,
+                "Tahin (Test 12)"
+            ],
+            [
+                4,
+                "Tomate (Test 14)"
+            ],
+            [
+                6,
+                "Tahin: Sesammus"
+            ],
+            [
+                7,
+                "Sesampaste: hell"
+            ],
+            [
+                8,
+                "Tomaten: frisch"
+            ]
+        ],
+        "darfAnkerPflegen": true,
+        "panelGp": {
+            "type": "gp",
+            "anker": [
+                {
+                    "slug": "tahin",
+                    "display_de": "Tahin",
+                    "source": "manual"
+                }
+            ],
+            "aroma": [
+                "Knoblauch",
+                "Zitrone"
+            ],
+            "braucht": [],
+            "kontrast": [],
+            "konflikt": []
+        },
+        "aromaTrueSubstitutes": {
+            "source": {
+                "gp_id": 6,
+                "name": "Tahin: Sesammus",
+                "anker": [
+                    "Tahin"
+                ]
+            },
+            "context": {
+                "recipe_ingredient_id": null,
+                "recipe_id": null,
+                "swap_locked": false,
+                "base_cohesion": null
+            },
+            "candidates": [
+                {
+                    "gp_id": 7,
+                    "name": "Sesampaste: hell",
+                    "flavor_score": 1.0,
+                    "edge_overlap": 1.0,
+                    "erhaltene_bruecken": [
+                        "Tahin"
+                    ],
+                    "verlorene_bruecken": [],
+                    "kohaesions_delta": null,
+                    "is_manual_equiv": false,
+                    "allergen_warnungen": [],
+                    "cost": {
+                        "source_listen_ek": null,
+                        "candidate_listen_ek": null,
+                        "guenstiger": null,
+                        "hinweis": "indikativ: Listen-EK der Lead-LA, nicht mengennormalisiert"
+                    },
+                    "evidenz": {
+                        "tier": "abgeleitet",
+                        "basis": "Anker-Kanten"
+                    }
+                },
+                {
+                    "gp_id": 2,
+                    "name": "Tahin (Test 12)",
+                    "flavor_score": 1.0,
+                    "edge_overlap": 1.0,
+                    "erhaltene_bruecken": [
+                        "Tahin"
+                    ],
+                    "verlorene_bruecken": [],
+                    "kohaesions_delta": null,
+                    "is_manual_equiv": false,
+                    "allergen_warnungen": [],
+                    "cost": {
+                        "source_listen_ek": null,
+                        "candidate_listen_ek": null,
+                        "guenstiger": null,
+                        "hinweis": "indikativ: Listen-EK der Lead-LA, nicht mengennormalisiert"
+                    },
+                    "evidenz": {
+                        "tier": "abgeleitet",
+                        "basis": "Anker-Kanten"
+                    }
+                }
+            ]
+        },
+        "clear": []
+    },
+    "netz": {
+        "panelRecipe": [
+            {
+                "type": "recipe",
+                "ist_gericht": false,
+                "kombination": {
+                    "art": "basisrezept",
+                    "bestandteile": [
+                        {
+                            "schluessel": "z1",
+                            "label": "Kichererbse (Test 16)",
+                            "recipe_id": null,
+                            "rolle": null,
+                            "kern": [
+                                {
+                                    "anchor_id": 1,
+                                    "name": "Kichererbse",
+                                    "anteil": 100.0,
+                                    "verfahren": null
+                                }
+                            ],
+                            "abdeckung": 100.0
+                        },
+                        {
+                            "schluessel": "z2",
+                            "label": "Tahin (Test 17)",
+                            "recipe_id": null,
+                            "rolle": null,
+                            "kern": [
+                                {
+                                    "anchor_id": 2,
+                                    "name": "Tahin",
+                                    "anteil": 100.0,
+                                    "verfahren": null
+                                }
+                            ],
+                            "abdeckung": 100.0
+                        }
+                    ],
+                    "aussagen": {
+                        "neutral": [
+                            {
+                                "typ": "neutral",
+                                "grundlage": "inspire_gemessen",
+                                "grundlage_label": "gemessen (Foodpairing)",
+                                "text": "Kichererbse (Test 16) und Tahin (Test 17): kein nennenswerter aromatischer Bezug",
+                                "bestandteile": [
+                                    "z1",
+                                    "z2"
+                                ],
+                                "achse": null,
+                                "wert": 0.0
+                            }
+                        ]
+                    },
+                    "offene_bedarfe": [],
+                    "kennzahlen": {
+                        "neutral": 1
+                    },
+                    "zusammenfassung": "2 Bestandteile · 0 harmonieren · 0 Spannung",
+                    "profil": {
+                        "anker": [
+                            {
+                                "anchor_id": 1,
+                                "name": "Kichererbse",
+                                "anteil": 50.0,
+                                "verfahren": null
+                            },
+                            {
+                                "anchor_id": 2,
+                                "name": "Tahin",
+                                "anteil": 50.0,
+                                "verfahren": null
+                            }
+                        ],
+                        "anker_anzeige": [
+                            {
+                                "anchor_id": 1,
+                                "kern": true,
+                                "staerke": null,
+                                "anteil": 50.0,
+                                "name": "Kichererbse"
+                            },
+                            {
+                                "anchor_id": 2,
+                                "kern": true,
+                                "staerke": null,
+                                "anteil": 50.0,
+                                "name": "Tahin"
+                            }
+                        ],
+                        "abdeckung": 100.0,
+                        "eigenschaften": []
+                    },
+                    "vorschlaege": []
+                },
+                "netz": {
+                    "nodes": [
+                        {
+                            "id": "z",
+                            "kind": "zentrum",
+                            "label": "Creme: Hummus",
+                            "x": 600.0,
+                            "y": 490.0
+                        },
+                        {
+                            "id": "a:1",
+                            "kind": "anker",
+                            "label": "Kichererbse",
+                            "slug": "kichererbse",
+                            "kern": true,
+                            "anteil": 50.0,
+                            "staerke": null,
+                            "x": 600.0,
+                            "y": 340.0
+                        },
+                        {
+                            "id": "a:2",
+                            "kind": "anker",
+                            "label": "Tahin",
+                            "slug": "tahin",
+                            "kern": true,
+                            "anteil": 50.0,
+                            "staerke": null,
+                            "x": 600.0,
+                            "y": 640.0
+                        },
+                        {
+                            "id": "k:3",
+                            "kind": "kandidat",
+                            "typ": "stern3",
+                            "level": 3,
+                            "label": "Knoblauch",
+                            "slug": "knoblauch",
+                            "cover": 2,
+                            "cover_einheit": "Zutaten",
+                            "anker_treffer": 2,
+                            "x": 600.0,
+                            "y": 170.0,
+                            "auch_kontrast": null
+                        },
+                        {
+                            "id": "k:6",
+                            "kind": "kandidat",
+                            "typ": "stern3",
+                            "level": 3,
+                            "label": "Zitrone",
+                            "slug": "zitrone",
+                            "cover": 1,
+                            "cover_einheit": "Zutaten",
+                            "anker_treffer": 1,
+                            "x": 600.0,
+                            "y": 810.0,
+                            "auch_kontrast": null
+                        },
+                        {
+                            "id": "b:2",
+                            "kind": "basisrezept",
+                            "typ": "stern3",
+                            "label": "Sauce: Aioli",
+                            "recipe_id": 2,
+                            "via": "knoblauch",
+                            "x": 600.0,
+                            "y": 20.0
+                        },
+                        {
+                            "id": "b:3",
+                            "kind": "basisrezept",
+                            "typ": "stern3",
+                            "label": "Sauce: Tomatensugo",
+                            "recipe_id": 3,
+                            "via": "knoblauch",
+                            "x": 600.0,
+                            "y": 960.0
+                        }
+                    ],
+                    "edges": [
+                        {
+                            "source": "z",
+                            "target": "a:1",
+                            "kind": "zentrum_anker",
+                            "visible": true
+                        },
+                        {
+                            "source": "z",
+                            "target": "a:2",
+                            "kind": "zentrum_anker",
+                            "visible": true
+                        },
+                        {
+                            "source": "k:3",
+                            "target": "a:1",
+                            "kind": "kandidat",
+                            "typ": "stern3",
+                            "level": 3,
+                            "weight": 1.0,
+                            "visible": true
+                        },
+                        {
+                            "source": "k:3",
+                            "target": "a:2",
+                            "kind": "kandidat",
+                            "typ": "stern3",
+                            "level": 3,
+                            "weight": 1.0,
+                            "visible": true
+                        },
+                        {
+                            "source": "k:6",
+                            "target": "a:2",
+                            "kind": "kandidat",
+                            "typ": "stern3",
+                            "level": 3,
+                            "weight": 1.0,
+                            "visible": true
+                        },
+                        {
+                            "source": "b:2",
+                            "target": "a:1",
+                            "kind": "basis",
+                            "typ": "stern3",
+                            "visible": true
+                        },
+                        {
+                            "source": "b:3",
+                            "target": "a:1",
+                            "kind": "basis",
+                            "typ": "stern3",
+                            "visible": true
+                        }
+                    ],
+                    "meta": {
+                        "recipe_id": 1,
+                        "canvas_w": 1200.0,
+                        "canvas_h": 980.0,
+                        "sig": "43215261ee",
+                        "typ_default": {
+                            "stern3": true,
+                            "kontrast": true
+                        },
+                        "counts": {
+                            "stern3": 2,
+                            "kontrast": 0,
+                            "basis": 2,
+                            "anker_anker": 0,
+                            "konflikt": 0
+                        }
+                    }
+                },
+                "profil": [
+                    {
+                        "name": "Kichererbse",
+                        "anteil": 50.0
+                    },
+                    {
+                        "name": "Tahin",
+                        "anteil": 50.0
+                    }
+                ],
+                "passt_dazu": [],
+                "deckt_bedarf": [],
+                "partner": [
+                    "Knoblauch",
+                    "Zitrone"
+                ],
+                "kontrast": [],
+                "verwandte": []
+            },
+            {
+                "type": "recipe",
+                "ist_gericht": true,
+                "kombination": {
+                    "art": "gericht",
+                    "bestandteile": [
+                        {
+                            "schluessel": "r1",
+                            "label": "Creme: Hummus",
+                            "recipe_id": 1,
+                            "rolle": null,
+                            "kern": [
+                                {
+                                    "anchor_id": 1,
+                                    "name": "Kichererbse",
+                                    "anteil": 50.0,
+                                    "verfahren": null
+                                },
+                                {
+                                    "anchor_id": 2,
+                                    "name": "Tahin",
+                                    "anteil": 50.0,
+                                    "verfahren": null
+                                }
+                            ],
+                            "abdeckung": 100.0
+                        }
+                    ],
+                    "aussagen": [],
+                    "offene_bedarfe": [],
+                    "kennzahlen": [],
+                    "zusammenfassung": "1 Bestandteile · 0 harmonieren · 0 Spannung",
+                    "vorschlaege": []
+                },
+                "netz": {
+                    "nodes": [
+                        {
+                            "id": "z",
+                            "kind": "zentrum",
+                            "label": "[HG] Orientteller",
+                            "x": 600.0,
+                            "y": 490.0
+                        },
+                        {
+                            "id": "t:r1",
+                            "kind": "bestandteil",
+                            "label": "Creme: Hummus",
+                            "recipe_id": 1,
+                            "ohne_profil": false,
+                            "anteil": 100.0,
+                            "gramm": 100.0,
+                            "kern": [
+                                1,
+                                2
+                            ],
+                            "x": 600.0,
+                            "y": 275.0
+                        },
+                        {
+                            "id": "b:2",
+                            "kind": "basisrezept",
+                            "typ": "stern3",
+                            "label": "Sauce: Aioli",
+                            "recipe_id": 2,
+                            "via": "Creme: Hummus",
+                            "mit_anteil": 100.0,
+                            "x": 600.0,
+                            "y": 170.0
+                        },
+                        {
+                            "id": "b:3",
+                            "kind": "basisrezept",
+                            "typ": "stern3",
+                            "label": "Sauce: Tomatensugo",
+                            "recipe_id": 3,
+                            "via": "Creme: Hummus",
+                            "mit_anteil": 100.0,
+                            "x": 600.0,
+                            "y": 810.0
+                        }
+                    ],
+                    "edges": [
+                        {
+                            "source": "z",
+                            "target": "t:r1",
+                            "kind": "zentrum_anker",
+                            "anteil": 100.0,
+                            "visible": true
+                        },
+                        {
+                            "source": "b:2",
+                            "target": "t:r1",
+                            "kind": "basis",
+                            "typ": "stern3",
+                            "text": "Sauce: Aioli harmoniert mit Creme: Hummus",
+                            "visible": true
+                        },
+                        {
+                            "source": "b:3",
+                            "target": "t:r1",
+                            "kind": "basis",
+                            "typ": "stern3",
+                            "text": "Sauce: Tomatensugo harmoniert mit Creme: Hummus",
+                            "visible": true
+                        }
+                    ],
+                    "meta": {
+                        "recipe_id": 4,
+                        "art": "gericht",
+                        "canvas_w": 1200.0,
+                        "canvas_h": 980.0,
+                        "sig": "a12cc74299",
+                        "typ_default": {
+                            "stern3": true,
+                            "kontrast": true
+                        },
+                        "counts": {
+                            "bestandteile": 1,
+                            "stern3": 2,
+                            "kontrast": 0,
+                            "basis": 2,
+                            "konflikt": 0
+                        }
+                    }
+                },
+                "profil": [
+                    {
+                        "name": "Kichererbse",
+                        "anteil": 50.0
+                    },
+                    {
+                        "name": "Tahin",
+                        "anteil": 50.0
+                    }
+                ],
+                "passt_dazu": [
+                    {
+                        "recipe_id": 2,
+                        "name": "Sauce: Aioli",
+                        "mit": "Creme: Hummus"
+                    },
+                    {
+                        "recipe_id": 3,
+                        "name": "Sauce: Tomatensugo",
+                        "mit": "Creme: Hummus"
+                    }
+                ],
+                "deckt_bedarf": [],
+                "partner": [],
+                "kontrast": [],
+                "verwandte": []
+            }
+        ],
+        "pairingNetz_basis": {
+            "nodes": [
+                {
+                    "id": "z",
+                    "kind": "zentrum",
+                    "label": "Creme: Hummus",
+                    "x": 600.0,
+                    "y": 490.0
+                },
+                {
+                    "id": "a:1",
+                    "kind": "anker",
+                    "label": "Kichererbse",
+                    "slug": "kichererbse",
+                    "kern": true,
+                    "anteil": 50.0,
+                    "staerke": null,
+                    "x": 600.0,
+                    "y": 340.0
+                },
+                {
+                    "id": "a:2",
+                    "kind": "anker",
+                    "label": "Tahin",
+                    "slug": "tahin",
+                    "kern": true,
+                    "anteil": 50.0,
+                    "staerke": null,
+                    "x": 600.0,
+                    "y": 640.0
+                },
+                {
+                    "id": "k:3",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "label": "Knoblauch",
+                    "slug": "knoblauch",
+                    "cover": 2,
+                    "cover_einheit": "Zutaten",
+                    "anker_treffer": 2,
+                    "x": 600.0,
+                    "y": 170.0,
+                    "auch_kontrast": null
+                },
+                {
+                    "id": "k:6",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "label": "Zitrone",
+                    "slug": "zitrone",
+                    "cover": 1,
+                    "cover_einheit": "Zutaten",
+                    "anker_treffer": 1,
+                    "x": 600.0,
+                    "y": 810.0,
+                    "auch_kontrast": null
+                },
+                {
+                    "id": "b:2",
+                    "kind": "basisrezept",
+                    "typ": "stern3",
+                    "label": "Sauce: Aioli",
+                    "recipe_id": 2,
+                    "via": "knoblauch",
+                    "x": 600.0,
+                    "y": 20.0
+                },
+                {
+                    "id": "b:3",
+                    "kind": "basisrezept",
+                    "typ": "stern3",
+                    "label": "Sauce: Tomatensugo",
+                    "recipe_id": 3,
+                    "via": "knoblauch",
+                    "x": 600.0,
+                    "y": 960.0
+                }
+            ],
+            "edges": [
+                {
+                    "source": "z",
+                    "target": "a:1",
+                    "kind": "zentrum_anker",
+                    "visible": true
+                },
+                {
+                    "source": "z",
+                    "target": "a:2",
+                    "kind": "zentrum_anker",
+                    "visible": true
+                },
+                {
+                    "source": "k:3",
+                    "target": "a:1",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "weight": 1.0,
+                    "visible": true
+                },
+                {
+                    "source": "k:3",
+                    "target": "a:2",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "weight": 1.0,
+                    "visible": true
+                },
+                {
+                    "source": "k:6",
+                    "target": "a:2",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "weight": 1.0,
+                    "visible": true
+                },
+                {
+                    "source": "b:2",
+                    "target": "a:1",
+                    "kind": "basis",
+                    "typ": "stern3",
+                    "visible": true
+                },
+                {
+                    "source": "b:3",
+                    "target": "a:1",
+                    "kind": "basis",
+                    "typ": "stern3",
+                    "visible": true
+                }
+            ],
+            "meta": {
+                "recipe_id": 1,
+                "canvas_w": 1200.0,
+                "canvas_h": 980.0,
+                "sig": "43215261ee",
+                "typ_default": {
+                    "stern3": true,
+                    "kontrast": true
+                },
+                "counts": {
+                    "stern3": 2,
+                    "kontrast": 0,
+                    "basis": 2,
+                    "anker_anker": 0,
+                    "konflikt": 0
+                }
+            }
+        },
+        "pairingNetz_gericht": {
+            "nodes": [
+                {
+                    "id": "z",
+                    "kind": "zentrum",
+                    "label": "[HG] Orientteller",
+                    "x": 600.0,
+                    "y": 490.0
+                },
+                {
+                    "id": "t:r1",
+                    "kind": "bestandteil",
+                    "label": "Creme: Hummus",
+                    "recipe_id": 1,
+                    "ohne_profil": false,
+                    "anteil": 100.0,
+                    "gramm": 100.0,
+                    "kern": [
+                        1,
+                        2
+                    ],
+                    "x": 600.0,
+                    "y": 275.0
+                },
+                {
+                    "id": "b:2",
+                    "kind": "basisrezept",
+                    "typ": "stern3",
+                    "label": "Sauce: Aioli",
+                    "recipe_id": 2,
+                    "via": "Creme: Hummus",
+                    "mit_anteil": 100.0,
+                    "x": 600.0,
+                    "y": 170.0
+                },
+                {
+                    "id": "b:3",
+                    "kind": "basisrezept",
+                    "typ": "stern3",
+                    "label": "Sauce: Tomatensugo",
+                    "recipe_id": 3,
+                    "via": "Creme: Hummus",
+                    "mit_anteil": 100.0,
+                    "x": 600.0,
+                    "y": 810.0
+                }
+            ],
+            "edges": [
+                {
+                    "source": "z",
+                    "target": "t:r1",
+                    "kind": "zentrum_anker",
+                    "anteil": 100.0,
+                    "visible": true
+                },
+                {
+                    "source": "b:2",
+                    "target": "t:r1",
+                    "kind": "basis",
+                    "typ": "stern3",
+                    "text": "Sauce: Aioli harmoniert mit Creme: Hummus",
+                    "visible": true
+                },
+                {
+                    "source": "b:3",
+                    "target": "t:r1",
+                    "kind": "basis",
+                    "typ": "stern3",
+                    "text": "Sauce: Tomatensugo harmoniert mit Creme: Hummus",
+                    "visible": true
+                }
+            ],
+            "meta": {
+                "recipe_id": 4,
+                "art": "gericht",
+                "canvas_w": 1200.0,
+                "canvas_h": 980.0,
+                "sig": "a12cc74299",
+                "typ_default": {
+                    "stern3": true,
+                    "kontrast": true
+                },
+                "counts": {
+                    "bestandteile": 1,
+                    "stern3": 2,
+                    "kontrast": 0,
+                    "basis": 2,
+                    "konflikt": 0
+                }
+            }
+        },
+        "pairingNetzForAnkers": {
+            "nodes": [
+                {
+                    "id": "z",
+                    "kind": "zentrum",
+                    "label": "Probe",
+                    "x": 600.0,
+                    "y": 490.0
+                },
+                {
+                    "id": "a:1",
+                    "kind": "anker",
+                    "label": "Kichererbse",
+                    "slug": "kichererbse",
+                    "kern": true,
+                    "anteil": null,
+                    "staerke": null,
+                    "x": 600.0,
+                    "y": 340.0,
+                    "orphan": true
+                },
+                {
+                    "id": "a:2",
+                    "kind": "anker",
+                    "label": "Tahin",
+                    "slug": "tahin",
+                    "kern": true,
+                    "anteil": null,
+                    "staerke": null,
+                    "x": 600.0,
+                    "y": 640.0,
+                    "orphan": true
+                },
+                {
+                    "id": "k:3",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "label": "Knoblauch",
+                    "slug": "knoblauch",
+                    "cover": 2,
+                    "cover_einheit": "Ankern",
+                    "anker_treffer": 2,
+                    "x": 600.0,
+                    "y": 170.0,
+                    "auch_kontrast": null
+                },
+                {
+                    "id": "k:6",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "label": "Zitrone",
+                    "slug": "zitrone",
+                    "cover": 1,
+                    "cover_einheit": "Ankern",
+                    "anker_treffer": 1,
+                    "x": 600.0,
+                    "y": 810.0,
+                    "auch_kontrast": null
+                },
+                {
+                    "id": "b:2",
+                    "kind": "basisrezept",
+                    "typ": "stern3",
+                    "label": "Sauce: Aioli",
+                    "recipe_id": 2,
+                    "via": "knoblauch",
+                    "x": 600.0,
+                    "y": 20.0
+                },
+                {
+                    "id": "b:3",
+                    "kind": "basisrezept",
+                    "typ": "stern3",
+                    "label": "Sauce: Tomatensugo",
+                    "recipe_id": 3,
+                    "via": "knoblauch",
+                    "x": 600.0,
+                    "y": 960.0
+                }
+            ],
+            "edges": [
+                {
+                    "source": "z",
+                    "target": "a:1",
+                    "kind": "zentrum_anker",
+                    "visible": true
+                },
+                {
+                    "source": "z",
+                    "target": "a:2",
+                    "kind": "zentrum_anker",
+                    "visible": true
+                },
+                {
+                    "source": "k:3",
+                    "target": "a:1",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "weight": 1.0,
+                    "visible": true
+                },
+                {
+                    "source": "k:3",
+                    "target": "a:2",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "weight": 1.0,
+                    "visible": true
+                },
+                {
+                    "source": "k:6",
+                    "target": "a:2",
+                    "kind": "kandidat",
+                    "typ": "stern3",
+                    "level": 3,
+                    "weight": 1.0,
+                    "visible": true
+                },
+                {
+                    "source": "b:2",
+                    "target": "a:1",
+                    "kind": "basis",
+                    "typ": "stern3",
+                    "visible": true
+                },
+                {
+                    "source": "b:3",
+                    "target": "a:1",
+                    "kind": "basis",
+                    "typ": "stern3",
+                    "visible": true
+                }
+            ],
+            "meta": {
+                "recipe_id": 0,
+                "canvas_w": 1200.0,
+                "canvas_h": 980.0,
+                "sig": "db968d0dcc",
+                "typ_default": {
+                    "stern3": true,
+                    "kontrast": true
+                },
+                "counts": {
+                    "stern3": 2,
+                    "kontrast": 0,
+                    "basis": 2,
+                    "anker_anker": 0,
+                    "konflikt": 0
+                }
+            }
+        },
+        "composerCohesion": [
+            {
+                "score": 0,
+                "min_score": 0,
+                "rated_pairs": 0,
+                "total_pairs": 1,
+                "coverage_pct": 0,
+                "weakest_pair": null,
+                "unrated_pairs": [
+                    [
+                        "Kichererbse",
+                        "Tahin"
+                    ]
+                ],
+                "komponenten": [
+                    {
+                        "label": "Kichererbse",
+                        "via": "kichererbse",
+                        "fit": null,
+                        "rated_links": 0,
+                        "is_orphan": false
+                    },
+                    {
+                        "label": "Tahin",
+                        "via": "tahin",
+                        "fit": null,
+                        "rated_links": 0,
+                        "is_orphan": false
+                    }
+                ]
+            },
+            {
+                "score": 0,
+                "min_score": 0,
+                "rated_pairs": 0,
+                "total_pairs": 0,
+                "coverage_pct": 0,
+                "weakest_pair": null,
+                "unrated_pairs": [],
+                "komponenten": []
+            }
+        ],
+        "composerAnkerBrowse": [
+            {
+                "items": [
+                    {
+                        "id": 8,
+                        "slug": "basilikum",
+                        "label": "Basilikum",
+                        "category": null,
+                        "typ": null,
+                        "auch_kontrast": null
+                    },
+                    {
+                        "id": 4,
+                        "slug": "granatapfel",
+                        "label": "Granatapfel",
+                        "category": null,
+                        "typ": null,
+                        "auch_kontrast": null
+                    },
+                    {
+                        "id": 3,
+                        "slug": "knoblauch",
+                        "label": "Knoblauch",
+                        "category": null,
+                        "typ": "stern3",
+                        "auch_kontrast": null
+                    },
+                    {
+                        "id": 5,
+                        "slug": "minze",
+                        "label": "Minze",
+                        "category": null,
+                        "typ": null,
+                        "auch_kontrast": null
+                    },
+                    {
+                        "id": 9,
+                        "slug": "neutral",
+                        "label": "Neutral",
+                        "category": null,
+                        "typ": null,
+                        "auch_kontrast": null
+                    },
+                    {
+                        "id": 7,
+                        "slug": "tomate",
+                        "label": "Tomate",
+                        "category": null,
+                        "typ": null,
+                        "auch_kontrast": null
+                    },
+                    {
+                        "id": 6,
+                        "slug": "zitrone",
+                        "label": "Zitrone",
+                        "category": null,
+                        "typ": "stern3",
+                        "auch_kontrast": null
+                    }
+                ],
+                "total": 7,
+                "kategorien": []
+            },
+            {
+                "items": [
+                    {
+                        "id": 7,
+                        "slug": "tomate",
+                        "label": "Tomate",
+                        "category": null,
+                        "typ": null,
+                        "auch_kontrast": null
+                    }
+                ],
+                "total": 1,
+                "kategorien": []
+            }
+        ]
+    },
+    "rezept_kohaesion_menue": {
+        "resolveRecipeAnchors": [
+            {
+                "label": "Kichererbse (Test 6)",
+                "kern": 1,
+                "prozess": [],
+                "via": "gp_anker"
+            },
+            {
+                "label": "Tahin (Test 7)",
+                "kern": 2,
+                "prozess": [],
+                "via": "gp_anker"
+            }
+        ],
+        "resolveRecipeAnchorsMany": {
+            "1": [
+                {
+                    "label": "Kichererbse (Test 6)",
+                    "kern": 1,
+                    "prozess": [],
+                    "via": "gp_anker"
+                },
+                {
+                    "label": "Tahin (Test 7)",
+                    "kern": 2,
+                    "prozess": [],
+                    "via": "gp_anker"
+                }
+            ],
+            "3": [
+                {
+                    "label": "Tomate (Test 9)",
+                    "kern": 7,
+                    "prozess": [],
+                    "via": "gp_anker"
+                },
+                {
+                    "label": "Knoblauch (Test 10)",
+                    "kern": 3,
+                    "prozess": [],
+                    "via": "gp_anker"
+                }
+            ],
+            "4": []
+        },
+        "anchorsForRecipe": [
+            7,
+            3
+        ],
+        "flacheAnker": [
+            1,
+            2
+        ],
+        "cohesionFor": {
+            "score": 0,
+            "min_score": 0,
+            "rated_pairs": 0,
+            "total_pairs": 1,
+            "coverage_pct": 0,
+            "weakest_pair": null,
+            "unrated_pairs": [
+                [
+                    "Kichererbse (Test 6)",
+                    "Tahin (Test 7)"
+                ]
+            ],
+            "komponenten": [
+                {
+                    "label": "Kichererbse (Test 6)",
+                    "via": "gp_anker",
+                    "fit": null,
+                    "rated_links": 0,
+                    "is_orphan": false
+                },
+                {
+                    "label": "Tahin (Test 7)",
+                    "via": "gp_anker",
+                    "fit": null,
+                    "rated_links": 0,
+                    "is_orphan": false
+                }
+            ]
+        },
+        "recipeCohesion": [
+            {
+                "score": 0,
+                "min_score": 0,
+                "rated_pairs": 0,
+                "total_pairs": 1,
+                "coverage_pct": 0,
+                "weakest_pair": null,
+                "unrated_pairs": [
+                    [
+                        "Kichererbse (Test 6)",
+                        "Tahin (Test 7)"
+                    ]
+                ],
+                "komponenten": [
+                    {
+                        "label": "Kichererbse (Test 6)",
+                        "via": "gp_anker",
+                        "fit": null,
+                        "rated_links": 0,
+                        "is_orphan": false
+                    },
+                    {
+                        "label": "Tahin (Test 7)",
+                        "via": "gp_anker",
+                        "fit": null,
+                        "rated_links": 0,
+                        "is_orphan": false
+                    }
+                ]
+            },
+            {
+                "score": 0,
+                "min_score": 0,
+                "rated_pairs": 0,
+                "total_pairs": 0,
+                "coverage_pct": 0,
+                "weakest_pair": null,
+                "unrated_pairs": [],
+                "komponenten": []
+            }
+        ],
+        "edgesFor": {
+            "3": {
+                "1": [
+                    1.0,
+                    "aroma"
+                ],
+                "2": [
+                    1.0,
+                    "aroma"
+                ]
+            },
+            "1": {
+                "3": [
+                    1.0,
+                    "aroma"
+                ]
+            },
+            "2": {
+                "3": [
+                    1.0,
+                    "aroma"
+                ]
+            }
+        },
+        "menuRepetitions": [
+            [],
+            []
+        ],
+        "menuCohesion": {
+            "score": 100,
+            "min_score": 100,
+            "rated_pairs": 3,
+            "total_pairs": 3,
+            "coverage_pct": 100,
+            "weakest_pair": {
+                "a": "Creme: Hummus",
+                "b": "Sauce: Aioli",
+                "score": 100,
+                "type": "aroma"
+            },
+            "unrated_pairs": [],
+            "komponenten": [
+                {
+                    "label": "Creme: Hummus",
+                    "via": "menu",
+                    "fit": 100,
+                    "rated_links": 2,
+                    "is_orphan": false
+                },
+                {
+                    "label": "Sauce: Aioli",
+                    "via": "menu",
+                    "fit": 100,
+                    "rated_links": 2,
+                    "is_orphan": false
+                },
+                {
+                    "label": "Sauce: Tomatensugo",
+                    "via": "menu",
+                    "fit": 100,
+                    "rated_links": 2,
+                    "is_orphan": false
+                }
+            ]
+        },
+        "menuKohaesionWarnung": [
+            {
+                "stufe": "gut",
+                "score": 100,
+                "text": "Die Menüfolge trägt auf der Aroma-Achse (Score 100)."
+            },
+            null
+        ],
+        "menueAromaProfil": [
+            {
+                "anker": [
+                    "Kichererbse",
+                    "Knoblauch",
+                    "Tahin",
+                    "Tomate"
+                ],
+                "partner": [
+                    "Zitrone",
+                    "Basilikum"
+                ]
+            },
+            null
+        ],
+        "componentSuggestions": {
+            "klassiker": [
+                {
+                    "anchor_id": 3,
+                    "slug": "knoblauch",
+                    "cover": 2,
+                    "mean_w": 100,
+                    "degree": 3,
+                    "spec": 1.1547005383792517,
+                    "trifft": [
+                        "kichererbse",
+                        "tahin"
+                    ],
+                    "dish_n": 2,
+                    "allrounder": false
+                }
+            ],
+            "signature": [
+                {
+                    "anchor_id": 3,
+                    "slug": "knoblauch",
+                    "cover": 2,
+                    "mean_w": 100,
+                    "degree": 3,
+                    "spec": 1.1547005383792517,
+                    "trifft": [
+                        "kichererbse",
+                        "tahin"
+                    ],
+                    "dish_n": 2,
+                    "allrounder": false
+                }
+            ]
+        },
+        "passtZurDiaet": [
+            true,
+            true
+        ],
+        "recipesSharingPairings": []
+    }
+}

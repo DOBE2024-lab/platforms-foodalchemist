@@ -24,6 +24,18 @@ final class BestellHerkunft
         return self::PRODUKTION_BASIS.$productionOrderId.':';
     }
 
+    /** Voller Quell-Key `produktion:{id}:{ref}` für die Bedarfs-Übergabe (98 · 3.3: hierher, ProductionOrderService::sourceRefFor ist Alias). */
+    public static function produktionsRef(int $productionOrderId, string $ref): string
+    {
+        return self::produktionsPraefix($productionOrderId).$ref;
+    }
+
+    /** Stabiler Hash der Ziel-Liste einer Produktion (Stale-Marker P4; 98 · 3.3: hierher, ProductionOrderService::targetsHash ist Alias). */
+    public static function zielHash(?array $targets): string
+    {
+        return sha1(json_encode(array_values($targets ?? []), JSON_UNESCAPED_UNICODE) ?: '');
+    }
+
     /** Produktionsauftrag-ID aus einem Quell-Key `produktion:{id}:…`, sonst null (Gegenstück zu produktionsPraefix). */
     public static function produktionsAuftragId(string $ref): ?int
     {

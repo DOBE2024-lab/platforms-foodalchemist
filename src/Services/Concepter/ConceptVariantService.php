@@ -52,7 +52,7 @@ class ConceptVariantService
         }
 
         $original = FoodAlchemistRecipe::visibleToTeam($team)
-            ->with(['ingredients', 'darreichungen'])
+            ->with(['ingredients', 'presentations'])
             ->findOrFail((int) $slot->sales_recipe_id);
 
         return DB::transaction(function () use ($team, $slot, $original) {
@@ -73,7 +73,7 @@ class ConceptVariantService
                 $zk->team_id = $team->id;
                 $zk->save();
             }
-            foreach ($original->darreichungen as $d) {
+            foreach ($original->presentations as $d) {
                 $dk = $d->replicate(['uuid']);
                 $dk->uuid = null;
                 $dk->recipe_id = $kopie->id;
@@ -144,7 +144,7 @@ class ConceptVariantService
                 $variante = FoodAlchemistRecipe::whereKey($varianteId)->whereNotNull('variant_source_recipe_id')->first();
                 if ($variante !== null && $variante->isOwnedBy($team)) {
                     $variante->ingredients()->delete();
-                    $variante->darreichungen()->delete();
+                    $variante->presentations()->delete();
                     $variante->delete();
                 }
             }

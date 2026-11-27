@@ -92,7 +92,7 @@ class GpService
     public function find(int $id, ?Team $team): ?FoodAlchemistGp
     {
         return $this->scoped(FoodAlchemistGp::query(), $team)
-            ->with(['commodity_group', 'preferredCountUnit', 'derivatVon', 'mergedInto', 'leadLa.supplier'])
+            ->with(['commodity_group', 'preferredCountUnit', 'derivedFrom', 'mergedInto', 'leadLa.supplier'])
             ->find($id);
     }
 

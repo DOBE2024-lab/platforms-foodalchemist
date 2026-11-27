@@ -48,6 +48,11 @@ it('löst jede deklarierte Relations-Methode der Modul-Models auf', function () 
             if ($m->getDeclaringClass()->getName() !== $klasse || $m->isStatic() || $m->getNumberOfRequiredParameters() > 0) {
                 continue;
             }
+            // 98 · 3.5: veraltete deutsche Aliase (#486) melden sich zur Laufzeit und werfen in Tests (Support\VeralteterAlias).
+            // Sie leiten nur auf eine Relation weiter, die hier ohnehin geprüft wird — also überspringen statt aufrufen.
+            if (str_contains((string) $m->getDocComment(), '@deprecated #486')) {
+                continue;
+            }
             $typ = $m->getReturnType();
             if (! $typ instanceof ReflectionNamedType || $typ->isBuiltin()) {
                 continue;

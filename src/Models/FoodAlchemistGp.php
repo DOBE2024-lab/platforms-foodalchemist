@@ -165,6 +165,7 @@ class FoodAlchemistGp extends Model
     /** @deprecated #486 deutscher Alias → derivedFrom() */
     public function derivatVon(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'derivedFrom');
         return $this->derivedFrom();
     }
 

@@ -69,6 +69,7 @@ class FoodAlchemistRecipeDarreichung extends Model
     /** @deprecated #486 deutscher Alias → servingForm() */
     public function servierform()
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'servingForm');
         return $this->servingForm();
     }
 
@@ -80,6 +81,7 @@ class FoodAlchemistRecipeDarreichung extends Model
     /** @deprecated #486 deutscher Alias → markupClass() */
     public function aufschlagsklasse()
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'markupClass');
         return $this->markupClass();
     }
 

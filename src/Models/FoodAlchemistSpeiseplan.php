@@ -117,6 +117,7 @@ class FoodAlchemistSpeiseplan extends Model
     /** @deprecated #486 deutscher Alias → entries() */
     public function eintraege(): HasMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'entries');
         return $this->entries();
     }
 
@@ -135,6 +136,7 @@ class FoodAlchemistSpeiseplan extends Model
     /** @deprecated #486 deutscher Alias → lines() */
     public function linien(): HasMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'lines');
         return $this->lines();
     }
 }

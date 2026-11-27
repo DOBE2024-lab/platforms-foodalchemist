@@ -49,7 +49,7 @@ class MenuCandidatePoolService
             ->where('status', '!=', 'draft')
             // Modell A: HG hängt direkt am Recipe (dish_main_group_id); dishClass.mainGroup = Alt-Pfad-Fallback
             // levelSuitabilities = Niveau-Eignungen (haute_cuisine|gehoben|klassisch) fürs Segment-Ranking (Phase 5)
-            ->with(['dishClass:id,diet_form,dish_main_group_id', 'dishClass.mainGroup:id,code,label', 'speisenHauptgruppe:id,code,label', 'levelSuitabilities']);
+            ->with(['dishClass:id,diet_form,dish_main_group_id', 'dishClass.mainGroup:id,code,label', 'dishMainGroup:id,code,label', 'levelSuitabilities']);
         if ($brauchtBegriffe || $mitConvenience) {
             // Convenience-Ranking (Leitplanke) braucht das GP-Tag tag_is_convenience je Zutat.
             $gpSel = 'id,name' . ($mitConvenience ? ',tag_is_convenience' : '');
@@ -98,7 +98,7 @@ class MenuCandidatePoolService
                 'id' => $r->id,
                 'name' => $r->name,
                 'diet_form' => $diet,
-                'hg_label' => mb_strtolower(trim((string) ($r->speisenHauptgruppe?->label ?? $r->dishClass?->mainGroup?->label ?? ''))),
+                'hg_label' => mb_strtolower(trim((string) ($r->dishMainGroup?->label ?? $r->dishClass?->mainGroup?->label ?? ''))),
                 // auf Cent gerundet wie die Wirtschafts-Achse — sonst wären „dieselbe Zahl"
                 // und „dieselbe Zahl bis auf Rundung" zwei verschiedene Zusicherungen
                 'sales_net' => $preis['vk'] !== null ? round($preis['vk'], 2) : null,

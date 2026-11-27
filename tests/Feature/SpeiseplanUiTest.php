@@ -52,7 +52,7 @@ it('Editor: Zelle (Datum × Mittag) mit Gericht belegen — Eintrag erscheint', 
         ->assertDispatched('speiseplan-geaendert')
         ->assertSee('Tagessuppe Kürbis');
 
-    $e = $sp->eintraege()->first();
+    $e = $sp->entries()->first();
     expect($e)->not->toBeNull()
         ->and($e->entry_date->format('Y-m-d'))->toBe($montag)
         ->and($e->meal)->toBe('mittag')

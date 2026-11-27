@@ -320,6 +320,7 @@ class FoodAlchemistRecipe extends Model
     /** @deprecated #486 deutscher Alias → category() */
     public function kategorie(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'category');
         return $this->category();
     }
 
@@ -343,6 +344,7 @@ class FoodAlchemistRecipe extends Model
     /** @deprecated #486 deutscher Alias → levelSuitabilities() */
     public function niveauEignungen(): HasMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'levelSuitabilities');
         return $this->levelSuitabilities();
     }
 
@@ -354,6 +356,7 @@ class FoodAlchemistRecipe extends Model
     /** @deprecated #486 deutscher Alias → sectorSuitabilities() */
     public function sektorEignungen(): HasMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'sectorSuitabilities');
         return $this->sectorSuitabilities();
     }
 
@@ -367,6 +370,7 @@ class FoodAlchemistRecipe extends Model
     /** @deprecated #486 deutscher Alias → dishClass() */
     public function speisenKlasse(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'dishClass');
         return $this->dishClass();
     }
 
@@ -382,6 +386,7 @@ class FoodAlchemistRecipe extends Model
     /** @deprecated #486 deutscher Alias → dishMainGroup() */
     public function speisenHauptgruppe(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'dishMainGroup');
         return $this->dishMainGroup();
     }
 
@@ -393,6 +398,7 @@ class FoodAlchemistRecipe extends Model
     /** @deprecated #486 deutscher Alias → salesUnit() */
     public function vkEinheit(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'salesUnit');
         return $this->salesUnit();
     }
 
@@ -405,6 +411,7 @@ class FoodAlchemistRecipe extends Model
     /** @deprecated #486 deutscher Alias → presentations() */
     public function darreichungen(): HasMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'presentations');
         return $this->presentations();
     }
 
@@ -418,6 +425,7 @@ class FoodAlchemistRecipe extends Model
     /** @deprecated #486 deutscher Alias → standardPresentation() */
     public function standardDarreichung(): HasOne
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'standardPresentation');
         return $this->standardPresentation();
     }
 

@@ -78,6 +78,7 @@ class FoodAlchemistAngebot extends Model
     /** @deprecated #486 deutscher Alias → referencedConcepts() */
     public function referenzierteConcepts(): BelongsToMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'referencedConcepts');
         return $this->referencedConcepts();
     }
 

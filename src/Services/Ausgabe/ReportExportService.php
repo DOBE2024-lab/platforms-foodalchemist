@@ -175,7 +175,7 @@ class ReportExportService
     private function hochrechnung(FoodAlchemistRecipe $recipe, array $optionen): array
     {
         $darreichungen = $recipe->is_sales_recipe
-            ? $recipe->darreichungen()->with('servingForm')->get()
+            ? $recipe->presentations()->with('servingForm')->get()
                 ->map(fn ($d) => [
                     'id' => (int) $d->id,
                     'label' => $d->bezeichnung() ?? 'Darreichung #'.$d->id,

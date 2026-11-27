@@ -46,7 +46,7 @@ it('Foodbook-Editor: anlegen, Kapitel, Concept einfügen, €/Person im Cockpit'
         ->set('neuesKapitelTitel', 'Menü')
         ->call('kapitelNeu');
 
-    $kap = $fb->kapitel()->first();
+    $kap = $fb->chapters()->first();
     expect($kap)->not->toBeNull();
 
     // Concept einfügen (KEIN Gericht-Picker) → Cockpit zeigt €/Person: das Foodbook ist
@@ -66,11 +66,11 @@ it('Foodbook-Editor: kapitelNeu(parentId) legt ein Unterkapitel unter dem Eltern
         ->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'Hauptteil')->call('kapitelNeu');       // Top-Kapitel (parentId = null)
 
-    $top = $fb->kapitel()->whereNull('parent_id')->first();
+    $top = $fb->chapters()->whereNull('parent_id')->first();
     expect($top)->not->toBeNull();
 
     $comp->call('kapitelNeu', $top->id);                                   // Unterkapitel unter Top
-    $sub = $fb->kapitel()->where('parent_id', $top->id)->first();
+    $sub = $fb->chapters()->where('parent_id', $top->id)->first();
     expect($sub)->not->toBeNull()
         ->and($sub->parent_id)->toBe($top->id);                            // nicht flach → echtes Unterkapitel
 });
@@ -83,7 +83,7 @@ it('Foodbook-Editor: Header-Preis-Block (person) erscheint mit €/Person im Coc
         ->set('form.personen', 50)->call('speichern')
         ->set('neuesKapitelTitel', 'Pakete')->call('kapitelNeu');
 
-    $kap = $fb->kapitel()->first();
+    $kap = $fb->chapters()->first();
     $comp->call('presetHinzu', 'header_frei_preis', 'format.menue_paket', 'Menü-Paket', 'person', true);
     $block = $kap->blocks()->where('type', 'header_frei_preis')->first();
     expect($block)->not->toBeNull();
@@ -145,7 +145,7 @@ it('#3: Paket-Reiter listet kind=paket (consumer_name), Concept-Reiter nicht; pa
     $comp = Livewire::test(FoodbooksIndex::class)
         ->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'Buffet')->call('kapitelNeu');
-    $kap = $fb->kapitel()->first();
+    $kap = $fb->chapters()->first();
     $comp->call('katalogModus', 'paket')
         ->assertSee('Frische Salat-Auswahl')
         ->assertDontSee('Salatwand intern')
@@ -175,7 +175,7 @@ it('#7/#1: Block-Vorschau löst ein eingebettetes Paket auf (Gerichte + Paket-Pr
     $comp = Livewire::test(FoodbooksIndex::class)
         ->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'Buffet')->call('kapitelNeu');
-    $kap = $fb->kapitel()->first();
+    $kap = $fb->chapters()->first();
     $comp->call('conceptHinzu', $concept->id)
         ->assertSee('Salatwand')        // eingebettetes Paket in der Block-Vorschau aufgelöst
         ->assertSee('7,90')             // Paket-Preis (#1)
@@ -196,7 +196,7 @@ it('C1: Gericht-Zeile inline editieren schreibt den foodbook-lokalen Override + 
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'Kap')->call('kapitelNeu');
-    $kap = $fb->kapitel()->first();
+    $kap = $fb->chapters()->first();
     $comp->call('conceptHinzu', $concept->id);
     $block = $kap->blocks()->where('type', 'concept_ref')->firstOrFail();
 
@@ -238,7 +238,7 @@ it('Paket-in-Kapitel-Wording: das Kapitel-Wording betextet AUCH die Gerichte ein
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'Kap')->call('kapitelNeu');
-    $kap = $fb->kapitel()->first();
+    $kap = $fb->chapters()->first();
     $comp->call('conceptHinzu', $concept->id);
     $block = $kap->blocks()->where('type', 'concept_ref')->firstOrFail();
 
@@ -302,7 +302,7 @@ it('#2: Kapitel-Schreibstil betextet die Konzepte im Kapitel-Stil (sprach_duktus
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'Kap')->call('kapitelNeu');
-    $kap = $fb->kapitel()->first();
+    $kap = $fb->chapters()->first();
     $comp->call('conceptHinzu', $concept->id);
     $block = $kap->blocks()->where('type', 'concept_ref')->firstOrFail();
 

@@ -63,7 +63,7 @@ it('Sektor-Eignung: zuweisen, reaktivieren, entfernen', function () {
     expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toBe(['care']);
 
     $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'kita_schule');
-    expect($this->concept->sektorEignungen()->count())->toBe(2);          // reaktiviert, nicht doppelt
+    expect($this->concept->sectorSuitabilities()->count())->toBe(2);          // reaktiviert, nicht doppelt
 });
 
 it('CQ 2.5a: Sektor-Eignung prüft gegen das Sektor-Vokabular, Altwerte werden umgeschlüsselt', function () {
@@ -73,7 +73,7 @@ it('CQ 2.5a: Sektor-Eignung prüft gegen das Sektor-Vokabular, Altwerte werden u
 
     expect(fn () => $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'Kita'))
         ->toThrow(RuntimeException::class, 'Unbekannter Sektor „Kita“');
-    expect($this->concept->sektorEignungen()->count())->toBe(2);
+    expect($this->concept->sectorSuitabilities()->count())->toBe(2);
 });
 
 it('CQ 2.5a: alter Freitext bleibt stehen und lässt sich entfernen', function () {

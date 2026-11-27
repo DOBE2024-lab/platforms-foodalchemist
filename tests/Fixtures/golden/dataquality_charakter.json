@@ -1,0 +1,1039 @@
+{
+    "je_metrik": {
+        "la_strukturiert": {
+            "label": "Erfasste Lieferantenartikel",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "la_gemappt": {
+            "label": "davon einem Grundprodukt zugeordnet",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "la_needs_review": {
+            "label": "Lieferantenartikel zur Prüfung",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "la_eingestellt": {
+            "label": "Eingestellte Lieferantenartikel",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "la_preis_fehlt": {
+            "label": "Lieferantenartikel ohne Einkaufspreis",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "la_konformitaet": {
+            "label": "Lieferantenartikel mit Verstoß gegen die Anlageregeln",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_approved": {
+            "label": "Freigegebene Grundprodukte",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_tentative": {
+            "label": "Grundprodukte im Entwurf (zur Prüfung)",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_kein_la": {
+            "label": "Grundprodukte ohne Lieferantenartikel",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_kein_preis": {
+            "label": "Grundprodukte mit Artikeln, aber ohne Preis",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_kein_lead": {
+            "label": "Grundprodukte ohne gewählten Hauptartikel",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_lead_ohne_preis": {
+            "label": "Grundprodukte, deren Hauptartikel keinen gültigen Preis hat",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_allergen_konfidenz": {
+            "label": "Grundprodukte ohne ausgewertete Allergene",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_anker_fehlt": {
+            "label": "Genutzte Grundprodukte ohne Aromaprofil",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_tentative_genutzt": {
+            "label": "Grundprodukte im Entwurf, die schon in Rezepten stecken",
+            "count": 3,
+            "betroffene": [
+                {
+                    "kind": "gp",
+                    "name": "Butter",
+                    "vk": false
+                },
+                {
+                    "kind": "gp",
+                    "name": "Mehl",
+                    "vk": false
+                },
+                {
+                    "kind": "gp",
+                    "name": "Zucker",
+                    "vk": false
+                }
+            ],
+            "trifft_erstes": true
+        },
+        "gp_konformitaet": {
+            "label": "Grundprodukte mit Verstoß gegen die Anlageregeln",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "gp_stueck_ohne_gewicht": {
+            "label": "Grundprodukte in Rezepten mit Stück- oder Zähl-Einheit ohne Gewicht",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "br_ek_null": {
+            "label": "Basisrezepte ohne Einkaufspreis",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "br_ek_teil": {
+            "label": "Basisrezepte mit Zutaten ohne Preis",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "br_anker_fehlt": {
+            "label": "Basisrezepte ohne Aromaprofil",
+            "count": 1,
+            "betroffene": [
+                {
+                    "kind": "recipe",
+                    "name": "Vanillesauce",
+                    "vk": false
+                }
+            ],
+            "trifft_erstes": true
+        },
+        "br_stueck_ohne_ertrag": {
+            "label": "Basisrezepte, in Stück verwendet, ohne Ertrag bzw. Stückzahl",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "vk_ek_null": {
+            "label": "Gerichte ohne Einkaufspreis",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "vk_ek_teil": {
+            "label": "Gerichte mit Zutaten ohne Preis",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "vk_anker_fehlt": {
+            "label": "Gerichte ohne Aromaprofil",
+            "count": 1,
+            "betroffene": [
+                {
+                    "kind": "recipe",
+                    "name": "DES: Kuchen",
+                    "vk": true
+                }
+            ],
+            "trifft_erstes": true
+        },
+        "vk_servierform_unbestimmt": {
+            "label": "Gerichte ohne festgelegte Servierform",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_ohne_zubereitung": {
+            "label": "Rezepte ohne Zubereitung",
+            "count": 2,
+            "betroffene": [
+                {
+                    "kind": "recipe",
+                    "name": "DES: Kuchen",
+                    "vk": true
+                },
+                {
+                    "kind": "recipe",
+                    "name": "Vanillesauce",
+                    "vk": false
+                }
+            ],
+            "trifft_erstes": true
+        },
+        "rezept_feedback_kritisch": {
+            "label": "Rezepte mit kritischem Küchen-Feedback",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_feedback_stark": {
+            "label": "Küchen-Favoriten mit wiederholten Bestnoten",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_mengen_luecke": {
+            "label": "Rezepte mit Zutat ohne Menge",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_allergen_unbelastbar": {
+            "label": "Rezepte für Gäste mit ungesicherten Allergenen",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_zutaten_ungemappt": {
+            "label": "Rezepte mit Zutaten ohne Grundprodukt",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_ein_zutat": {
+            "label": "Rezepte mit höchstens einer Zutat",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_kategorie_problem": {
+            "label": "Rezepte ohne gültige Kategorie",
+            "count": 2,
+            "betroffene": [
+                {
+                    "kind": "recipe",
+                    "name": "DES: Kuchen",
+                    "vk": true
+                },
+                {
+                    "kind": "recipe",
+                    "name": "Vanillesauce",
+                    "vk": false
+                }
+            ],
+            "trifft_erstes": true
+        },
+        "rezept_yield_implausibel": {
+            "label": "Rezepte mit fehlender oder unmöglicher Ausbeute",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_naming_regelwerk": {
+            "label": "Rezepte mit Verstoß gegen die Benennungsregeln",
+            "count": 1,
+            "betroffene": [
+                {
+                    "kind": "recipe",
+                    "name": "DES: Kuchen",
+                    "vk": true
+                }
+            ],
+            "trifft_erstes": true
+        },
+        "rezept_dublette": {
+            "label": "Rezepte mit gleichem Namen",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_sub_stub_offen": {
+            "label": "Leere Unterrezepte, die schon verwendet werden",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_verwaist": {
+            "label": "Rezepte, die lange nicht genutzt wurden",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_plausi_ki": {
+            "label": "Rezepte mit offenem KI-Hinweis",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "rezept_gericht_vs_komponente": {
+            "label": "Rezepte, bei denen Gericht oder Komponente unklar ist",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "konzept_slot_luecke": {
+            "label": "Konzepte im Einsatz mit unbesetzter Pflichtposition",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "konzept_ohne_wording": {
+            "label": "Konzepte im Einsatz mit Gericht ohne Kundentext",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "konzept_preisband_verletzt": {
+            "label": "Konzepte im Einsatz außerhalb der Preisspanne",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "konzept_regel_verletzt": {
+            "label": "Konzepte im Einsatz mit verletzter Kundenvorgabe",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "konzept_dramaturgie": {
+            "label": "Konzepte im Einsatz mit wiederholter Hauptzutat",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "foodbook_kapitel_leer": {
+            "label": "Foodbooks im Einsatz mit leerem Kapitel oder ganz ohne Inhalt",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "foodbook_skizze_ungeerdet": {
+            "label": "Foodbooks mit Gerichtsidee, die nie umgesetzt wurde",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "foodbook_ziel_verfehlt": {
+            "label": "Foodbooks im Einsatz mit verfehltem Kapitelziel",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "foodbook_stale": {
+            "label": "Freigegebene Foodbooks mit überholtem Preis",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "foodbook_kapitel_ohne_text": {
+            "label": "Foodbooks im Einsatz mit Kapitel ohne Hinführung",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "ri_gemini_unverifiziert": {
+            "label": "Zutatenzuordnungen der KI, noch nicht geprüft",
+            "count": 0,
+            "betroffene": [],
+            "trifft_erstes": null
+        },
+        "_unbekannt": {
+            "label": null,
+            "count": 0,
+            "betroffene": []
+        }
+    },
+    "katalog": {
+        "la": {
+            "label": "Lieferantenartikel",
+            "metriken": [
+                {
+                    "key": "la_strukturiert",
+                    "kind": "info",
+                    "label": "Erfasste Lieferantenartikel",
+                    "wert": 3,
+                    "severity": "info",
+                    "signal": null
+                },
+                {
+                    "key": "la_gemappt",
+                    "kind": "info",
+                    "label": "davon einem Grundprodukt zugeordnet",
+                    "wert": 3,
+                    "severity": "info",
+                    "signal": null
+                },
+                {
+                    "key": "la_needs_review",
+                    "kind": "gap",
+                    "label": "Lieferantenartikel zur Prüfung",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": null
+                },
+                {
+                    "key": "la_eingestellt",
+                    "kind": "gap",
+                    "label": "Eingestellte Lieferantenartikel",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "la_eingestellt",
+                        "dedup": "dq-la-eingestellt",
+                        "desc": "Diese Artikel sind einem aktiven Grundprodukt zugeordnet und nicht mehr bestellbar. Ersatzartikel prüfen und die Zuordnung aktualisieren.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "la_preis_fehlt",
+                    "kind": "gap",
+                    "label": "Lieferantenartikel ohne Einkaufspreis",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "la_preis_fehlt",
+                        "dedup": "dq-la-preis-fehlt",
+                        "desc": "Für diese lieferbaren und zugeordneten Artikel fehlt in der Preissicht des Teams ein positiver Einkaufspreis. Preis am Artikel prüfen oder den Katalogimport kontrollieren.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "la_konformitaet",
+                    "kind": "gap",
+                    "label": "Lieferantenartikel mit Verstoß gegen die Anlageregeln",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "konformitaet_la",
+                        "dedup": "dq-la-konformitaet",
+                        "desc": "Bei diesen Lieferantenartikeln verstoßen Angaben aus dem Lieferantenkatalog gegen die Anlageregeln. Artikel öffnen und die markierten Felder prüfen.",
+                        "sev": null
+                    }
+                }
+            ]
+        },
+        "gp": {
+            "label": "Grundprodukte",
+            "metriken": [
+                {
+                    "key": "gp_approved",
+                    "kind": "info",
+                    "label": "Freigegebene Grundprodukte",
+                    "wert": 0,
+                    "severity": "info",
+                    "signal": null
+                },
+                {
+                    "key": "gp_tentative",
+                    "kind": "info",
+                    "label": "Grundprodukte im Entwurf (zur Prüfung)",
+                    "wert": 3,
+                    "severity": "info",
+                    "signal": null
+                },
+                {
+                    "key": "gp_kein_la",
+                    "kind": "gap",
+                    "label": "Grundprodukte ohne Lieferantenartikel",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "datenqualitaet_gp_la",
+                        "dedup": "dq-gp-kein-la",
+                        "desc": "Diese Grundprodukte brauchen einen Lieferantenartikel. Einen für das Team sichtbaren Artikel verknüpfen.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "gp_kein_preis",
+                    "kind": "gap",
+                    "label": "Grundprodukte mit Artikeln, aber ohne Preis",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": null
+                },
+                {
+                    "key": "gp_kein_lead",
+                    "kind": "gap",
+                    "label": "Grundprodukte ohne gewählten Hauptartikel",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": null
+                },
+                {
+                    "key": "gp_lead_ohne_preis",
+                    "kind": "gap",
+                    "label": "Grundprodukte, deren Hauptartikel keinen gültigen Preis hat",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "datenqualitaet_gp_la",
+                        "dedup": "dq-gp-lead-ohne-preis",
+                        "desc": "Der gewählte Hauptartikel hat keinen gültigen Preis (gesperrt, ohne Preis oder Betrag 0). Das Grundprodukt bekommt dadurch keinen Einkaufspreis. Einen Artikel mit Preis als Hauptartikel wählen oder den Preis pflegen.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "gp_allergen_konfidenz",
+                    "kind": "gap",
+                    "label": "Grundprodukte ohne ausgewertete Allergene",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "datenqualitaet_gp_la",
+                        "dedup": "dq-gp-allergen-konfidenz",
+                        "desc": "Die Allergene der Lieferantenartikel wurden für diese Grundprodukte nie zusammengeführt. Die Allergenangaben in den Rezepten sind dadurch nicht gesichert.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "gp_anker_fehlt",
+                    "kind": "gap",
+                    "label": "Genutzte Grundprodukte ohne Aromaprofil",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "anker_fehlt",
+                        "dedup": "dq-gp-anker-fehlt",
+                        "desc": "Diese Grundprodukte stecken in Rezepten, haben aber kein Aromaprofil. Für Kombinationsvorschläge sind sie dadurch unsichtbar.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "gp_tentative_genutzt",
+                    "kind": "gap",
+                    "label": "Grundprodukte im Entwurf, die schon in Rezepten stecken",
+                    "wert": 3,
+                    "severity": "gelb",
+                    "signal": {
+                        "typ": "datenqualitaet_gp_la",
+                        "dedup": "dq-gp-tentative-genutzt",
+                        "desc": "Nicht freigegebene Grundprodukte sollten nicht in Rezepten stecken. Grundprodukt prüfen und freigeben oder in den Rezepten ersetzen.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "gp_konformitaet",
+                    "kind": "gap",
+                    "label": "Grundprodukte mit Verstoß gegen die Anlageregeln",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "konformitaet_gp",
+                        "dedup": "dq-gp-konformitaet",
+                        "desc": "Bei diesen Grundprodukten verstoßen Angaben gegen die Anlageregeln, zum Beispiel bei Benennung oder Pflichtangaben. Grundprodukt öffnen und die markierten Felder prüfen.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "gp_stueck_ohne_gewicht",
+                    "kind": "gap",
+                    "label": "Grundprodukte in Rezepten mit Stück- oder Zähl-Einheit ohne Gewicht",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": null
+                }
+            ]
+        },
+        "basisrezept": {
+            "label": "Basisrezepte",
+            "metriken": [
+                {
+                    "key": "br_ek_null",
+                    "kind": "gap",
+                    "label": "Basisrezepte ohne Einkaufspreis",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "ek_kette_unvollstaendig",
+                        "dedup": "dq-br-ek-null",
+                        "desc": "Für keine Zutat dieser Basisrezepte ist ein Preis hinterlegt, der Einkaufspreis lässt sich nicht berechnen. Zutaten Grundprodukten mit Lieferantenpreis zuordnen.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "br_ek_teil",
+                    "kind": "gap",
+                    "label": "Basisrezepte mit Zutaten ohne Preis",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "ek_kette_unvollstaendig",
+                        "dedup": "dq-br-ek-teil",
+                        "desc": "Einzelne Zutaten haben keinen Preis. Der Einkaufspreis ist dadurch zu niedrig. Fehlende Preise ergänzen.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "br_anker_fehlt",
+                    "kind": "gap",
+                    "label": "Basisrezepte ohne Aromaprofil",
+                    "wert": 1,
+                    "severity": "gelb",
+                    "signal": {
+                        "typ": "anker_fehlt",
+                        "dedup": "dq-br-anker-fehlt",
+                        "desc": "Diese Basisrezepte haben kein Aromaprofil. Für Kombinationsvorschläge sind sie dadurch unsichtbar.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "br_stueck_ohne_ertrag",
+                    "kind": "gap",
+                    "label": "Basisrezepte, in Stück verwendet, ohne Ertrag bzw. Stückzahl",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": null
+                }
+            ]
+        },
+        "gericht": {
+            "label": "VK-Gerichte",
+            "metriken": [
+                {
+                    "key": "vk_ek_null",
+                    "kind": "gap",
+                    "label": "Gerichte ohne Einkaufspreis",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "ek_kette_unvollstaendig",
+                        "dedup": "dq-vk-ek-null",
+                        "desc": "Für keine Zutat dieser Gerichte ist ein Preis hinterlegt. Wareneinsatz und Marge lassen sich nicht berechnen. Zutaten Grundprodukten mit Lieferantenpreis zuordnen.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "vk_ek_teil",
+                    "kind": "gap",
+                    "label": "Gerichte mit Zutaten ohne Preis",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "ek_kette_unvollstaendig",
+                        "dedup": "dq-vk-ek-teil",
+                        "desc": "Einzelne Zutaten haben keinen Preis. Der Wareneinsatz ist dadurch zu niedrig und die Marge zu hoch ausgewiesen. Fehlende Preise ergänzen.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "vk_anker_fehlt",
+                    "kind": "gap",
+                    "label": "Gerichte ohne Aromaprofil",
+                    "wert": 1,
+                    "severity": "gelb",
+                    "signal": {
+                        "typ": "anker_fehlt",
+                        "dedup": "dq-vk-anker-fehlt",
+                        "desc": "Diese Gerichte haben kein Aromaprofil. Für Kombinationsvorschläge und Menüplanung sind sie dadurch unsichtbar.",
+                        "sev": null
+                    }
+                },
+                {
+                    "key": "vk_servierform_unbestimmt",
+                    "kind": "gap",
+                    "label": "Gerichte ohne festgelegte Servierform",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "servierform_unbestimmt",
+                        "dedup": "dq-vk-servierform-unbestimmt",
+                        "desc": "Die Standard-Servierform steht noch auf „unbestimmt“. Im Gericht festlegen, wie es serviert wird.",
+                        "sev": null
+                    }
+                }
+            ]
+        },
+        "rezeptqualitaet": {
+            "label": "Rezept-Qualität",
+            "metriken": [
+                {
+                    "key": "rezept_ohne_zubereitung",
+                    "kind": "gap",
+                    "label": "Rezepte ohne Zubereitung",
+                    "wert": 2,
+                    "severity": "gelb",
+                    "signal": {
+                        "typ": "rezept_ohne_zubereitung",
+                        "dedup": "dq-rezept-ohne-zubereitung",
+                        "desc": "Ohne Zubereitungstext kann die Küche das Rezept nicht nachkochen, und die Angaben zum Regenerieren und zum Ablauf fehlen ebenfalls. Zubereitung im Rezept ergänzen.",
+                        "sev": "kritisch"
+                    }
+                },
+                {
+                    "key": "rezept_feedback_kritisch",
+                    "kind": "gap",
+                    "label": "Rezepte mit kritischem Küchen-Feedback",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_feedback_kritisch",
+                        "dedup": "dq-rezept-feedback-kritisch",
+                        "desc": "Die Küche hat dieses Rezept mehrfach schlecht bewertet (Durchschnitt höchstens 2,5 bei mindestens 2 Bewertungen). Das ist kein Datenfehler, aber oft ein Rezeptfehler. Die Bewertungen stehen im Rezept unter „Feedback“, von dort führt „Weiterentwickeln“ direkt in eine neue Fassung.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "rezept_feedback_stark",
+                    "kind": "gap",
+                    "label": "Küchen-Favoriten mit wiederholten Bestnoten",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_feedback_stark",
+                        "dedup": "dq-rezept-feedback-stark",
+                        "desc": "Die Küche bewertet dieses Rezept wiederholt mit Bestnoten (Durchschnitt mindestens 4,5 bei mindestens 3 Bewertungen). Kein Mangel, sondern eine Empfehlung: ins Standardrepertoire aufnehmen, auf die nächste Karte setzen oder als Vorlage für Varianten nutzen.",
+                        "sev": "info"
+                    }
+                },
+                {
+                    "key": "rezept_mengen_luecke",
+                    "kind": "gap",
+                    "label": "Rezepte mit Zutat ohne Menge",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_mengen_luecke",
+                        "dedup": "dq-rezept-mengen-luecke",
+                        "desc": "Mindestens eine Zutat steht auf Menge 0. Sie fällt aus Einkaufspreis, Ausbeute und Nährwerten heraus, der Wareneinsatz ist dadurch unbemerkt zu niedrig. Mengen im Rezept ergänzen.",
+                        "sev": "kritisch"
+                    }
+                },
+                {
+                    "key": "rezept_allergen_unbelastbar",
+                    "kind": "gap",
+                    "label": "Rezepte für Gäste mit ungesicherten Allergenen",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_allergen_unbelastbar",
+                        "dedup": "dq-rezept-allergen-unbelastbar",
+                        "desc": "Das Rezept geht über Konzept, Foodbook, Speiseplan oder Paket an den Gast, aber seine Allergenangabe ist nicht gesichert: die Angaben sind ungeprüft oder mindestens ein Allergen steht auf „unbekannt“. Kritisch, weil daraus eine Auskunft an den Gast wird. Zutaten prüfen und Allergene vervollständigen. Rezepte, die nicht beim Gast landen, zählen hier nicht mit.",
+                        "sev": "kritisch"
+                    }
+                },
+                {
+                    "key": "rezept_zutaten_ungemappt",
+                    "kind": "gap",
+                    "label": "Rezepte mit Zutaten ohne Grundprodukt",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_zutaten_ungemappt",
+                        "dedup": "dq-rezept-zutaten-ungemappt",
+                        "desc": "Zutaten ohne Zuordnung zu einem Grundprodukt fehlen im Einkaufspreis, bei den Allergenen und in den Nährwerten. Alle Summen am Rezept sind dadurch unvollständig. Zutaten im Rezept einem Grundprodukt zuordnen.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "rezept_ein_zutat",
+                    "kind": "gap",
+                    "label": "Rezepte mit höchstens einer Zutat",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_ein_zutat",
+                        "dedup": "dq-rezept-ein-zutat",
+                        "desc": "Ein Rezept mit einer oder keiner Zutat ist meist keins: entweder ein Grundprodukt, das als Rezept angelegt wurde, oder ein unvollständiger Import, bei dem die Zutatenliste fehlt.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "rezept_kategorie_problem",
+                    "kind": "gap",
+                    "label": "Rezepte ohne gültige Kategorie",
+                    "wert": 2,
+                    "severity": "gelb",
+                    "signal": {
+                        "typ": "rezept_kategorie_problem",
+                        "dedup": "dq-rezept-kategorie-problem",
+                        "desc": "Die Kategorie fehlt, oder das Gericht hängt an einer Hauptgruppe, die nicht mehr verwendet wird. Ohne gültige Kategorie findet man das Rezept weder in der Rezeptliste noch bei der Gerichtauswahl. Kategorie im Rezept setzen.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "rezept_yield_implausibel",
+                    "kind": "gap",
+                    "label": "Rezepte mit fehlender oder unmöglicher Ausbeute",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_yield_implausibel",
+                        "dedup": "dq-rezept-yield-implausibel",
+                        "desc": "Entweder fehlt die Ausbeute, obwohl Zutaten da sind (dann rechnet nichts pro kg oder Portion), oder sie ist höher als die eingesetzte Rohware. Das ist unmöglich, weil Putz- und Garverlust die Menge nur senken. Meist wurde die Ausbeute von Hand überschrieben oder stammt aus einer älteren Zutatenliste. Rezept neu berechnen lassen.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "rezept_naming_regelwerk",
+                    "kind": "gap",
+                    "label": "Rezepte mit Verstoß gegen die Benennungsregeln",
+                    "wert": 1,
+                    "severity": "gelb",
+                    "signal": {
+                        "typ": "rezept_naming_regelwerk",
+                        "dedup": "dq-rezept-naming-regelwerk",
+                        "desc": "Der Name verstößt gegen die Benennungsregeln: doppelte Leerzeichen, Trennzeichen am Anfang oder Ende, eine Grammatur ohne Grund. Bei Gerichten zusätzlich: das Kürzel der Hauptgruppe am Anfang fehlt, oder Katalog-Kennzeichen wie „CC:“, „STF:“ oder „(BOX)“ stehen im Namen. Falsch benannte Rezepte findet man schlecht und legt sie doppelt an.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "rezept_dublette",
+                    "kind": "gap",
+                    "label": "Rezepte mit gleichem Namen",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_dublette",
+                        "dedup": "dq-rezept-dublette",
+                        "desc": "Zwei oder mehr Rezepte derselben Art und Kategorie heißen gleich (Groß- und Kleinschreibung, Satzzeichen und Leerzeichen nicht mitgezählt). Alle werden gelistet. Zusammenführen oder durch einen Zusatz im Namen unterscheiden. Gleiche Namen in unterschiedlichen Kategorien sind erlaubt und zählen nicht.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "rezept_sub_stub_offen",
+                    "kind": "gap",
+                    "label": "Leere Unterrezepte, die schon verwendet werden",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_sub_stub_offen",
+                        "dedup": "dq-rezept-sub-stub-offen",
+                        "desc": "Ein anderes Rezept verwendet dieses als Unterrezept, aber es ist noch ein leerer Platzhalter. Solange es leer ist, fehlen dem übergeordneten Rezept Menge, Einkaufspreis und Allergene. Unterrezept ausarbeiten.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "rezept_verwaist",
+                    "kind": "gap",
+                    "label": "Rezepte, die lange nicht genutzt wurden",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_verwaist",
+                        "dedup": "dq-rezept-verwaist",
+                        "desc": "Seit über 180 Tagen nicht bearbeitet und in keinem Gericht, Konzept, Foodbook, Speiseplan oder Paket verwendet. Prüfen: aktualisieren, ausmustern oder bewusst behalten. Nur ein Hinweis, Bestand ist kein Fehler.",
+                        "sev": "info"
+                    }
+                },
+                {
+                    "key": "rezept_plausi_ki",
+                    "kind": "gap",
+                    "label": "Rezepte mit offenem KI-Hinweis",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_plausi_ki",
+                        "dedup": "dq-rezept-plausi-ki",
+                        "desc": "Die KI-Prüfung hat am Rezept mindestens einen offenen Hinweis hinterlassen, bei dem sie sich sicher ist (falsche Menge, unpassende Zutat, fehlende Kernzutat). Typischer Fall: Pfefferkörner wurden als Pfefferrahmsauce erkannt. Im Rezept je Hinweis übernehmen oder verwerfen. Ein verworfener Hinweis kommt nicht wieder.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "rezept_gericht_vs_komponente",
+                    "kind": "gap",
+                    "label": "Rezepte, bei denen Gericht oder Komponente unklar ist",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "rezept_gericht_vs_komponente",
+                        "dedup": "dq-rezept-gericht-vs-komponente",
+                        "desc": "Die KI-Prüfung widerspricht der Einordnung: was hier als Gericht geführt wird, ist nach seinem Aufbau eine Komponente, oder umgekehrt. Maßstab ist, wie es gebaut ist, nicht wo es eingesetzt wird. Eine falsche Einordnung wirkt still, aber breit: eine als Gericht geführte Sauce erscheint in der Gerichtauswahl, ein als Komponente geführtes Gericht bekommt weder Verkaufsangaben noch Servierformen. Im Rezept selbst umstellen.",
+                        "sev": "warnung"
+                    }
+                }
+            ]
+        },
+        "konzept": {
+            "label": "Konzepte",
+            "metriken": [
+                {
+                    "key": "konzept_slot_luecke",
+                    "kind": "gap",
+                    "label": "Konzepte im Einsatz mit unbesetzter Pflichtposition",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "konzept_slot_luecke",
+                        "dedup": "dq-konzept-slot-luecke",
+                        "desc": "Das Konzept ist im Einsatz (aktiv, in einem Angebot oder in einem Foodbook), aber mindestens eine Pflichtposition ist weder mit einem Gericht noch mit einem Paket belegt, oder es ist gar keine Position belegt. Die Lücke schlägt bis ins Angebot und ins Kundendokument durch: der Preis pro Person rechnet ohne die fehlende Position, die Zeile fehlt im Menü.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "konzept_ohne_wording",
+                    "kind": "gap",
+                    "label": "Konzepte im Einsatz mit Gericht ohne Kundentext",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "konzept_ohne_wording",
+                        "dedup": "dq-konzept-ohne-wording",
+                        "desc": "Mindestens ein Gericht in diesem Konzept hat keinen Text für den Gast, weder an der Position noch am Gericht. Dann erscheint dort der interne Arbeitsname mit Kürzeln und Trennstrichen, genau der Text, der nie beim Kunden landen darf. Kundentext am Gericht oder an der Position ergänzen.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "konzept_preisband_verletzt",
+                    "kind": "gap",
+                    "label": "Konzepte im Einsatz außerhalb der Preisspanne",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "konzept_preisband_verletzt",
+                        "dedup": "dq-konzept-preisband-verletzt",
+                        "desc": "Der Preis pro Person liegt außerhalb der Spanne aus der Planungsvorgabe, oder der Preisrahmen einer Position ist nicht eingehalten. Gemeldet wird nur der rote Fall: eine Abweichung vom Zielpreis innerhalb der Spanne bleibt eine Kalkulationsfrage. Ohne Planungsvorgabe gibt es keinen Befund.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "konzept_regel_verletzt",
+                    "kind": "gap",
+                    "label": "Konzepte im Einsatz mit verletzter Kundenvorgabe",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "konzept_regel_verletzt",
+                        "dedup": "dq-konzept-regel-verletzt",
+                        "desc": "Mindestens eine Kundenvorgabe aus der Planung ist verletzt: der geforderte Anteil einer Ernährungsform ist nicht erreicht, eine ausgeschlossene Zutat oder ein ausgeschlossenes Allergen kommt vor, oder eine geforderte Saison fehlt. Das sind Zusagen an den Kunden, und eine gebrochene Zusage fällt beim Lesen nicht auf. Weiche Vorgaben zählen hier nicht mit.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "konzept_dramaturgie",
+                    "kind": "gap",
+                    "label": "Konzepte im Einsatz mit wiederholter Hauptzutat",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "konzept_dramaturgie",
+                        "dedup": "dq-konzept-dramaturgie",
+                        "desc": "Zwei oder mehr Gänge dieses Konzepts haben dieselbe Hauptzutat, also die mengenmäßig größte Zutat des Gerichts. Sorten zählen zusammen (Lachs und Wildlachs). Nur ein Hinweis: ein Themenmenü darf sich wiederholen. Gerichte ohne vergleichbare Mengen oder ohne Aromaprofil bleiben unbewertet.",
+                        "sev": "info"
+                    }
+                }
+            ]
+        },
+        "foodbook": {
+            "label": "Foodbooks",
+            "metriken": [
+                {
+                    "key": "foodbook_kapitel_leer",
+                    "kind": "gap",
+                    "label": "Foodbooks im Einsatz mit leerem Kapitel oder ganz ohne Inhalt",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "foodbook_kapitel_leer",
+                        "dedup": "dq-foodbook-kapitel-leer",
+                        "desc": "Mindestens ein Kapitel dieses Foodbooks hat keinen Inhalt: weder ein Paket oder Konzept noch ein einzelnes Gericht. Überschriften, Texte, Abstände und Bilder zählen nicht als Inhalt. Kapitel mit Unterkapiteln werden nicht geprüft, ihr Inhalt steht darunter. Ein ausgeblendeter Block zählt ebenfalls nicht: im Kundendokument erscheint das Kapitel dann leer. Gemeldet werden auch Foodbooks ganz ohne befülltes Kapitel.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "foodbook_skizze_ungeerdet",
+                    "kind": "gap",
+                    "label": "Foodbooks mit Gerichtsidee, die nie umgesetzt wurde",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "foodbook_skizze_ungeerdet",
+                        "dedup": "dq-foodbook-skizze-ungeerdet",
+                        "desc": "Beim Anlegen eines Kapitels wurde eine Gerichtsidee an die KI übergeben, aber daraus ist nie ein Gericht geworden. Der Hinweis erscheint erst 48 Stunden danach: vorher ist die Idee in Arbeit, danach hängt sie fest. Es geht um verlorene Kreativarbeit: die Idee steht im Foodbook-Entwurf, im Sortiment fehlt sie.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "foodbook_ziel_verfehlt",
+                    "kind": "gap",
+                    "label": "Foodbooks im Einsatz mit verfehltem Kapitelziel",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "foodbook_ziel_verfehlt",
+                        "dedup": "dq-foodbook-ziel-verfehlt",
+                        "desc": "Mindestens ein Kapitel dieses Foodbooks verfehlt sein Ziel: für die geplante Anzahl Gerichte ist kein einziges Gericht da, oder der durchschnittliche VK im Kapitel liegt außerhalb der geplanten Preisspanne. Unterkapitel übernehmen das Ziel des Kapitels darüber. Gemeldet wird nur der rote Fall, „3 von 5 Gerichten da“ bleibt Arbeitsstand. Ohne Planungsvorgabe gibt es keinen Befund.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "foodbook_stale",
+                    "kind": "gap",
+                    "label": "Freigegebene Foodbooks mit überholtem Preis",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "foodbook_stale",
+                        "dedup": "dq-foodbook-stale",
+                        "desc": "Das Foodbook ist freigegeben oder beim Kunden, aber mindestens ein Preis im veröffentlichten Link weicht stärker vom aktuell berechneten VK ab, als das Team erlaubt. Der Link nennt damit einen Preis, den die Kalkulation nicht mehr ergibt — neu veröffentlichen übernimmt die aktuellen Preise. Foodbooks in der Kalkulation zählen nicht mit, dort dürfen Preise sich bewegen.",
+                        "sev": "warnung"
+                    }
+                },
+                {
+                    "key": "foodbook_kapitel_ohne_text",
+                    "kind": "gap",
+                    "label": "Foodbooks im Einsatz mit Kapitel ohne Hinführung",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": {
+                        "typ": "foodbook_kapitel_ohne_text",
+                        "dedup": "dq-foodbook-kapitel-ohne-text",
+                        "desc": "Mindestens ein befülltes Kapitel dieses Foodbooks hat keinen Text für den Gast: im Dokument folgt auf die Kapitelüberschrift direkt die Liste. Leere Kapitel zählen hier nicht, sie brauchen zuerst Gerichte. Ergänzen im Kapitelkopf der Leitstelle über das Feld „Hinführung“, auf Wunsch mit KI-Text.",
+                        "sev": "info"
+                    }
+                }
+            ]
+        },
+        "quer": {
+            "label": "Querschnitt",
+            "metriken": [
+                {
+                    "key": "ri_gemini_unverifiziert",
+                    "kind": "gap",
+                    "label": "Zutatenzuordnungen der KI, noch nicht geprüft",
+                    "wert": 0,
+                    "severity": "gruen",
+                    "signal": null
+                }
+            ]
+        }
+    },
+    "naming_und_emission": {
+        "naming_kuchen": [
+            "leerraum",
+            "trenner_rand",
+            "vk_praefix"
+        ],
+        "naming_sauce": [],
+        "emission": {
+            "emittiert": 6,
+            "geschlossen": 0
+        },
+        "emission_nochmal": 6
+    }
+}

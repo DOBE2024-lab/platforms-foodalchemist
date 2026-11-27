@@ -37,12 +37,15 @@ final class ZukaufBasisrezeptService
      */
     private const SUB_KNABBEREIEN = '09.6';
 
+    /** Sprossen & Keimlinge (01.8): Unterkategorie, keine Warengruppen-Rolle — benannte Fachregel wie SUB_KNABBEREIEN. */
+    private const SUB_SPROSSEN = '01.8';
+
     /**
      * Fertigware nach GP-Taxonomie: Gewürze & Toppings (10), Öle & Essige (11), Convenience (13) über die Rolle
      * „fertig“ (WgRolle), dazu auf Unterkategorie-Ebene Knabbereien (09.6) und Sprossen & Keimlinge (01.8). Ohne Typ in
      * der Zeile zusätzlich Kräuter (03). Rohware (Gemüse, Fleisch …) wird nie Zukauf — „Püree: Kürbis“ ist eine Zubereitung.
      */
-    private const FERTIG_SUB = [self::SUB_KNABBEREIEN, '01.8'];
+    private const FERTIG_SUB = [self::SUB_KNABBEREIEN, self::SUB_SPROSSEN];
 
     /** Ist die Zeile gekaufte Fertigware (sicherer GP-Treffer auf Fertigware) — unabhängig davon, ob ein Typ ableitbar ist? */
     public function istFertigware(Team $team, string $text): bool

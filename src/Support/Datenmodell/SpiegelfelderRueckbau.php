@@ -116,17 +116,35 @@ final class SpiegelfelderRueckbau
         if ($spalten === []) {
             return;
         }
-        foreach (Schema::getForeignKeys(self::REZEPTE) as $fk) {
-            if (array_intersect($fk['columns'], $spalten) !== []) {
-                Schema::table(self::REZEPTE, fn (Blueprint $t) => $fk['name'] !== null ? $t->dropForeign($fk['name']) : $t->dropForeign($fk['columns']));
+        if (SqliteTabellenUmbau::aktiv()) {
+            // Testbasis: FK-Klauseln per originalgetreuem Umbau raus (Laravels Umbau verlöre partielle Indizes), dann nativ
+            // DROP INDEX / DROP COLUMN — beides ohne Tabellen-Neubau.
+            SqliteTabellenUmbau::umbauen(self::REZEPTE, function (string $sql) use ($spalten) {
+                foreach ($spalten as $s) {
+                    $sql = SqliteTabellenUmbau::ohneFk($sql, $s);
+                }
+
+                return $sql;
+            });
+        } else {
+            foreach (Schema::getForeignKeys(self::REZEPTE) as $fk) {
+                if (array_intersect($fk['columns'], $spalten) !== []) {
+                    Schema::table(self::REZEPTE, fn (Blueprint $t) => $t->dropForeign($fk['name']));
+                }
             }
         }
         foreach (Schema::getIndexes(self::REZEPTE) as $ix) {
             if (! $ix['primary'] && array_intersect($ix['columns'], $spalten) !== []) {
-                Schema::table(self::REZEPTE, fn (Blueprint $t) => $t->dropIndex($ix['name']));
+                DB::statement('DROP INDEX '.(SqliteTabellenUmbau::aktiv() ? '"'.$ix['name'].'"' : '`'.$ix['name'].'` ON `'.self::REZEPTE.'`'));
             }
         }
-        Schema::table(self::REZEPTE, fn (Blueprint $t) => $t->dropColumn($spalten));
+        if (SqliteTabellenUmbau::aktiv()) {
+            foreach ($spalten as $s) {
+                DB::statement('ALTER TABLE "'.self::REZEPTE.'" DROP COLUMN "'.$s.'"');
+            }
+        } else {
+            Schema::table(self::REZEPTE, fn (Blueprint $t) => $t->dropColumn($spalten));
+        }
     }
 
     /**
@@ -165,6 +183,19 @@ final class SpiegelfelderRueckbau
     public static function wiederherstellen(): void
     {
         $fehlt = array_values(array_filter(array_keys(self::SPALTEN), fn ($s) => ! Schema::hasColumn(self::REZEPTE, $s)));
+        if ($fehlt !== [] && SqliteTabellenUmbau::aktiv()) {
+            // Testbasis: natives ADD COLUMN (REFERENCES ist bei DEFAULT NULL erlaubt) — kein Tabellen-Neubau
+            foreach ($fehlt as $s) {
+                [$typ, $ziel] = self::SPALTEN[$s];
+                $def = match ($typ) {
+                    'decimal' => 'numeric',
+                    'fk' => 'integer REFERENCES "'.$ziel.'"("id") ON DELETE SET NULL',
+                    default => 'integer',
+                };
+                DB::statement('ALTER TABLE "'.self::REZEPTE.'" ADD COLUMN "'.$s.'" '.$def);
+            }
+            $fehlt = [];
+        }
         if ($fehlt !== []) {
             Schema::table(self::REZEPTE, function (Blueprint $t) use ($fehlt) {
                 foreach ($fehlt as $s) {

@@ -16,6 +16,9 @@ use Platform\FoodAlchemist\Support\Datenmodell\SpiegelfelderRueckbau;
  */
 return new class extends Migration
 {
+    /** SQLite-Testbasis: originalgetreuer Umbau braucht abgeschaltete FK-Prüfung, die wirkt nur ohne Transaktion (MySQL: ohne Wirkung). */
+    public $withinTransaction = false;
+
     public function up(): void
     {
         if (SpiegelfelderRueckbau::vorhanden() === []) {
